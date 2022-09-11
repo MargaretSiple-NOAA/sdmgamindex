@@ -22,9 +22,9 @@ rmarkdown::render(paste0("./README.Rmd"),
                   output_dir = "./",
                   output_file = "README.md")
 
-########### Add vignettes ------------------------------------------------------
+########### Add stuff ------------------------------------------------------
 
-# usethis::use_vignette("A-data-prep")
+# usethis::use_vignette("C-model-comparisons")
 
 ########### Create Documentation GitHub-Pages ----------------------------------
 

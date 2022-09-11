@@ -52,7 +52,7 @@ data("noaa_afsc_public_foss")
 Public data from FOSS
 }
 \details{
-DETAILS
+The Resource Assessment and Conservation Engineering (RACE) Division Groundfish Assessment Program (GAP) of the Alaska Fisheries Science Center (AFSC) conducts fisheries-independent bottom trawl surveys to assess the populations of demersal fish and crab stocks of Alaska. Data presented here are presence-only (non-zero) observations from those surveys and therefore CANNOT be aggregated.
 }
 \examples{
 data(noaa_afsc_public_foss)

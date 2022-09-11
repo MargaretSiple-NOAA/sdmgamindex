@@ -38,5 +38,8 @@ Imports:
 RoxygenNote: 7.2.1
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown, 
+    coldpool, 
+    akgfmaps, 
+    dplyr
 VignetteBuilder: knitr

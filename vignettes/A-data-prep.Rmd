@@ -11,23 +11,23 @@ vignette: >
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE, message=FALSE, error=FALSE,
+  collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE, 
   comment = "#>"
 )
 ```
 
 ```{r setup, echo = FALSE}
+# library(remotes)
 PKG <- c(
-  # library(remotes)
-  # remotes::install_github("DTUAqua/DATRAS/DATRAS")
-  # remotes::install_github("casperwberg/surveyIndex/surveyIndex")
-  "surveyIndex", ## Make sure to use latest version (1.09)
-  "DATRAS", 
+  "surveyIndex", # remotes::install_github("casperwberg/surveyIndex/surveyIndex")
+  "DATRAS", # remotes::install_github("DTUAqua/DATRAS/DATRAS")
   
-  "rgdal", 
+  # "rgdal", 
   "dplyr",
+  "sf", 
+  "gstat",
   
-  # RACE-GAP Specific
+  # RACE-GAP Specific R packages
   "akgfmaps", # devtools::install_github("sean-rohan-noaa/akgfmaps", build_vignettes = TRUE)
   "coldpool" # devtools::install_github("sean-rohan-noaa/coldpool")
 )
@@ -39,54 +39,93 @@ for (p in PKG) {
 }
 ```
 
-# Example context:
+## Example set up and context:
 
-For this example, let's say we want to assess 
+For this example, let's say we want to assess: 
 
-"yellowfin sole", "walleye pollock", "red king crab"
+:::: {style="display: flex;"}
+::: {style="width:500px;"}
+![Yellowfin Sole](https://github.com/EmilyMarkowitz-NOAA/gap_bs_data_report/blob/main/img/yellowfin_sole.png?raw=true){width=25%}
+:::
+::: {}
+This commonly caught "golden child" species has been realitively easy to model and assess because of it's high abundance, large distribution over the survey area, and consistent availability to the survey. 
+:::
+::::
 
-"EBS" &
-                  year %in% 2010:2021
+<!-- break -->
 
+:::: {style="display: flex;"}
+::: {style="width:500px;"}
+![Walleye Pollock](https://github.com/EmilyMarkowitz-NOAA/gap_bs_data_report/blob/main/img/walleye_pollock.png?raw=true){width=25%}
+:::
+::: {}
+Walleye pollock are also common to the survey, but their distribution and availability to the survey are driven by density-dependence and temperature and the cold pool extent. Including covariates in model fits could help uncover structure that could help us better understand this specie's abundance. 
+:::
+::::
+
+<!-- break -->
+
+:::: {style="display: flex;"}
+::: {style="width:500px;"}
+![Red King Crab](https://github.com/EmilyMarkowitz-NOAA/gap_bs_data_report/blob/main/img/red_king_crab.png?raw=true){width=25%}
+:::
+::: {}
+This "problem child" will have patchier and less understood availability to the survey. 
+:::
+::::
+
+<!-- break -->
+
+![Survey grid for the eastern and northern Bering sea bottom trawl surveys. ](https://raw.githubusercontent.com/afsc-gap-products/survey-live-temperature-map/main/test/_grid_bs.png){width=60%}
+
+In this example, we will use data from NOAA Fisheries' eastern Bering sea (EBS) bottom trawl survey. The Resource Assessment and Conservation Engineering (RACE) Division Groundfish Assessment Program (GAP) of the Alaska Fisheries Science Center (AFSC) conducts fisheries-independent bottom trawl surveys to assess the populations of demersal fish and crab stocks of Alaska. Data presented here are presence-only (non-zero) observations from those surveys and therefore CANNOT be aggregated. 
+
+For the sake of a simple example, we will only assess data from 2010 to 2021. 
+
+```{r vars} 
+SPECIES <- c("yellowfin sole", "walleye pollock", "red king crab")
+YEARS <- 2010:2021
+SRVY <- "EBS"
+```
 
 ## 1. What data area we using?
-
-The Resource Assessment and Conservation Engineering (RACE) Division Groundfish Assessment Program (GAP) of the Alaska Fisheries Science Center (AFSC) conducts fisheries-independent bottom trawl surveys to assess the populations of demersal fish and crab stocks of Alaska. Data presented here are presence-only (non-zero) observations from those surveys and therefore CANNOT be aggregated. Please reach out to survey team leads listed in the metadata if clarification is needed. 
-
-![Survey grid for the eastern and northern Bering sea bottom trawl surveys. ](https://raw.githubusercontent.com/afsc-gap-products/survey-live-temperature-map/main/test/_grid_bs.png)
 
 Here, we use the public facing data from the [NOAA AFSC groundfish Bering sea bottom trawl survey](https://www.fisheries.noaa.gov/foss/f?p=215:29:5480997826449::NO:::). For more information about how these data were compiled, see [afsc-gap-products GitHub repo](https://github.com/afsc-gap-products/gap_public_data). 
 
 ```{r view_data}
 dat <- surveyIndex::noaa_afsc_public_foss %>% 
-  dplyr::filter(srvy == "EBS" &
-                  year %in% 2010:2021 &
-                  common_name %in% c("yellowfin sole", "walleye pollock", "red king crab")) %>% 
+  dplyr::filter(srvy == SRVY &
+                  year %in% YEARS &
+                  common_name %in% SPECIES) %>%
+  dplyr::mutate(hauljoin = paste0(stratum, "_", station, "_", date_time)) %>%
   dplyr::select(
     year, date_time, latitude_dd, longitude_dd, # spatiotemproal data
     cpue_kgha, common_name, # catch data
     bottom_temperature_c, depth_m, # possible covariate data
-    srvy, area_swept_ha, duration_hr, vessel_id # haul/effort data)
+    srvy, area_swept_ha, duration_hr, vessel_id, hauljoin # haul/effort data)
   )
 
 head(dat)
 ```
 
-## 2. prep the data for surveyIndex::get_surveyidx():
+## 2. Prepare the data for surveyIndex::get_surveyidx():
 
 ```{r data_wrangle}
 
 # project spatial data
-crs_proj <- "EPSG:3338"
+crs_proj <- "EPSG:3338" # NAD83 / Alaska Albers
+crs_latlon <- "+proj=longlat +datum=WGS84" # decimal degrees
+
 ll <- surveyIndex::convert_crs( 
   x = dat$longitude_dd,
   y = dat$latitude_dd, 
-  crs_in = "+proj=longlat +datum=WGS84", # decimal degrees
-  crs_out = crs_proj) # NAD83 / Alaska Albers
+  crs_in = crs_latlon, 
+  crs_out = crs_proj) 
 
-dat_processed <- dat %in% 
-  dplyr::mutate(dplyr::across((c("year", "vessel_id", "common_name", "srvy")), as.factor)) %>%
-  # The surveyIndex::get_surveyidx() expects some columns to be named in a specific way
+YEARS <- sort(unique(dat$year))
+
+# The surveyIndex::get_surveyidx() expects some columns to be named in a specific way
+dat_wrangled <- dat %>% 
   dplyr::rename(
     Year = year,
     wCPUE = cpue_kgha, 
@@ -98,6 +137,8 @@ dat_processed <- dat %in%
     Ship = vessel_id) %>%
   dplyr::mutate( 
     # create some other vars
+    Lon = longitude_dd, 
+    Lat = latitude_dd, 
     lon = ll$X,
     lat = ll$Y,
     sx = ((longitude_dd - mean(longitude_dd, na.rm = TRUE))/1000),
@@ -114,48 +155,66 @@ dat_processed <- dat %in%
     # add some dummy vars and create some other vars
     Country = "USA",
     Gear = "dummy",
-    Quarter = "2") %>% 
+    Quarter = "2")  %>%
+  dplyr::mutate(across((c("Year", "Ship", "COMMON_NAME")), as.factor)) %>% 
   dplyr::select(wCPUE, GEAR_TEMPERATURE, BOTTOM_DEPTH, COMMON_NAME, EFFORT, 
-                Year, Ship, lat, lon, sx, sy, ctime, 
-                TimeShotHour, timeOfYear, Gear, Quarter)
+                Year, Ship, Lon, Lat, lat, lon, sx, sy, ctime, 
+                TimeShotHour, timeOfYear, Gear, Quarter, HaulDur, hauljoin)
 
-YEARS <- sort(unique(dat0$Year))[sort(unique(dat0$Year)) %in% YEARS]
-
-head(dat_processed)
+head(dat_wrangled)
 
 ```
 
 ## 3. Define representitive station points to fit and predict the model at
 
-Since surveys are not done at the same **exact** location each year (it's the intention, but impossible in practice), we need to define what representative latitudes and longitudes we are going to predict at. 
+Since surveys are not done at the same *exact* location each year (it's the intention, but impossible in practice), we need to define what representative latitudes and longitudes we are going to predict at. 
 
-These are the same prediction grids AFSC uses for their 2021 [VAST model-based indices](https://github.com/James-Thorson-NOAA/VAST). 
+These are the same prediction grids AFSC uses for their 2021 [VAST model-based indices](https://github.com/James-Thorson-NOAA/VAST) (which is subject to change - do not use this without asking/checking that this is still current!). 
 
 ```{r prediction_grid}
 pred_grid <- surveyIndex::pred_grid_ebs
+
+ll <- surveyIndex::convert_crs( 
+  x = pred_grid$lon,
+  y = pred_grid$lat, 
+  crs_in = crs_latlon, 
+  crs_out = crs_proj) 
+
+pred_grid <- pred_grid %>% 
+  dplyr::mutate( 
+    lon = ll$X,
+    lat = ll$Y,
+    sx = ((lon - mean(lon, na.rm = TRUE))/1000),
+    sy = ((lat - mean(lat, na.rm = TRUE))/1000))
+
 head(pred_grid)
 ```
 
-It is also good to have a shapefile on hand to crop and constrain your outputs too. Here at AFSC GAP, we have developed the (akgfmaps R package)[https://github.com/afsc-gap-products/akgfmaps] to save and share such shapefiles.  
+It is also good to have a shapefile on hand to crop and constrain your outputs too. Here at AFSC GAP, we have developed the [{akgfmaps} R package](https://github.com/afsc-gap-products/akgfmaps) to save and share such shapefiles.  
 
 ```{r survey_shapefile}
-
 # library(devtools)
 # devtools::install_github("afsc-gap-products/akgfmaps", build_vignettes = TRUE)
-
 library(akgfmaps)
 
 map_layers <- akgfmaps::get_base_layers(
-  select.region = "bs.south", 
+  select.region = "bs.south",
   set.crs = crs_proj)
 
+# Let's just see what that looks like:
 tmp <- map_layers$survey.area
 tmp$AREA_KM2 <- tmp$PERIM_KM <- NULL
 plot(tmp)
-
 ```
 
 ## 4. Prepare covariate data
+
+Here we want to match covariate data to the prediction grid. 
+
+```{r dat_cov}
+dat_cov <- pred_grid %>% 
+  dplyr::select(-Shape_Area)
+```
 
 ### 4a. Data that varies over only space (depth)
 
@@ -164,78 +223,266 @@ Here in the Bering sea, the depth rarely changes. The modeler may consider makin
 For this, we are going to create a raster of depth in the Bering sea from the survey data so we can merge that into the dataset at the prediction grid lat/lons. 
 
 ```{r covar_depth}
- ## Get bottom depth data
-  # Here I'll create a raster to map the bathymetry so I can merge that into the dataset at the right lat/lons
-  
-  x <- dat_processed %>% 
-    dplyr::mutate(Year = as.numeric(Year)) %>% 
-    dplyr::filter(Year %in% YEARS) %>%
-    dplyr::select(lat, lon, BOTTOM_DEPTH) %>% 
-    # dplyr::mutate(COMMON_NAME = "depth") %>%
-    dplyr::distinct() %>% 
-    sf::st_as_sf(x = ., 
-                 coords = c(x = "lon", y = "lat"), 
-                 crs = sf::st_crs(crs_latlon)) %>% 
-    sf::st_transform(crs = CRS(crs_proj))
-  
-  extrap.box <- sf::st_bbox(map_layers$survey.area)
-  
-  idw.nmax = 4
-  idw_fit <- gstat::gstat(formula = BOTTOM_DEPTH ~ 1, 
-                          locations = x, 
-                          nmax = idw.nmax)
-  
-  stn.predict <- raster::predict(idw_fit, x)
-  
-  grid.cell = c(5000, 5000)
-  sp_extrap.raster <- raster::raster(xmn = extrap.box["xmin"],
-                                     xmx = extrap.box["xmax"],
-                                     ymn = extrap.box["ymin"],
-                                     ymx = extrap.box["ymax"],
-                                     ncol = (extrap.box["xmax"] - extrap.box["xmin"])/grid.cell[1],
-                                     nrow = (extrap.box["ymax"] - extrap.box["ymin"])/grid.cell[2],
-                                     crs = raster::crs(crs_proj))
-  
-  sp_extrap.raster <- data_predicted[,c("LONG", "LAT")]
-  coordinates(sp_extrap.raster) <- ~ LONG + LAT
-  crs(sp_extrap.raster) <- crs_latlon 
-  sp_extrap.raster <- spTransform(x = sp_extrap.raster, CRSobj = crs_proj)#%>%
-  #   sf::st_as_sf() %>%
-  #   sf::st_transform(crs = raster::crs(x))
-  
-  extrap.grid <- raster::predict(idw_fit, as(sp_extrap.raster, Class = "SpatialPoints")) %>% 
-    sf::st_as_sf() %>%
-    sf::st_transform(crs = raster::crs(x))  %>%
-    stars::st_rasterize() %>%
-    sf::st_join((map_layers$survey.area), # sf::st_union
-                join = st_intersects) %>% 
-    stars::st_extract(x = ., 
-                      at = as.matrix(data_predicted[,c("lon", "lat")]))
-  
-  data_predicted <- data_predicted %>% 
-    # dplyr::filter(!is.na(GEAR_TEMPERATURE2019)) %>% 
-    dplyr::left_join(x = .,
-                     y = extrap.grid %>% 
-                       data.frame() %>%
-                       dplyr::mutate(LONG = data_predicted$LONG, 
-                                     LAT = data_predicted$LAT) %>% 
-                       dplyr::rename(#LONG = x, 
-                         #LAT = y, 
-                         BOTTOM_DEPTH = var1.pred) %>% 
-                       dplyr::select(LONG, LAT, BOTTOM_DEPTH), 
-                     by = c("LONG", "LAT")) %>%
-    stats::na.omit()
+x <- dat_wrangled %>%
+  dplyr::select(Lon, Lat, BOTTOM_DEPTH) %>%
+  stats::na.omit()  %>% 
+  sf::st_as_sf(x = ., 
+               coords = c(x = "Lon", y = "Lat"), 
+               crs = sf::st_crs(crs_latlon))
+
+idw_fit <- gstat::gstat(formula = BOTTOM_DEPTH ~ 1,
+                        locations = x,
+                        nmax = 4)
+
+stn_predict <- raster::predict(idw_fit, x)
+
+sp_extrap_raster <- SpatialPoints(
+  coords = coordinates(as.matrix(dat_cov[,c("lon", "lat")])), 
+  proj4string = CRS(crs_latlon) )
+
+extrap_data0 <- raster::predict(
+  idw_fit, 
+  as(sp_extrap_raster, Class = "SpatialPoints")) %>%
+  sf::st_as_sf() %>%
+  sf::st_transform(crs = crs_latlon)  %>%
+  stars::st_rasterize() 
+
+plot(extrap_data0) # Just so we can see what we are looking at: 
+
+extrap_data <- stars::st_extract(x = extrap_data0,
+                                 at = as.matrix(dat_cov[,c("lon", "lat")]))
+
+dat_cov <- cbind.data.frame(dat_cov, 
+                      "BOTTOM_DEPTH" = extrap_data$var1.pred) %>%
+  stats::na.omit()
+
+head(dat_cov)
+
 ```
 
 ### 4b. Data that varies over space and time (bottom temperature)
 
 Here, bottom temperature, and thereby the cold pool extent, have been show to drive the distribution of many species. This is especially true for walleye pollock. 
 
-For this we are going to lean on our in-house prepared validated and pre-prepared [coldpool R package](https://github.com/afsc-gap-products/coldpool) (S. Rohan, L. Barnett, and N. Charriere). This data interpolates over the whole area of the survey so there are no missing data. 
+For this we are going to lean on our in-house prepared validated and pre-prepared [{coldpool} R package](https://github.com/afsc-gap-products/coldpool) (S. Rohan, L. Barnett, and N. Charriere). This data interpolates over the whole area of the survey so there are no missing data. 
 
 ```{r covar_bt}
+x <- coldpool::ebs_bottom_temperature %>%
+  raster::projectRaster(., crs = crs_latlon) %>%
+  raster::extract(x = ., 
+                  y = as.matrix(dat_cov[,c("sx", "sy")])) %>% 
+  as.data.frame()
+
+names(x) <- paste0("GEAR_TEMPERATURE", 
+                          gsub(pattern = "_", replacement = "", 
+                               x = gsub(pattern = "[a-zA-Z]+", 
+                                        replacement = "", 
+                                        x = names(x))))
+dat_cov <- dplyr::bind_cols(dat_cov, x) %>% 
+  na.omit()
+
+head(dat_cov)
 
 ```
 
 
+## 5. DATRAS structure
+
+
+Now, we need to fill in the data with the zeros!
+
+```{r catch_haul_fill_0}
+
+  # Identify vars that will be used --------------------------------------------
+
+  varsbyyr <- unique( # c("GEAR_TEMPERATURE", "cpi")
+    gsub(pattern = "[0-9]+", 
+         replacement = "", 
+         x = names(dat_cov)[grepl(names(dat_cov), 
+                                   pattern = "[0-9]+")]))
+  
+  vars <- unique( # c("BOTTOM_DEPTH")
+    names(dat_cov)[!grepl(names(dat_cov), 
+                           pattern = "[0-9]+")])
+  vars <- vars[!(vars %in% c("LONG", "LAT", "lon", "lat", "sx", "sy"))]
+  
+  ## Fill catch data with zeros ---------------------------------------------------------
+  
+  data_hauls <- dat_wrangled %>% 
+    dplyr::select(Year, sx, sy, 
+                  dplyr::all_of(varsbyyr), dplyr::all_of(vars), 
+                  Ship, hauljoin, 
+                  lat, lon, 
+                  ctime, TimeShotHour, timeOfYear, Gear, Quarter, 
+                  EFFORT, HaulDur)  %>% 
+    # dplyr::filter(!is.na(GEAR_TEMPERATURE)) %>% 
+    na.omit() %>%
+    dplyr::distinct()
+  
+  data_catch <- dat_wrangled %>% 
+    dplyr::select(COMMON_NAME, wCPUE, hauljoin)
+  
+  dat_catch_haul <- dplyr::left_join(x = data_hauls, 
+                        y = data_catch, 
+                        by = c("hauljoin")) %>% 
+    dplyr::mutate(wCPUE = ifelse(is.na(wCPUE), 0, wCPUE))
+  
+  head(dat_catch_haul)
+```
+  
+```{r catch_haul_datras }
+  ## prediction a grid for a specific year 
+get_pd <- function(year, 
+                  x,
+                  subsel=NULL, 
+                  varsbyyr, 
+                  vars){
+  nam = c("lon","lat","sx","sy", vars)
+  nam2 <- tidyr::crossing(varsbyyr, year) %>% 
+    dplyr::mutate(vars0 = paste0(varsbyyr, year)) %>% 
+    dplyr::select(vars0) %>% 
+    unlist()
+  # nam2 = paste0(c(vars),year)
+  
+  pd = data.frame(x[,c(nam,nam2)])
+  colnames(pd)<-c(nam,nam2)
+  
+  pd$EFFORT = 1.0 
+  ## Note, Better to use median effort here if splines on effort is used.
+  ## Otherwise uncertainty is inflated because it is outside normal effort range.
+  
+  if (!is.null(subsel)) {
+    pd = pd[subsel,]
+  }
+  return(pd)
+}
+
+ allpd <- lapply(YEARS, FUN = get_pd, x = dat_cov, vars = vars, varsbyyr = varsbyyr)
+  names(allpd) <- as.character(YEARS)
+  
+  head(allpd[1])
+  
+```
+
+```{r cov_datras}
+
+## Data frame with one row per haul to DATRASraw alike object
+df2dr <- function(x){
+  x$haul.id = 1:nrow(x)
+  dd = list()
+  dd[[1]] = data.frame()
+  dd[[2]] = x
+  dd[[3]] = data.frame()
+  class(dd)<-"DATRASraw"
+  dd
+}
+
+  ## split data by species, make into DATRASraw + Nage matrix
+  ds <- split(dat_catch_haul,dat_catch_haul$COMMON_NAME)
+  ds <- lapply(ds, df2dr)
+  ## OBS, response is added here in "Nage" matrix -- use wCPUE
+  ds <- lapply(ds,function(x) { x[[2]]$Nage <- matrix(x$wCPUE,ncol=1); colnames(x[[2]]$Nage)<-1; x } )
+  
+ds
+```
+
+
+
+
+## 6. Formulas
+
+```{r formulas}
+fm <-  list(
+#   # Null model spatial
+#   "fm_1null_s" = #"Year +
+#     "s(sx,sy,bs=c('ts'),k=520)",
+#   # Null model temporal
+#   "fm_1null_t" = "Year",
+#   # Null model spatial and temporal
+#   "fm_1null_s_t" = "Year +
+# s(sx,sy,bs=c('ts'),k=520)",
+# 
+#   # Null model spatial and temporal with an additional spatiotemporal effect
+#   "fm_1null_s_t" = "Year +
+# s(sx,sy,bs=c('ts'),k=520)  + 
+# s(sx,sy,bs=c('ts'),k=50,by=Year,id=1)",
+
+  # Mdoel with simple covariates
+  "fm_2cov" = "Year + 
+s(sx,sy,bs=c('ts'),k=520) + 
+s(BOTTOM_DEPTH,bs='ts',k=10) + 
+s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)"#,
+  # Model with an additional year effect
+#   "fm_3smyr" = "Year + 
+# s(sx,sy,bs=c('ts'),k=520) + 
+# s(BOTTOM_DEPTH,bs='ts',k=10) + 
+# s(log(GEAR_TEMPERATURE+3),bs='ts',k=10) + 
+# s(Year, bs=c('ts'), k=10)",
+#   # model with an additional spatiotemporal effect
+#   "fm_4st" = "Year + 
+# s(sx,sy,bs=c('ts'),k=520) + 
+# s(BOTTOM_DEPTH,bs='ts',k=10) + 
+# s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)  +
+# s(Year, bs=c('ts'), k=10) + 
+# s(sx,sy,bs=c('ts'),k=50,by=Year,id=1)" 
+)
+```
+
+
+## 7. Fit the Model
+
+Here are all of the models we want to try fitting:
+
+```{r model_combos}
+  comb <- tidyr::crossing("SPECIES" = SPECIES, 
+                          "fm_name" = gsub(pattern = " ", replacement = "_", x = names(fm))) %>% 
+    dplyr::left_join(x = ., 
+                     y = data.frame("fm" = gsub(pattern = "\n", replacement = "", x = unlist(fm), fixed = TRUE), 
+                                    "fm_name" = gsub(pattern = " ", replacement = "_", x = names(fm))), 
+                     by = "fm_name")
+
+comb
+```
+
+
+```{r model_fit}
+  
+  models <- fittimes <- list()
+  
+  for(i in 1:nrow(comb)){
+    cat("Fitting ",comb$SPECIES[i],"\n", comb$fm_name[i], ": ", comb$fm[i], "\n")
+    
+    temp <- paste0(comb$SPECIES[i], " ", comb$fm_name[i])
+    
+    fittimes[[ temp ]] <- 
+      system.time ( models[[ temp ]] <- 
+                     surveyIndex::get_surveyidx(x = ds[[ comb$SPECIES[i] ]], 
+                                   ages = 1,
+                                   myids = NULL, 
+                                   predD = allpd,
+                                   cutOff = 0,
+                                   fam = "Tweedie",
+                                   modelP = comb$fm[i],
+                                   gamma = 1,
+                                   control = list(trace = TRUE,
+                                                  maxit = 20))  )
+    
+  }
+  
+  save(models, fittimes, file = paste0(dir_out, "model_fits.Rdata"))
+```
+
+
+```{r model_check}
+  ## Check basis dimensions splines (spatial resolution)
+  sink(paste0(dir_out, "gamcheck.txt"))
+  lapply(models,function(x) gam.check(x$pModels[[1]]))
+  sink()
+  
+  ## Model summaries
+  sink(paste0(dir_out, "summaries.txt"))
+  lapply(models,function(x) summary(x$pModels[[1]]))
+  sink()
+
+```
 
