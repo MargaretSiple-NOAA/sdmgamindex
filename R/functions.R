@@ -1726,13 +1726,23 @@ get_grid <- function(
 #'
 #' @examples
 #' convert_crs(x = 170, y = 62)
+#' dat <- surveyIndex::noaa_afsc_public_foss[,c("longitude_dd", "latitude_dd")]
+#' head(dat)
+#' ll <- surveyIndex::convert_crs( # project data
+#'    x = dat$longitude_dd,
+#'    y = dat$latitude_dd,
+#'    crs_in = "+proj=longlat +datum=WGS84",
+#'    crs_out = "EPSG:3338")
+#' head(ll)
 convert_crs <- function(
     x,
     y,
     crs_in = "+proj=longlat +datum=WGS84",
     crs_out = "EPSG:3338" # "+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs",
     ) {
-  xy <- data.frame(ID = 1:length(x), X = x, Y = y)
+  xy <- data.frame(ID = 1:length(x),
+                   X = x,
+                   Y = y)
   sp::coordinates(xy) <- c("X", "Y")
   sp::proj4string(xy) <- sp::CRS(crs_in)
   res <- sp::spTransform(xy, sp::CRS(crs_out))
@@ -1893,3 +1903,24 @@ calc_distance <-
 #' data(noaa_afsc_public_foss)
 #' @details DETAILS
 "noaa_afsc_public_foss"
+
+
+#' @title EBS Prediction Grid
+#' @description EBS Prediction Grid
+#' @usage data("pred_grid_ebs")
+#' @author Emily Markowitz (emily.markowitz AT noaa.gov) and James Thorson (james.thorson AT noaa.gov)
+#' @format A data frame with 36690 observations on the following 3 variables.
+#' \describe{
+#'   \item{\code{lon}}{Numeric; Longitude (one hundred thousandth of a decimal degree).}
+#'   \item{\code{lat}}{Numeric; Latitude (one hundred thousandth of a decimal degree).}
+#'   \item{\code{Shape_Area}}{Numeric; The area that this location represents. }
+#'   }
+#' @source https://github.com/James-Thorson-NOAA/VAST
+#' @keywords eastern bering sea grid prediciton
+#' @examples
+#' data(pred_grid_ebs)
+#' @details DETAILS
+"pred_grid_ebs"
+
+
+

@@ -36,3 +36,7 @@ Imports:
     MASS,
     tweedie
 RoxygenNote: 7.2.1
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

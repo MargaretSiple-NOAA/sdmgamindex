@@ -1,0 +1,241 @@
+---
+title: "A-data-prep"
+description: "Prepare survey data for get_surveyidx()"
+date: "`r format(Sys.Date(), format='%B %d %Y') `"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{A-data-prep}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE, message=FALSE, error=FALSE,
+  comment = "#>"
+)
+```
+
+```{r setup, echo = FALSE}
+PKG <- c(
+  # library(remotes)
+  # remotes::install_github("DTUAqua/DATRAS/DATRAS")
+  # remotes::install_github("casperwberg/surveyIndex/surveyIndex")
+  "surveyIndex", ## Make sure to use latest version (1.09)
+  "DATRAS", 
+  
+  "rgdal", 
+  "dplyr",
+  
+  # RACE-GAP Specific
+  "akgfmaps", # devtools::install_github("sean-rohan-noaa/akgfmaps", build_vignettes = TRUE)
+  "coldpool" # devtools::install_github("sean-rohan-noaa/coldpool")
+)
+
+for (p in PKG) {
+  if(!require(p,character.only = TRUE)) {  
+    install.packages(p)
+    require(p,character.only = TRUE)}
+}
+```
+
+# Example context:
+
+For this example, let's say we want to assess 
+
+"yellowfin sole", "walleye pollock", "red king crab"
+
+"EBS" &
+                  year %in% 2010:2021
+
+
+## 1. What data area we using?
+
+The Resource Assessment and Conservation Engineering (RACE) Division Groundfish Assessment Program (GAP) of the Alaska Fisheries Science Center (AFSC) conducts fisheries-independent bottom trawl surveys to assess the populations of demersal fish and crab stocks of Alaska. Data presented here are presence-only (non-zero) observations from those surveys and therefore CANNOT be aggregated. Please reach out to survey team leads listed in the metadata if clarification is needed. 
+
+![Survey grid for the eastern and northern Bering sea bottom trawl surveys. ](https://raw.githubusercontent.com/afsc-gap-products/survey-live-temperature-map/main/test/_grid_bs.png)
+
+Here, we use the public facing data from the [NOAA AFSC groundfish Bering sea bottom trawl survey](https://www.fisheries.noaa.gov/foss/f?p=215:29:5480997826449::NO:::). For more information about how these data were compiled, see [afsc-gap-products GitHub repo](https://github.com/afsc-gap-products/gap_public_data). 
+
+```{r view_data}
+dat <- surveyIndex::noaa_afsc_public_foss %>% 
+  dplyr::filter(srvy == "EBS" &
+                  year %in% 2010:2021 &
+                  common_name %in% c("yellowfin sole", "walleye pollock", "red king crab")) %>% 
+  dplyr::select(
+    year, date_time, latitude_dd, longitude_dd, # spatiotemproal data
+    cpue_kgha, common_name, # catch data
+    bottom_temperature_c, depth_m, # possible covariate data
+    srvy, area_swept_ha, duration_hr, vessel_id # haul/effort data)
+  )
+
+head(dat)
+```
+
+## 2. prep the data for surveyIndex::get_surveyidx():
+
+```{r data_wrangle}
+
+# project spatial data
+crs_proj <- "EPSG:3338"
+ll <- surveyIndex::convert_crs( 
+  x = dat$longitude_dd,
+  y = dat$latitude_dd, 
+  crs_in = "+proj=longlat +datum=WGS84", # decimal degrees
+  crs_out = crs_proj) # NAD83 / Alaska Albers
+
+dat_processed <- dat %in% 
+  dplyr::mutate(dplyr::across((c("year", "vessel_id", "common_name", "srvy")), as.factor)) %>%
+  # The surveyIndex::get_surveyidx() expects some columns to be named in a specific way
+  dplyr::rename(
+    Year = year,
+    wCPUE = cpue_kgha, 
+    COMMON_NAME = common_name,
+    GEAR_TEMPERATURE = bottom_temperature_c, 
+    BOTTOM_DEPTH = depth_m,
+    HaulDur = duration_hr,
+    EFFORT = area_swept_ha,
+    Ship = vessel_id) %>%
+  dplyr::mutate( 
+    # create some other vars
+    lon = ll$X,
+    lat = ll$Y,
+    sx = ((longitude_dd - mean(longitude_dd, na.rm = TRUE))/1000),
+    sy = ((latitude_dd - mean(latitude_dd, na.rm = TRUE))/1000), 
+    ctime = as.numeric(as.character(Year)),
+    date_time = as.Date(x = date_time, format = "%m/%d/%Y %H:%M:%S"), 
+    hour = as.numeric(format(date_time,"%H")),
+    minute = as.numeric(format(date_time,"%M")),
+    day = as.numeric(format(date_time,"%d")),
+    month = as.numeric(format(date_time,"%m")),
+    TimeShotHour = hour + minute/60,
+    timeOfYear = (month - 1) * 1/12 + (day - 1)/365,   
+    
+    # add some dummy vars and create some other vars
+    Country = "USA",
+    Gear = "dummy",
+    Quarter = "2") %>% 
+  dplyr::select(wCPUE, GEAR_TEMPERATURE, BOTTOM_DEPTH, COMMON_NAME, EFFORT, 
+                Year, Ship, lat, lon, sx, sy, ctime, 
+                TimeShotHour, timeOfYear, Gear, Quarter)
+
+YEARS <- sort(unique(dat0$Year))[sort(unique(dat0$Year)) %in% YEARS]
+
+head(dat_processed)
+
+```
+
+## 3. Define representitive station points to fit and predict the model at
+
+Since surveys are not done at the same **exact** location each year (it's the intention, but impossible in practice), we need to define what representative latitudes and longitudes we are going to predict at. 
+
+These are the same prediction grids AFSC uses for their 2021 [VAST model-based indices](https://github.com/James-Thorson-NOAA/VAST). 
+
+```{r prediction_grid}
+pred_grid <- surveyIndex::pred_grid_ebs
+head(pred_grid)
+```
+
+It is also good to have a shapefile on hand to crop and constrain your outputs too. Here at AFSC GAP, we have developed the (akgfmaps R package)[https://github.com/afsc-gap-products/akgfmaps] to save and share such shapefiles.  
+
+```{r survey_shapefile}
+
+# library(devtools)
+# devtools::install_github("afsc-gap-products/akgfmaps", build_vignettes = TRUE)
+
+library(akgfmaps)
+
+map_layers <- akgfmaps::get_base_layers(
+  select.region = "bs.south", 
+  set.crs = crs_proj)
+
+tmp <- map_layers$survey.area
+tmp$AREA_KM2 <- tmp$PERIM_KM <- NULL
+plot(tmp)
+
+```
+
+## 4. Prepare covariate data
+
+### 4a. Data that varies over only space (depth)
+
+Here in the Bering sea, the depth rarely changes. The modeler may consider making this variable time-varying as well if they are say, in the Gulf of Alaska or the Aleutian Islands where currents and island formation can markedly change depth. 
+
+For this, we are going to create a raster of depth in the Bering sea from the survey data so we can merge that into the dataset at the prediction grid lat/lons. 
+
+```{r covar_depth}
+ ## Get bottom depth data
+  # Here I'll create a raster to map the bathymetry so I can merge that into the dataset at the right lat/lons
+  
+  x <- dat_processed %>% 
+    dplyr::mutate(Year = as.numeric(Year)) %>% 
+    dplyr::filter(Year %in% YEARS) %>%
+    dplyr::select(lat, lon, BOTTOM_DEPTH) %>% 
+    # dplyr::mutate(COMMON_NAME = "depth") %>%
+    dplyr::distinct() %>% 
+    sf::st_as_sf(x = ., 
+                 coords = c(x = "lon", y = "lat"), 
+                 crs = sf::st_crs(crs_latlon)) %>% 
+    sf::st_transform(crs = CRS(crs_proj))
+  
+  extrap.box <- sf::st_bbox(map_layers$survey.area)
+  
+  idw.nmax = 4
+  idw_fit <- gstat::gstat(formula = BOTTOM_DEPTH ~ 1, 
+                          locations = x, 
+                          nmax = idw.nmax)
+  
+  stn.predict <- raster::predict(idw_fit, x)
+  
+  grid.cell = c(5000, 5000)
+  sp_extrap.raster <- raster::raster(xmn = extrap.box["xmin"],
+                                     xmx = extrap.box["xmax"],
+                                     ymn = extrap.box["ymin"],
+                                     ymx = extrap.box["ymax"],
+                                     ncol = (extrap.box["xmax"] - extrap.box["xmin"])/grid.cell[1],
+                                     nrow = (extrap.box["ymax"] - extrap.box["ymin"])/grid.cell[2],
+                                     crs = raster::crs(crs_proj))
+  
+  sp_extrap.raster <- data_predicted[,c("LONG", "LAT")]
+  coordinates(sp_extrap.raster) <- ~ LONG + LAT
+  crs(sp_extrap.raster) <- crs_latlon 
+  sp_extrap.raster <- spTransform(x = sp_extrap.raster, CRSobj = crs_proj)#%>%
+  #   sf::st_as_sf() %>%
+  #   sf::st_transform(crs = raster::crs(x))
+  
+  extrap.grid <- raster::predict(idw_fit, as(sp_extrap.raster, Class = "SpatialPoints")) %>% 
+    sf::st_as_sf() %>%
+    sf::st_transform(crs = raster::crs(x))  %>%
+    stars::st_rasterize() %>%
+    sf::st_join((map_layers$survey.area), # sf::st_union
+                join = st_intersects) %>% 
+    stars::st_extract(x = ., 
+                      at = as.matrix(data_predicted[,c("lon", "lat")]))
+  
+  data_predicted <- data_predicted %>% 
+    # dplyr::filter(!is.na(GEAR_TEMPERATURE2019)) %>% 
+    dplyr::left_join(x = .,
+                     y = extrap.grid %>% 
+                       data.frame() %>%
+                       dplyr::mutate(LONG = data_predicted$LONG, 
+                                     LAT = data_predicted$LAT) %>% 
+                       dplyr::rename(#LONG = x, 
+                         #LAT = y, 
+                         BOTTOM_DEPTH = var1.pred) %>% 
+                       dplyr::select(LONG, LAT, BOTTOM_DEPTH), 
+                     by = c("LONG", "LAT")) %>%
+    stats::na.omit()
+```
+
+### 4b. Data that varies over space and time (bottom temperature)
+
+Here, bottom temperature, and thereby the cold pool extent, have been show to drive the distribution of many species. This is especially true for walleye pollock. 
+
+For this we are going to lean on our in-house prepared validated and pre-prepared [coldpool R package](https://github.com/afsc-gap-products/coldpool) (S. Rohan, L. Barnett, and N. Charriere). This data interpolates over the whole area of the survey so there are no missing data. 
+
+```{r covar_bt}
+
+```
+
+
+

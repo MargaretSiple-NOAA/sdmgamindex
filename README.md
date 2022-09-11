@@ -5,11 +5,15 @@
 R package for calculating survey indices by age from DATRAS exchange
 data.
 
-[![](https://img.shields.io/github/last-commit/surveyIndex/gap_public_data.svg)](https://github.com/surveyIndex/gap_public_data/commits/main)
+[![](https://img.shields.io/github/last-commit/EmilyMarkowitz-NOAA/surveyIndex.svg)](https://github.com/EmilyMarkowitz-NOAA/surveyIndex/commits/main)
 
 > Code is still in development
 
 Code was originally developed by: **Casper W. Berg** (@casperwberg)
+
+> Berg et al. (2014): “Evaluation of alternative age-based methods for
+> estimating relative abundance from survey data in relation to
+> assessment models”, Fisheries Research 151(2014) 91-99.
 
 And then modified and adapted for the AFSC by:
 
@@ -38,7 +42,7 @@ remotes::install_github("emilymarkowitz-noaa/surveyIndex")
 
 ## Usage
 
-see example for the function getSurveyIdx (write ?getSurveyIdx in R)
+See example for the function getSurveyIdx (write ?getSurveyIdx in R)
 
 ## Metadata
 
@@ -65,19 +69,19 @@ This package was last produced using:
     ## loaded via a namespace (and not attached):
     ##   [1] colorspace_2.0-3    gitcreds_0.1.1      ellipsis_0.3.2      rprojroot_2.0.3     fs_1.5.2            rstudioapi_0.14     remotes_2.4.2      
     ##   [8] gh_1.3.0            bit64_4.0.5         fansi_1.0.3         xml2_1.3.3          codetools_0.2-18    splines_4.2.0       ncdf4_1.19         
-    ##  [15] cachem_1.0.6        pkgload_1.3.0       jsonlite_1.8.0      icesDatras_1.4.0    shiny_1.7.2         httr_1.4.4          BiocManager_1.30.18
-    ##  [22] compiler_4.2.0      rvcheck_0.2.1       assertthat_0.2.1    Matrix_1.4-1        fastmap_1.1.0       cli_3.3.0           later_1.3.0        
+    ##  [15] cachem_1.0.6        pkgload_1.3.0       jsonlite_1.8.0      icesDatras_1.4.0    shiny_1.7.2         BiocManager_1.30.18 compiler_4.2.0     
+    ##  [22] httr_1.4.4          rvcheck_0.2.1       assertthat_0.2.1    Matrix_1.4-1        fastmap_1.1.0       cli_3.3.0           later_1.3.0        
     ##  [29] htmltools_0.5.3     prettyunits_1.1.1   tools_4.2.0         gtable_0.3.1        glue_1.6.2          reshape2_1.4.4      dplyr_1.0.9        
-    ##  [36] Rcpp_1.0.9          pkgdown_2.0.6       raster_3.5-29       vctrs_0.4.1         xfun_0.32           stringr_1.4.1       ps_1.7.1           
-    ##  [43] brio_1.1.3          testthat_3.1.4      mime_0.12           miniUI_0.1.1.1      lifecycle_1.0.1     dlstats_0.1.5       sys_3.4            
-    ##  [50] terra_1.6-7         MASS_7.3-58.1       scales_1.2.1        promises_1.2.0.1    credentials_1.3.2   RColorBrewer_1.1-3  gert_1.7.1         
-    ##  [57] yaml_2.3.5          curl_4.3.2          memoise_2.0.1       ggplot2_3.3.6       yulab.utils_0.0.5   stringi_1.7.8       RSQLite_2.2.17     
-    ##  [64] desc_1.4.1          pkgbuild_1.3.1      shape_1.4.6         rlang_1.0.4         pkgconfig_2.0.3     evaluate_0.16       lattice_0.20-45    
-    ##  [71] purrr_0.3.4         htmlwidgets_1.5.4   bit_4.0.4           processx_3.7.0      tidyselect_1.1.2    plyr_1.8.7          magrittr_2.0.3     
-    ##  [78] R6_2.5.1            generics_0.1.3      profvis_0.3.7       DBI_1.1.3           pillar_1.8.1        foreign_0.8-82      withr_2.5.0        
-    ##  [85] tibble_3.1.8        crayon_1.5.1        utf8_1.2.2          rmarkdown_2.16      urlchecker_1.0.1    grid_4.2.0          blob_1.2.3         
-    ##  [92] callr_3.7.2         digest_0.6.29       xtable_1.8-4        adehabitatMA_0.3.14 httpuv_1.6.5        openssl_2.0.2       munsell_0.5.0      
-    ##  [99] tweedie_2.3.5       sessioninfo_1.2.2   askpass_1.1
+    ##  [36] Rcpp_1.0.9          raster_3.5-29       vctrs_0.4.1         xfun_0.32           stringr_1.4.1       ps_1.7.1            brio_1.1.3         
+    ##  [43] testthat_3.1.4      mime_0.12           miniUI_0.1.1.1      lifecycle_1.0.1     dlstats_0.1.5       sys_3.4             terra_1.6-7        
+    ##  [50] MASS_7.3-58.1       scales_1.2.1        promises_1.2.0.1    credentials_1.3.2   RColorBrewer_1.1-3  gert_1.7.1          yaml_2.3.5         
+    ##  [57] curl_4.3.2          memoise_2.0.1       ggplot2_3.3.6       yulab.utils_0.0.5   stringi_1.7.8       RSQLite_2.2.17      desc_1.4.1         
+    ##  [64] pkgbuild_1.3.1      shape_1.4.6         rlang_1.0.4         pkgconfig_2.0.3     evaluate_0.16       lattice_0.20-45     purrr_0.3.4        
+    ##  [71] htmlwidgets_1.5.4   bit_4.0.4           processx_3.7.0      tidyselect_1.1.2    plyr_1.8.7          magrittr_2.0.3      R6_2.5.1           
+    ##  [78] generics_0.1.3      profvis_0.3.7       DBI_1.1.3           pillar_1.8.1        foreign_0.8-82      withr_2.5.0         tibble_3.1.8       
+    ##  [85] crayon_1.5.1        utf8_1.2.2          rmarkdown_2.16      urlchecker_1.0.1    grid_4.2.0          blob_1.2.3          callr_3.7.2        
+    ##  [92] digest_0.6.29       xtable_1.8-4        adehabitatMA_0.3.14 httpuv_1.6.5        openssl_2.0.2       munsell_0.5.0       tweedie_2.3.5      
+    ##  [99] sessioninfo_1.2.2   askpass_1.1
 
 ## NOAA README
 

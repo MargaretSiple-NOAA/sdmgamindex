@@ -22,6 +22,10 @@ rmarkdown::render(paste0("./README.Rmd"),
                   output_dir = "./",
                   output_file = "README.md")
 
+########### Add vignettes ------------------------------------------------------
+
+# usethis::use_vignette("A-data-prep")
+
 ########### Create Documentation GitHub-Pages ----------------------------------
 
 .rs.restartR()
@@ -34,9 +38,9 @@ library(pkgdown)
 # devtools::install_github("r-lib/pkgdown")
 # pkgdown::build_favicons()
 # devtools::build_vignettes()
-# usethis::use_pkgdown(config_file = "./pkgdown/_pkgdown.yml")
+usethis::use_pkgdown(config_file = "./docs/pkgdown.yml")
 
-pkgdown::build_site(pkg = here::here())
+# pkgdown::build_site(pkg = here::here())
 # usethis::use_github_action("pkgdown")
 
 # Save Package tar.gz

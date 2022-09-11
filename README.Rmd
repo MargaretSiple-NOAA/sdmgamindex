@@ -38,7 +38,9 @@ cat(
 
 > Code is still in development
 
-Code was originally developed by:  **Casper W. Berg** (@casperwberg)
+Code was originally developed by: **Casper W. Berg** (@casperwberg)
+
+> Berg et al. (2014): "Evaluation of alternative age-based methods for estimating relative abundance from survey data in relation to assessment models", Fisheries Research 151(2014) 91-99.
 
 And then modified and adapted for the AFSC by:
 
@@ -67,7 +69,7 @@ remotes::install_github("emilymarkowitz-noaa/surveyIndex")
 
 ## Usage
 
-see example for the function getSurveyIdx (write ?getSurveyIdx in R)
+See example for the function getSurveyIdx (write ?getSurveyIdx in R)
 
 ## Metadata
 
