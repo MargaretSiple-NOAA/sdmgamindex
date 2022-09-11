@@ -92,7 +92,7 @@ d<-subset(dAll, Species=="Pollachius virens",Quarter==1,HaulVal=="V",StdSpecRecC
 dAll<-NULL; gc(); ## lose dAll because it takes up a lot of memory
 d<-addSpectrum(d,by=1)
 ## get idea about number of age groups to include
-agetab<-xtabs(NoAtALK~Year+Age,data=d[[1]])
+agetab<-stats::xtabs(NoAtALK~Year+Age,data=d[[1]])
 agetab.df<-as.data.frame(agetab)
 ages<-1:8
 ## require at least 1 aged individual in each year
@@ -142,7 +142,7 @@ plot_surveyidx(SIQ1,dd,cols=ages,alt.idx=NULL,grid[[3]],par=list(mfrow=c(3,3)),
 
 ## Calculate internal concistency and export to file
 consistency_internal(SIQ1$idx)
-export_si(SIQ1$idx,ages=ages,years=levels(dd$Year),toy=mean(dd$timeOfYear),file="out.dat",
+export_surveyidx(SIQ1$idx,ages=ages,years=levels(dd$Year),toy=mean(dd$timeOfYear),file="out.dat",
          nam="Survey index demo example")
 }
 }

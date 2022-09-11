@@ -32,7 +32,7 @@ for (p in PKG) {
 cat(
   # badge_devel("surveyIndex/gap_public_data", "blue"),
   # badge_lifecycle("maturing", "blue"),
-  badge_last_commit("surveyIndex/gap_public_data")
+  badge_last_commit("EmilyMarkowitz-NOAA/surveyIndex")
 )
 ```
 

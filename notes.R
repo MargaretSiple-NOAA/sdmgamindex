@@ -40,11 +40,11 @@ pkgdown::build_site(pkg = here::here())
 # usethis::use_github_action("pkgdown")
 
 # Save Package tar.gz
-date0 <- "0.1.0"
-file.remove(paste0(dirname(here::here()), "/surveyIndex_",date0,".tar.gz"))
-file.remove(paste0((here::here()), "/surveyIndex_",date0,".tar.gz"))
+version0 <- "0.1.0"
+file.remove(paste0(dirname(here::here()), "/surveyIndex_",version0,".tar.gz"))
+file.remove(paste0((here::here()), "/surveyIndex_",version0,".tar.gz"))
 devtools::build()
-file.copy(from = paste0(dirname(here::here()), "/surveyIndex_",date0,".tar.gz"),
-          to = paste0(here::here(), "/surveyIndex_",date0,".tar.gz"),
+file.copy(from = paste0(dirname(here::here()), "/surveyIndex_",version0,".tar.gz"),
+          to = paste0(here::here(), "/surveyIndex_",version0,".tar.gz"),
           overwrite = TRUE)
 
