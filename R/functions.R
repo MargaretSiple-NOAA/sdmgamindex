@@ -13,7 +13,7 @@
 #' @param myids haul.ids for grid
 #' @param kvecP vector with spatial smoother max. basis dimension for each age group, strictly positive part of model
 #' @param kvecZ vector with spatial smoother max. basis dimension for each age group, presence/absence part of model (ignored for Tweedie models)
-#' @param gamma model degress of freedom inflation factor (see 'gamma' argument to gam() )
+#' @param gamma model degress of freedom inflation factor (see 'gamma' argument to mgcv::gam() )
 #' @param cutOff treat observations below this value as zero
 #' @param fam distribution, either "Gamma","LogNormal", or "Tweedie".
 #' @param useBIC use BIC for smoothness selection (overrides 'gamma' argument)
@@ -26,7 +26,7 @@
 #' @param knotsP optional list of knots to gam, strictly positive repsonses
 #' @param knotsZ optional list of knots to gam, presence/absence
 #' @param predfix optional named list of extra variables (besides Gear, HaulDur, Ship, and TimeShotHour),  that should be fixed during prediction step (standardized)
-#' @param linkZ link function for the binomial part of the model, default: "logit" (not used for Tweedie models).
+#' @param linkZ link function for the grDevices::dev.new part of the model, default: "logit" (not used for Tweedie models).
 #' @param CIlevel Confidence interval level, defaults to 0.95.
 #' @param ... Optional extra arguments to "gam"
 #' @return A survey index (list)
@@ -54,7 +54,8 @@
 #' ## Convert to numbers-at-age
 #' ###############################
 #' d.ysplit <- split(d, d$Year)
-#' ALK<-mclapply(d.ysplit,fitALK,minAge=min(ages),maxAge=max(ages),autoChooseK=TRUE,useBIC=TRUE,
+#' ALK<-mclapply(d.ysplit,fitALK,minAge=min(ages),maxAge=max(ages),
+#'                autoChooseK=TRUE,useBIC=TRUE,
 #'                varCof=FALSE,maxK=50,mc.cores=mc.cores)
 #' Nage<-mclapply(ALK,predict,mc.cores=mc.cores)
 #' for(i in 1:length(ALK)) d.ysplit[[i]]$Nage=Nage[[i]];
@@ -67,27 +68,29 @@
 #' ## These are set relatively low here to speed up the example
 #' kvP <- c(50,50,50,40,30,rep(10,length(ages)-5))
 #' kvZ <- kvP / 2;
-#' mP <- rep("Year+s(lon,lat,k=kvecP[a],bs='ts')+s(Depth,bs='ts',k=6)+offset(log(HaulDur))",length(ages)  );
-#' mZ <- rep("Year+s(lon,lat,k=kvecZ[a],bs='ts')+s(Depth,bs='ts',k=6)+offset(log(HaulDur))",length(ages)  );
+#' mP <- rep("Year+s(lon,lat,k=kvecP[a],bs='ts')+s(Depth,bs='ts',k=6)+
+#'          offset(log(HaulDur))",length(ages)  );
+#' mZ <- rep("Year+s(lon,lat,k=kvecZ[a],bs='ts')+s(Depth,bs='ts',k=6)+
+#'          offset(log(HaulDur))",length(ages)  );
 #'
 #' SIQ1 <- get_surveyidx(dd,ages=ages,myids=grid[[3]],cutOff=0.1,kvecP=kvP,kvecZ=kvZ,
 #'          modelZ=mZ,modelP=mP,mc.cores=mc.cores) ## if errors are encountered, debug with mc.cores=1
 #'
-#' strat.mean<-get_surveyidxStratMean(dd,ages)
+#' strat.mean<-get_surveyidx_stratmean(dd,ages)
 #'
 #' ## plot indices, distribution map, and estimated depth effects
 #' plot_surveyidx(SIQ1,dd,cols=ages,alt.idx=strat.mean,grid[[3]],par=list(mfrow=c(3,3)),legend=FALSE,
 #'                select="index",plotByAge=FALSE)
 #'
 #' plot_surveyidx(SIQ1,dd,cols=ages,alt.idx=NULL,grid[[3]],par=list(mfrow=c(3,3)),legend=FALSE,
-#'                 colors=rev(heat.colors(8)),select="map",plotByAge=FALSE)
+#'                 colors=rev(grDevices::heat.colors(8)),select="map",plotByAge=FALSE)
 #'
 #' plot_surveyidx(SIQ1,dd,cols=ages,alt.idx=NULL,grid[[3]],par=list(mfrow=c(3,3)),
 #'                 legend=FALSE,select="2",plotByAge=FALSE)
 #'
 #' ## Calculate internal concistency and export to file
-#' internalCons(SIQ1$idx)
-#' exportSI(SIQ1$idx,ages=ages,years=levels(dd$Year),toy=mean(dd$timeOfYear),file="out.dat",
+#' consistency_internal(SIQ1$idx)
+#' export_si(SIQ1$idx,ages=ages,years=levels(dd$Year),toy=mean(dd$timeOfYear),file="out.dat",
 #'          nam="Survey index demo example")
 #' }
 #' @importFrom MASS mvrnorm
@@ -106,8 +109,8 @@ get_surveyidx <- function(
     mc.cores=1,
     method="ML",
     predD=NULL,
-    modelZ=rep("Year+s(lon,lat,k=kvecZ[a],bs='ts')+s(Ship,bs='re',by=dum)+s(Depth,bs='ts')+s(TimeShotHour,bs='cc')",length(ages)  ),
-    modelP=rep("Year+s(lon,lat,k=kvecP[a],bs='ts')+s(Ship,bs='re',by=dum)+s(Depth,bs='ts')+s(TimeShotHour,bs='cc')",length(ages)  ),
+    modelZ=NULL,
+    modelP=NULL,
     knotsP=NULL,
     knotsZ=NULL,
     predfix=NULL,
@@ -115,30 +118,36 @@ get_surveyidx <- function(
     CIlevel=0.95,
     ... ){
 
-  if(is.null(x$Nage)) stop("No age matrix 'Nage' found.");
-  if(is.null(colnames(x$Nage))) stop("No colnames found on 'Nage' matrix.");
-  if(length(modelP)<length(ages)) stop(" length(modelP) < length(ages)");
-  if(length(kvecP)<length(ages)) stop(" length(kvecP) < length(ages)");
+  if (is.null(modelZ) & is.null(modelP)) {
+    modelZ <- modelP <- rep("Year+s(lon,lat,k=kvecZ[a],bs='ts')+s(Ship,bs='re',by=dum)+s(Depth,bs='ts')+s(TimeShotHour,bs='cc')",
+                            length(ages)  )
+  }
+
+  if(is.null(x$Nage)) {stop("No age matrix 'Nage' found.")}
+  if(is.null(colnames(x$Nage))) {stop("No colnames found on 'Nage' matrix.")}
+  if(length(modelP)<length(ages)) {stop(" length(modelP) < length(ages)")}
+  if(length(kvecP)<length(ages)) {stop(" length(kvecP) < length(ages)")}
   if(fam[1]!="Tweedie"){
-    if(length(modelZ)<length(ages)) stop(" length(modelZ) < length(ages)");
-    if(length(kvecZ)<length(ages)) stop(" length(kvecZ) < length(ages)");
+    if(length(modelZ)<length(ages)) {stop(" length(modelZ) < length(ages)")}
+    if(length(kvecZ)<length(ages)) {stop(" length(kvecZ) < length(ages)")}
   }
   ## check for valid family names
   stopifnot(fam[1] %in% c("Gamma","LogNormal","Tweedie","negbin"))
   if(length(fam)<length(ages)) { famVec = rep(fam[1],length(ages)) } else famVec=fam;
 
   dataAges <- as.numeric(gsub("[+]","",colnames(x$Nage)))
-  if(!all(ages%in%dataAges)) stop(paste0("age(s) ",setdiff(ages,dataAges)," not found in 'Nage' matrix"));
-  x[[1]]$Year=as.factor(x[[1]]$Year);
-  x[[2]]$Year=as.factor(x[[2]]$Year);
-  pModels=list()
-  zModels=list()
-  gPreds=list() ##last data year's predictions
-  gPreds2=list() ## all years predictions
-  gPreds2.CV=list() ## coefficient of variation of previous
-  allobs=list() ## response vector (zeroes and positive)
-  resid=list() ## residuals
-  predDc = predD ##copy of predD
+  if(!all(ages%in%dataAges)) {
+    stop(paste0("age(s) ",setdiff(ages,dataAges)," not found in 'Nage' matrix"))
+  }
+  x[[1]]$Year <- as.factor(x[[1]]$Year)
+  x[[2]]$Year <- as.factor(x[[2]]$Year)
+  pModels <- zModels <-
+    gPreds <-  ##last data year's predictions
+    gPreds2 <-  ## all years predictions
+    gPreds2.CV <- ## coefficient of variation of previous
+    allobs <- ## response vector (zeroes and positive)
+    resid <- list() ## residuals
+  predDc <- predD ##copy of predD
 
   if (exists(".Random.seed")) {
     oldseed <- get(".Random.seed", .GlobalEnv)
@@ -147,46 +156,54 @@ get_surveyidx <- function(
   }
   set.seed(314159265)
 
-  yearNum=as.numeric(as.character(x$Year));
-  yearRange=min(yearNum):max(yearNum);
+  yearNum <- as.numeric(as.character(x$Year))
+  yearRange <- min(yearNum):max(yearNum)
 
   ## Choose most frequent gear as reference gear
-  gearNames=names(xtabs(~Gear,data=x[[2]]))
-  myGear=names(xtabs(~Gear,data=x[[2]]))[which.max(xtabs(~Gear,data=x[[2]]))]
+  gearNames <- names(xtabs(~Gear,data=x[[2]]))
+  myGear <- names(xtabs(~Gear,data=x[[2]]))[which.max(xtabs(~Gear,data=x[[2]]))]
+
   if(!is.null(predfix$Gear)) {
-    myGear = predfix$Gear
+    myGear <- predfix$Gear
   }
 
-  resMat=matrix(NA,nrow=length(yearRange),ncol=length(ages));
-  upMat=resMat;
-  loMat=resMat;
-  do.one.a<-function(a){
+  resMat <- matrix(data = NA, nrow=length(yearRange), ncol=length(ages))
+  upMat <- loMat <- resMat
+
+  do_one_a <- function(a) {
     age = which(dataAges==ages[a])
-    ddd=x[[2]]; ddd$dum=1.0;
-    ddd$A1=ddd$Nage[,age]
-    gammaPos=gamma;
-    gammaZ=gamma;
+    ddd <- x[[2]]
+    ddd$dum <- 1.0
+    ddd$A1 <- ddd$Nage[,age]
+    gammaPos <- gamma
+    gammaZ <- gamma
 
     if(useBIC){
-      nZ=nrow(ddd);
-      nPos=nrow(subset(ddd,A1>cutOff));
-      gammaPos=log(nPos)/2;
-      gammaZ=log(nZ)/2;
-      cat("gammaPos: ",gammaPos," gammaZ: ",gammaZ,"\n");
+      nZ <- nrow(ddd)
+      nPos <- nrow(ddd[ddd$A1 > cutoff,]) # nrow(subset(ddd,A1>cutOff))
+      gammaPos <- log(nPos)/2
+      gammaZ <- log(nZ)/2
+      cat("gammaPos: ",gammaPos," gammaZ: ",gammaZ,"\n")
     }
-    pd = subset(ddd,A1>cutOff)
-    if(famVec[a]=="LogNormal"){
-      f.pos = as.formula( paste( "log(A1) ~",modelP[a]));
-      f.0 = as.formula( paste( "A1>",cutOff," ~",modelZ[a]));
+    pd <- ddd[ddd$A1>cutOff,] # subset(ddd,A1>cutOff)
+    if (famVec[a]=="LogNormal"){
+      f.pos <- stats::as.formula( paste( "log(A1) ~",modelP[a]));
+      f.0 <- stats::as.formula( paste( "A1>",cutOff," ~",modelZ[a]));
 
-      print(system.time(m.pos<-DATRAS:::tryCatch.W.E(gam(f.pos,data=subset(ddd,A1>cutOff),gamma=gammaPos,method=method,knots=knotsP,na.action=na.fail,...))$value));
+      print(system.time(m_pos<-DATRAS:::tryCatch.W.E(mgcv::gam(f.pos,
+                                                               data = ddd[ddd$A1 > cutoff,], #subset(ddd,A1>cutOff),
+                                                               gamma = gammaPos,
+                                                               method = method,
+                                                               knots = knotsP,
+                                                               na.action = stats::na.fail,
+                                                               ...))$value));
 
-      if(class(m.pos)[2] == "error") {
-        print(m.pos)
+      if(class(m_pos)[2] == "error") {
+        print(m_pos)
         stop("Error occured for age ", a, " in the positive part of the model\n", "Try reducing the number of age groups or decrease the basis dimension of the smooths, k\n")
       }
 
-      print(system.time(m0<-DATRAS:::tryCatch.W.E(gam(f.0,gamma=gammaZ,data=ddd,family=binomial(link=linkZ),method=method,knots=knotsZ,na.action=na.fail,...))$value));
+      print(system.time(m0<-DATRAS:::tryCatch.W.E(mgcv::gam(f.0,gamma=gammaZ,data=ddd,family=stats::binomial(link=linkZ),method=method,knots=knotsZ,na.action= stats::na.fail,...))$value));
 
       if(class(m0)[2] == "error") {
         print(m0)
@@ -194,17 +211,24 @@ get_surveyidx <- function(
       }
 
     } else if(famVec[a]=="Gamma"){
-      f.pos = as.formula( paste( "A1 ~",modelP[a]));
-      f.0 = as.formula( paste( "A1>",cutOff," ~",modelZ[a]));
+      f.pos <- stats::as.formula( paste( "A1 ~",modelP[a]));
+      f.0 <- stats::as.formula( paste( "A1>",cutOff," ~",modelZ[a]));
 
-      print(system.time(m.pos<-DATRAS:::tryCatch.W.E(gam(f.pos,data=subset(ddd,A1>cutOff),family=Gamma(link="log"),gamma=gammaPos,method=method,knots=knotsP,na.action=na.fail,...))$value));
+      print(system.time(m_pos<-DATRAS:::tryCatch.W.E(mgcv::gam(formula = f.pos,
+                                                               data = ddd[ddd$A1>cutoff,], #subset(ddd,A1>cutOff),
+                                                               family = stats::Gamma(link="log"),
+                                                               gamma = gammaPos,
+                                                               method = method,
+                                                               knots = knotsP,
+                                                               na.action = stats::na.fail,
+                                                               ...))$value));
 
-      if(class(m.pos)[2] == "error") {
-        print(m.pos)
+      if(class(m_pos)[2] == "error") {
+        print(m_pos)
         stop("Error occured for age ", a, " in the positive part of the model\n", "Try reducing the number of age groups or decrease the basis dimension of the smooths, k\n")
       }
 
-      print(system.time(m0<-DATRAS:::tryCatch.W.E(gam(f.0,gamma=gammaZ,data=ddd,family=binomial(link=linkZ),method=method,knots=knotsZ,na.action=na.fail,...))$value));
+      print(system.time(m0<-DATRAS:::tryCatch.W.E(mgcv::gam(f.0,gamma=gammaZ,data=ddd,family=stats::binomial(link=linkZ),method=method,knots=knotsZ,na.action=stats::na.fail,...))$value));
 
       if(class(m0)[2] == "error") {
         print(m0)
@@ -212,172 +236,218 @@ get_surveyidx <- function(
       }
     } else if(famVec[a]=="Tweedie"){
       ddd$A1[ ddd$A1<cutOff ] = 0
-      pd = ddd
-      f.pos = as.formula( paste( "A1 ~",modelP[a]));
-      print(system.time(m.pos<-DATRAS:::tryCatch.W.E(gam(f.pos,data=ddd,family=tw,gamma=gammaPos,method=method,knots=knotsP,na.action=na.fail,...))$value));
-      if(class(m.pos)[2] == "error") {
-        print(m.pos)
+      pd <- ddd
+      f.pos <- stats::as.formula( paste( "A1 ~",modelP[a]));
+      print(system.time(m_pos<-DATRAS:::tryCatch.W.E(mgcv::gam(f.pos,data=ddd,family = mgcv::tw,gamma=gammaPos,method=method,knots=knotsP,na.action=stats::na.fail,...))$value));
+      if(class(m_pos)[2] == "error") {
+        print(m_pos)
         stop("Error occured for age ", a, ".\n", "Try reducing the number of age groups or decrease the basis dimension of the smooths, k\n")
       }
-      m0=NULL;
+      m0 <- NULL
     } else if(famVec[a]=="negbin"){
-      pd = ddd
-      f.pos = as.formula( paste( "A1 ~",modelP[a]));
-      print(system.time(m.pos<-DATRAS:::tryCatch.W.E(gam(f.pos,data=ddd,family=nb,gamma=gammaPos,method=method,knots=knotsP,na.action=na.fail,...))$value));
-      if(class(m.pos)[2] == "error") {
-        print(m.pos)
+      pd <- ddd
+      f.pos <- stats::as.formula( paste( "A1 ~",modelP[a]));
+      print(system.time(m_pos<-DATRAS:::tryCatch.W.E(mgcv::gam(f.pos,data=ddd,family = nb, gamma=gammaPos,method=method,knots=knotsP,na.action=stats::na.fail,...))$value));
+      if(class(m_pos)[2] == "error") {
+        print(m_pos)
         stop("Error occured for age ", a, ".\n", "Try reducing the number of age groups or decrease the basis dimension of the smooths, k\n")
       }
       m0=NULL;
     }
     ## Calculate total log-likelihood
     if(famVec[a]=="Tweedie" || famVec[a]=="negbin"){
-      totll = logLik(m.pos)[1]
+      totll <- stats::logLik(m_pos)[1]
     } else {
-      p0p =(1-predict(m0,type="response"))
-      ppos=p0p[ddd$A1>cutOff]
-      p0m1=p0p[ddd$A1<=cutOff]
-      if(famVec[a]=="Gamma")  totll=sum(log(p0m1))+sum(log(1-ppos))+logLik(m.pos)[1];
+      p0p <- (1-stats::predict(m0,type="response"))
+      ppos <- p0p[ddd$A1>cutOff]
+      p0m1 <- p0p[ddd$A1<=cutOff]
+      if(famVec[a]=="Gamma")  {
+        totll <- sum(log(p0m1))+sum(log(1-ppos))+stats::logLik (m_pos)[1]
+      }
       ## if logNormal model, we must transform til log-likelihood to be able to use AIC
-      ## L(y) = prod( dnorm( log y_i, mu_i, sigma^2) * ( 1 / y_i ) ) => logLik(y) = sum( log[dnorm(log y_i, mu_i, sigma^2)]  - log( y_i ) )
-      if(famVec[a]=="LogNormal") totll=sum(log(p0m1))+ sum(log(1-ppos)) + logLik(m.pos)[1] - sum(m.pos$y);
+      ## L(y) = prod( dnorm( log y_i, mu_i, sigma^2) * ( 1 / y_i ) ) => stats::logLik (y) = sum( log[dnorm(log y_i, mu_i, sigma^2)]  - log( y_i ) )
+      if (famVec[a]=="LogNormal") {
+        totll <- sum(log(p0m1))+ sum(log(1-ppos)) + stats::logLik (m_pos)[1] - sum(m_pos$y)
+      }
     }
 
-    if(is.null(predD)) predD=subset(ddd,haul.id %in% myids);
-    res=numeric(length(yearRange));
-    lores=res;
-    upres=res;
-    gp2=list()
-    gp2.cv=list()
+    if(is.null(predD)) {
+      predD <- ddd[ddd$haul.id %in% myids,] # = subset(ddd,haul.id %in% myids)
+    }
+    res <- numeric(length(yearRange))
+    lores <- upres <- res
+    gp2 <- gp2_cv <- list()
 
-    for(y in levels(ddd$Year)){
+    for(y in levels(ddd$Year)) {
       ## take care of years with all zeroes
-      if(!any(ddd$A1[ddd$Year==y]>cutOff)){
-        res[which(as.character(yearRange)==y)]=0;
-        upres[which(as.character(yearRange)==y)] = 0;
-        lores[which(as.character(yearRange)==y)] = 0;
+      if (!any(ddd$A1[ddd$Year==y]>cutOff)){
+        res[which(as.character(yearRange)==y)] <-
+          upres[which(as.character(yearRange)==y)] <-
+          lores[which(as.character(yearRange)==y)] <- 0
         next;
       }
-      if(is.list(predDc) && !class(predDc)%in%c("data.frame","DATRASraw")) predD = predDc[[as.character(y)]]
-      if(is.null(predD)) stop(paste("Year",y," not found in predD"))
+      if(is.list(predDc) && !class(predDc)%in%c("data.frame","DATRASraw")) {
+        predD <- predDc[[as.character(y)]]
+      }
+      if(is.null(predD)) { stop(paste("Year",y," not found in predD")) }
       ## OBS: effects that should be removed should be included here
-      predD$Year=y; predD$dum=0;
-      predD$ctime=as.numeric(as.character(y));
-      predD$TimeShotHour=mean(ddd$TimeShotHour)
-      predD$Ship=names(which.max(summary(ddd$Ship)))
-      predD$timeOfYear=mean(ddd$timeOfYear);
-      predD$HaulDur=30.0
-      predD$Gear=myGear;
-      if(!is.null(predfix)){ ##optional extra variables for standardization
+      predD$Year <- y
+      predD$dum <- 0
+      predD$ctime <- as.numeric(as.character(y))
+      predD$TimeShotHour <- mean(ddd$TimeShotHour)
+      predD$Ship <- names(which.max(summary(ddd$Ship)))
+      predD$timeOfYear <- mean(ddd$timeOfYear)
+      predD$HaulDur <- 30.0
+      predD$Gear <- myGear
+
+      if(!is.null(predfix)) { ##optional extra variables for standardization
         stopifnot(is.list(predfix))
-        for(n in names(predfix)){
-          predD[,n] = predfix[[n]]
+        for(n in names(predfix)) {
+          predD[,n] <- predfix[[n]]
         }
       }
       p.1 <- p.0 <- NULL
       try({
-        Xp.1=predict(m.pos,newdata=predD,type="lpmatrix");
-        OS.pos = numeric(nrow(predD));
-        terms.pos=terms(m.pos)
-        if(!is.null(m.pos$offset)){
-          off.num.pos <- attr(terms.pos, "offset")
-          for (i in off.num.pos) OS.pos <- OS.pos + eval(attr(terms.pos,
-                                                              "variables")[[i + 1]], predD)
+        Xp.1 <- stats::predict(m_pos,newdata=predD,type="lpmatrix");
+        OS_pos <- numeric(nrow(predD));
+        terms_pos <- stats::terms(m_pos)
+        if (!is.null(m_pos$offset)) {
+          off.num.pos <- attr(terms_pos, "offset")
+          for (i in off.num.pos) {
+            OS_pos <- OS_pos + eval(attr(terms_pos, "variables")[[i + 1]], predD)
+          }
         }
-        p.1 =Xp.1%*%coef(m.pos)+OS.pos;
+        p.1 <- Xp.1 %*% stats::coef(m_pos)+OS_pos;
         if(!famVec[a] %in% c("Tweedie","negbin")){
-          Xp.0=predict(m0,newdata=predD,type="lpmatrix");
-          brp.0=coef(m0);
-          OS0 = numeric(nrow(predD))
-          terms.0=terms(m0)
+          Xp.0 <- stats::predict(m0,newdata=predD,type="lpmatrix");
+          brp_0 <- stats::coef(m0);
+          OS0 <- numeric(nrow(predD))
+          terms_0 <- stats::terms(m0)
           if(!is.null(m0$offset)){
-            off.num.0 <- attr(terms.0, "offset")
-            for (i in off.num.0) OS0 <- OS0 + eval(attr(terms.0,
+            off.num.0 <- attr(terms_0, "offset")
+            for (i in off.num.0) OS0 <- OS0 + eval(attr(terms_0,
                                                         "variables")[[i + 1]], predD)
           }
-          p.0 = m0$family$linkinv(Xp.0%*%brp.0+OS0);
+          p.0 <- m0$family$linkinv(Xp.0%*%brp_0+OS0);
         }
-      });
+      })
+
       ## take care of failing predictions
-      if(!is.numeric(p.1) | (!famVec[a] %in% c("Tweedie","negbin") && !is.numeric(p.0))) {
-        res[which(as.character(yearRange)==y)]=0;
-        upres[which(as.character(yearRange)==y)] = 0;
-        lores[which(as.character(yearRange)==y)] = 0;
+      if(!is.numeric(p.1) |
+         (!famVec[a] %in% c("Tweedie","negbin") &&
+          !is.numeric(p.0))) {
+        res[which(as.character(yearRange)==y)] <-
+          upres[which(as.character(yearRange)==y)] <-
+          lores[which(as.character(yearRange)==y)] <- 0
         next;
       }
-      sig2=m.pos$sig2;
+      sig2 <- m_pos$sig2
 
-      if(famVec[a]=="Gamma") { res[which(as.character(yearRange)==y)] = sum(p.0*exp(p.1)); gPred=p.0*exp(p.1) }
-      if(famVec[a]=="LogNormal")  { res[which(as.character(yearRange)==y)] = sum(p.0*exp(p.1+sig2/2)); gPred=p.0*exp(p.1+sig2/2) }
-      if(famVec[a] %in% c("Tweedie","negbin"))  { res[which(as.character(yearRange)==y)] = sum(exp(p.1)); gPred=exp(p.1) }
-      gp2[[y]]=gPred;
-      if(nBoot>10){
-        brp.1=mvrnorm(n=nBoot,coef(m.pos),m.pos$Vp);
+      if (famVec[a]=="Gamma") {
+        res[which(as.character(yearRange)==y)] <- sum(p.0*exp(p.1)); gPred=p.0*exp(p.1)
+      }
+      if(famVec[a]=="LogNormal")  {
+        res[which(as.character(yearRange)==y)] <- sum(p.0*exp(p.1+sig2/2)); gPred=p.0*exp(p.1+sig2/2)
+        }
+      if(famVec[a] %in% c("Tweedie","negbin")) {
+        res[which(as.character(yearRange)==y)] <- sum(exp(p.1)); gPred=exp(p.1)
+      }
+
+      gp2[[y]] <- gPred;
+      if (nBoot>10) {
+        brp_1 <- MASS::mvrnorm(n=nBoot,stats::coef(m_pos),m_pos$Vp);
         if(!famVec[a] %in% c("Tweedie","negbin")){
-          brp.0=mvrnorm(n=nBoot,coef(m0),m0$Vp);
+          brp_0 <- MASS::mvrnorm(n=nBoot,stats::coef(m0),m0$Vp);
           OS0 = matrix(0,nrow(predD),nBoot);
-          terms.0=terms(m0)
-          if(!is.null(m0$offset)){
-            off.num.0 <- attr(terms.0, "offset")
-            for (i in off.num.0) OS0 <- OS0 + eval(attr(terms.0,
-                                                        "variables")[[i + 1]], predD)
+          terms_0 <- stats::terms(m0)
+          if (!is.null(m0$offset)) {
+            off.num.0 <- attr(terms_0, "offset")
+            for (i in off.num.0) {
+              OS0 <- OS0 + eval(attr(terms_0, "variables")[[i + 1]], predD)
+            }
           }
-          rep0=m0$family$linkinv(Xp.0%*%t(brp.0)+OS0);
+          rep0=m0$family$linkinv(Xp.0%*%t(brp_0)+OS0)
         }
-        OS.pos = matrix(0,nrow(predD),nBoot);
-        terms.pos=terms(m.pos)
-        if(!is.null(m.pos$offset)){
-          off.num.pos <- attr(terms.pos, "offset")
-          for (i in off.num.pos) OS.pos <- OS.pos + eval(attr(terms.pos,
-                                                              "variables")[[i + 1]], predD)
+        OS_pos <- matrix(0,nrow(predD),nBoot);
+        terms_pos <- stats::terms(m_pos)
+
+        if(!is.null(m_pos$offset)) {
+          off.num.pos <- attr(terms_pos, "offset")
+          for (i in off.num.pos) {
+            OS_pos <- OS_pos + eval(attr(terms_pos, "variables")[[i + 1]], predD)
+          }
         }
-        if(famVec[a]=="LogNormal"){
-          rep1=exp(Xp.1%*%t(brp.1)+sig2/2+OS.pos);
+        if (famVec[a]=="LogNormal") {
+          rep1 <- exp(Xp.1%*%t(brp_1)+sig2/2+OS_pos)
         } else {
-          rep1=exp(Xp.1%*%t(brp.1)+OS.pos);
+          rep1 <- exp(Xp.1%*%t(brp_1)+OS_pos)
         }
 
-        if(!famVec[a] %in% c("Tweedie","negbin")){
-          idxSamp = colSums(rep0*rep1);
-          gp.sd = apply(rep0*rep1,1,sd)
-          gp2.cv[[y]] = gp.sd / gPred
+        if (!famVec[a] %in% c("Tweedie","negbin")) {
+          idxSamp <- base::colSums(rep0*rep1);
+          gp_sd <- apply(rep0*rep1, 1, stats::sd)
         } else {
-          idxSamp = colSums(rep1);
-          gp.sd = apply(rep1,1,sd)
-          gp2.cv[[y]] = gp.sd / gPred
+          idxSamp <- base::colSums(rep1);
+          gp_sd <- apply(rep1, 1, stats::sd)
         }
-        halpha = (1-CIlevel)/2
-        upres[which(as.character(yearRange)==y)] = quantile(idxSamp,1-halpha,na.rm=TRUE);
-        lores[which(as.character(yearRange)==y)] = quantile(idxSamp,halpha,na.rm=TRUE);
+        gp2_cv[[y]] <- (gp_sd / gPred)
+
+        halpha <- (1-CIlevel)/2
+        upres[which(as.character(yearRange)==y)] <- stats::quantile(idxSamp,1-halpha,na.rm=TRUE)
+        lores[which(as.character(yearRange)==y)] <- stats::quantile(idxSamp,halpha,na.rm=TRUE)
       }
     } ## rof years
-    list(res=res,m.pos=m.pos,m0=m0,lo=lores,up=upres,gp=gPred,ll=totll,pd=pd,gp2=gp2,gp2.cv=gp2.cv);
+    list(res=res,m_pos=m_pos,m0=m0,lo=lores,up=upres,gp=gPred,ll=totll,pd=pd,gp2=gp2,gp2_cv=gp2_cv)
   }## end do.one
   noAges=length(ages);
-  rr=parallel::mclapply(1:noAges,do.one.a,mc.cores=mc.cores);
+  rr=parallel::mclapply(1:noAges,do_one_a,mc.cores=mc.cores);
   logl=0;
   for(a in 1:noAges){
     resMat[,a]=rr[[a]]$res;
     zModels[[a]]=rr[[a]]$m0;
-    pModels[[a]]=rr[[a]]$m.pos;
+    pModels[[a]]=rr[[a]]$m_pos;
     loMat[,a]=rr[[a]]$lo;
     upMat[,a]=rr[[a]]$up;
     gPreds[[a]]=rr[[a]]$gp;
     logl=logl+rr[[a]]$ll
     gPreds2[[a]]=rr[[a]]$gp2
-    gPreds2.CV[[a]]=rr[[a]]$gp2.cv
+    gPreds2.CV[[a]]=rr[[a]]$gp2_cv
     allobs[[a]]=x[[2]]$Nage[,a]
   }
-  getEdf<-function(m) sum(m$edf)
-  totEdf=sum( unlist( lapply(zModels,getEdf))) + sum( unlist( lapply(pModels,getEdf)));
-  rownames(resMat)<-yearRange
-  colnames(resMat)<-ages
-  out <- list(idx=resMat,zModels=zModels,pModels=pModels,lo=loMat,up=upMat,gPreds=gPreds,logLik=logl,edfs=totEdf,gPreds2=gPreds2,gPreds2.CV = gPreds2.CV, family=famVec, cutOff=cutOff, dataAges=dataAges, yearNum=yearNum, refGear=myGear, predfix = predfix, knotsP=knotsP, knotsZ=knotsZ, allobs=allobs,CIlevel=CIlevel);
+  getEdf <-function(m) {sum(m$edf)}
+  totEdf <- sum(unlist(lapply(zModels,getEdf))) + sum( unlist( lapply(pModels,getEdf)))
+  rownames(resMat) <- yearRange
+  colnames(resMat) <- ages
+
+  out <- list(idx = resMat,
+              zModels = zModels,
+              pModels = pModels,
+              lo = loMat,
+              up = upMat,
+              gPreds = gPreds,
+              logLik  = logl,
+              edfs = totEdf,
+              gPreds2 = gPreds2,
+              gPreds2.CV  =  gPreds2.CV,
+              family = famVec,
+              cutOff = cutOff,
+              dataAges = dataAges,
+              yearNum = yearNum,
+              refGear = myGear,
+              predfix  =  predfix,
+              knotsP = knotsP,
+              knotsZ = knotsZ,
+              allobs = allobs,
+              CIlevel = CIlevel)
+
   class(out) <- "surveyIdx"
   set.seed(314159265) ## reset seed here (in case multicore option is used)
-  for(a in 1:noAges) resid[[a]] = residuals(out,a)
-  out$residuals = resid
-  out
+  for(a in 1:noAges) {
+    resid[[a]] = stats::residuals(out,a)
+  }
+  out$residuals <- resid
+
+  return(out)
 }
 
 
@@ -395,40 +465,50 @@ get_surveyidx <- function(
 #' @return list of estimates + ci bounds for each age group.
 #' @importFrom MASS mvrnorm
 #' @export
-get_effect <-
-  function(x,dat,parName="Gear",cutOff,nboot=1000,pOnly=FALSE){
-    noAges=length(x$pModels);
+get_effect <- function(
+    x,
+    dat,
+    parName="Gear",
+    cutOff,
+    nboot=1000,
+    pOnly=FALSE){
 
+    noAges <- length(x$pModels)
     res=list()
+
     for(a in 1:noAges){
-      cat("Age ",a,"\n");
-      shipSelP = grep(parName,names(coef(x$pModels[[a]])))
-      shipSelZ = grep(parName,names(coef(x$zModels[[a]])))
 
-      dd=subset(dat,Nage[,a]>cutOff)
-      zNam=levels(dat$Ship)
-      pNam=levels(dd$Ship)
-      dif=setdiff(zNam,pNam);
-      remo = which(zNam %in% dif)
-      if(length(remo)>0) shipSelZ = shipSelZ[-remo];
+      cat("Age ",a,"\n")
+      shipSelP <- grep(parName,names(stats::coef(x$pModels[[a]])))
+      shipSelZ <- grep(parName,names(stats::coef(x$zModels[[a]])))
 
-      if(length(shipSelP)!=length(shipSelZ)) { print("unequal number of ship effects"); }
+      dd <- dat[dat$Nage[,a]>cutOff] # subset(dat,Nage[,a]>cutOff)
+      zNam <- levels(dat$Ship)
+      pNam <- levels(dd$Ship)
+      dif <- setdiff(zNam, pNam)
+      remo <- which(zNam %in% dif)
+      if(length(remo)>0) {
+        shipSelZ <- shipSelZ[-remo]
+      }
 
+      if(length(shipSelP)!=length(shipSelZ)) { print("unequal number of ship effects") }
 
-      brp.1=mvrnorm(n=nboot,coef(x$pModels[[a]]),x$pModels[[a]]$Vp);
-      brp.0=mvrnorm(n=nboot,coef(x$zModels[[a]]),x$zModels[[a]]$Vp);
+      brp_1 <- MASS::mvrnorm(n=nboot,stats::coef(x$pModels[[a]]),x$pModels[[a]]$Vp)
+      brp_0 <- MASS::mvrnorm(n=nboot,stats::coef(x$zModels[[a]]),x$zModels[[a]]$Vp)
 
-      shipE = exp(brp.1[,shipSelP,drop=FALSE]);
-      if(!pOnly) shipE = shipE*x$zModels[[a]]$family$linkinv(brp.0[,shipSelZ,drop=FALSE])
+      shipE <- exp(brp_1[,shipSelP,drop=FALSE])
+      if (!pOnly) {
+        shipE <- shipE*x$zModels[[a]]$family$linkinv(brp_0[,shipSelZ,drop=FALSE])
+      }
 
-      upres  = apply(shipE,2, quantile,probs=0.975);
-      lores  = apply(shipE,2, quantile,probs=0.025);
+      upres <- apply(shipE,2, stats::quantile,probs=0.975)
+      lores <- apply(shipE,2, stats::quantile,probs=0.025)
 
-      tmp=cbind(colMeans(shipE),upres,lores);
+      tmp <- cbind(colMeans(shipE),upres,lores);
 
-      res[[a]]=tmp;
+      res[[a]] <- tmp
     }
-    return(res);
+    return(res)
   }
 
 
@@ -458,30 +538,29 @@ get_grid <-
     latf = cut(dd$lat, nLat, dig.lab=8)
     dd$StatRec2 = as.factor(paste(lonf,latf))
 
-    latbps=get_bps(levels(latf))
+    latbps <- get_bps(levels(latf))
     cat("Approximate grid size: ", mean( c(diff(lonbps[1,])*kmPerDegLon,diff(latbps[1,])*kmPerDegLat))," km\n");
 
-    uRecs=unique(as.character(dd$StatRec2))
-    N=length(uRecs);
-    mylon=numeric(N);
-    mylat=numeric(N);
-    myids=numeric(N);
-    k=0;
-    for(rec in uRecs)
-    {
-      k=k+1;
-      tmp=subset(dd[[2]],StatRec2==rec);
-      mlon=mean(tmp$lon);
-      mlat=mean(tmp$lat);
-      dist=sqrt( (mlon-tmp$lon)^2+(mlat-tmp$lat)^2);
-      sel=which.min(dist);
-      mylon[k]=tmp$lon[sel];
-      mylat[k]=tmp$lat[sel];
-      myids[k]=as.character(tmp$haul.id[sel]);
+    uRecs <- unique(as.character(dd$StatRec2))
+    N <- length(uRecs)
+    mylon <- mylat <- myids=numeric(N)
+    k <- 0
+
+    for(rec in uRecs) {
+      k <- k+1
+      tmp <- dd[[2]][dd[[2]]$StatRec2 == rec, ] # subset(dd[[2]],StatRec2==rec)
+      mlon <- mean(tmp$lon)
+      mlat <- mean(tmp$lat)
+      dist <- sqrt( (mlon-tmp$lon)^2+(mlat-tmp$lat)^2)
+      sel <- which.min(dist)
+      mylon[k] <- tmp$lon[sel]
+      mylat[k] <- tmp$lat[sel]
+      myids[k] <- as.character(tmp$haul.id[sel])
     }
+
     ret <- list(mylon,mylat,myids,lonbps,latbps)
     class(ret) <- "surveyIndexGrid"
-    return(ret);
+    return(ret)
   }
 
 
@@ -526,20 +605,23 @@ redo_surveyidx <- function(
   resMat=matrix(NA,nrow=length(yearRange),ncol=length(ages));
   upMat=resMat;
   loMat=resMat;
-  do.one.a<-function(a){
+  do_one_a<-function(a){
     age = which(dataAges==ages[a])
     ddd=x[[2]]; ddd$dum=1.0;
     ddd$A1=ddd$Nage[,age]
-    m.pos = model$pModels[[a]]
+    m_pos = model$pModels[[a]]
     m0 = NULL
     if(!famVec[a] %in% c("Tweedie","negbin")) m0 = model$zModels[[a]]
-    if(is.null(predD)) predD=subset(ddd,haul.id %in% myids);
+    if(is.null(predD)) {
+      predD <- ddd[ddd$haul.id %in% myids,] #=subset(ddd,haul.id %in% myids)
+    };
     res=numeric(length(yearRange));
     lores=res;
     upres=res;
     gp2=list()
-    gp2.cv=list()
-    do.one.y<-function(y){
+    gp2_cv=list()
+
+    do_one_y<-function(y){
 
       cat("Doing year ",y,"\n")
 
@@ -548,17 +630,19 @@ redo_surveyidx <- function(
 
       ## take care of years with all zeroes
       if(!any(ddd$A1[ddd$Year==y]>cutOff)){
-        return(list(res=0,upres=0,lores=0,gp2=NULL,gp2.cv=NULL))
+        return(list(res=0,upres=0,lores=0,gp2=NULL,gp2_cv=NULL))
       }
 
       ## OBS: effects that should be removed should be included here
-      predD$Year=y; predD$dum=0;
+      predD$Year=y
+      predD$dum=0
       predD$ctime=as.numeric(as.character(y));
       predD$TimeShotHour=mean(ddd$TimeShotHour)
       predD$Ship=names(which.max(summary(ddd$Ship)))
       predD$timeOfYear=mean(ddd$timeOfYear);
       predD$HaulDur=30.0
-      predD$Gear=myGear;
+      predD$Gear=myGear
+
       if(!is.null(predfix)){ ##optional extra variables for standardization
         stopifnot(is.list(predfix))
         for(n in names(predfix)){
@@ -567,94 +651,96 @@ redo_surveyidx <- function(
       }
       p.1 <- p.0 <- NULL
       try({
-        Xp.1=predict(m.pos,newdata=predD,type="lpmatrix");
-        OS.pos = numeric(nrow(predD));
-        terms.pos=terms(m.pos)
-        if(!is.null(m.pos$offset)){
-          off.num.pos <- attr(terms.pos, "offset")
-          for (i in off.num.pos) OS.pos <- OS.pos + eval(attr(terms.pos,
+        Xp.1 = stats::predict(m_pos,newdata=predD,type="lpmatrix");
+        OS_pos = numeric(nrow(predD));
+        terms_pos = stats::terms(m_pos)
+        if(!is.null(m_pos$offset)){
+          off.num.pos <- attr(terms_pos, "offset")
+          for (i in off.num.pos) OS_pos <- OS_pos + eval(attr(terms_pos,
                                                               "variables")[[i + 1]], predD)
         }
-        p.1 =Xp.1%*%coef(m.pos)+OS.pos;
+        p.1 <- Xp.1 %*% stats::coef(m_pos)+OS_pos;
         if(!famVec[a] %in% c("Tweedie","negbin")){
-          Xp.0=predict(m0,newdata=predD,type="lpmatrix");
-          brp.0=coef(m0);
+          Xp.0 <- stats::predict(m0,newdata=predD,type="lpmatrix")
+          brp_0 <- stats::coef(m0)
           OS0 = numeric(nrow(predD))
-          terms.0=terms(m0)
+          terms_0 = stats::terms(m0)
           if(!is.null(m0$offset)){
-            off.num.0 <- attr(terms.0, "offset")
-            for (i in off.num.0) OS0 <- OS0 + eval(attr(terms.0,
+            off.num.0 <- attr(terms_0, "offset")
+            for (i in off.num.0) OS0 <- OS0 + eval(attr(terms_0,
                                                         "variables")[[i + 1]], predD)
           }
-          p.0 = m0$family$linkinv(Xp.0%*%brp.0+OS0);
+          p.0 <- m0$family$linkinv(Xp.0%*%brp_0+OS0);
         }
-      });
+      })
+
       ## take care of failing predictions
       if(!is.numeric(p.1) | (!famVec[a] %in% c("Tweedie","negbin") && !is.numeric(p.0))) {
-        return(list(res=0,upres=0,lores=0,gp2=NULL,gp2.cv=NULL))
+        return(list(res=0,upres=0,lores=0,gp2=NULL,gp2_cv=NULL))
       }
-      sig2=m.pos$sig2;
+
+      sig2=m_pos$sig2
       idx = NA
       if(famVec[a]=="Gamma") { idx <- sum(p.0*exp(p.1)); gPred=p.0*exp(p.1) }
       if(famVec[a]=="LogNormal")  { idx <- sum(p.0*exp(p.1+sig2/2)); gPred=p.0*exp(p.1+sig2/2) }
       if(famVec[a] %in% c("Tweedie","negbin"))  { idx <- sum(exp(p.1)); gPred=exp(p.1) }
 
       if(nBoot>10){
-        brp.1=mvrnorm(n=nBoot,coef(m.pos),m.pos$Vp);
+        brp_1 <- MASS::mvrnorm(n=nBoot,stats::coef(m_pos),m_pos$Vp);
         if(!famVec[a] %in% c("Tweedie","negbin")){
-          brp.0=mvrnorm(n=nBoot,coef(m0),m0$Vp);
+          brp_0 <- MASS::mvrnorm(n=nBoot,stats::coef(m0),m0$Vp);
           OS0 = matrix(0,nrow(predD),nBoot);
-          terms.0=terms(m0)
+          terms_0 = stats::terms(m0)
           if(!is.null(m0$offset)){
-            off.num.0 <- attr(terms.0, "offset")
+            off.num.0 <- attr(terms_0, "offset")
 
-            for (i in off.num.0) OS0 <- OS0 + eval(attr(terms.0,
+            for (i in off.num.0) OS0 <- OS0 + eval(attr(terms_0,
                                                         "variables")[[i + 1]], predD)
           }
-          rep0=m0$family$linkinv(Xp.0%*%t(brp.0)+OS0);
+          rep0=m0$family$linkinv(Xp.0%*%t(brp_0)+OS0);
         }
-        OS.pos = matrix(0,nrow(predD),nBoot);
-        terms.pos=terms(m.pos)
-        if(!is.null(m.pos$offset)){
-          off.num.pos <- attr(terms.pos, "offset")
+        OS_pos = matrix(0,nrow(predD),nBoot);
+        terms_pos = stats::terms(m_pos)
+        if(!is.null(m_pos$offset)){
+          off.num.pos <- attr(terms_pos, "offset")
 
-          for (i in off.num.pos) OS.pos <- OS.pos + eval(attr(terms.pos,
+          for (i in off.num.pos) OS_pos <- OS_pos + eval(attr(terms_pos,
                                                               "variables")[[i + 1]], predD)
         }
 
 
         if(famVec[a]=="LogNormal"){
-          rep1=exp(Xp.1%*%t(brp.1)+sig2/2+OS.pos);
+          rep1=exp(Xp.1%*%t(brp_1)+sig2/2+OS_pos);
         } else {
-          rep1=exp(Xp.1%*%t(brp.1)+OS.pos);
+          rep1=exp(Xp.1%*%t(brp_1)+OS_pos);
         }
 
         if(!famVec[a] %in% c("Tweedie","negbin")){
-          idxSamp = colSums(rep0*rep1);
-          gp.sd = apply(rep0*rep1,1,sd)
-          gp.cv = gp.sd / gPred
+          idxSamp = base::colSums(rep0*rep1);
+          gp_sd = apply(rep0*rep1, 1, stats::sd)
+          gp.cv = gp_sd / gPred
         } else {
-          idxSamp = colSums(rep1);
-          gp.sd = apply(rep1,1,sd)
-          gp.cv = gp.sd / gPred
+          idxSamp = base::colSums(rep1);
+          gp_sd = apply(rep1, 1, stats::sd)
+          gp.cv = gp_sd / gPred
         }
         halpha = (1-model$CIlevel)/2
-        return(list(res=idx,upres=quantile(idxSamp,1-halpha,na.rm=TRUE),lores=quantile(idxSamp,halpha,na.rm=TRUE),gp2=gPred,gp2.cv=gp.cv))
+        return(list(res=idx,upres=stats::quantile(idxSamp,1-halpha,na.rm=TRUE),lores=stats::quantile(idxSamp,halpha,na.rm=TRUE),gp2=gPred,gp2_cv=gp.cv))
       }
     } ## rof years
-    yres = parallel::mclapply(levels(ddd$Year),do.one.y,mc.cores=mc.cores)
+    yres = parallel::mclapply(levels(ddd$Year),do_one_y,mc.cores=mc.cores)
     for(y in levels(ddd$Year)) {
       ii = which(as.character(yearRange)==y)
       res[ii] = yres[[ii]]$res
       upres[ii] = yres[[ii]]$upres
       lores[ii] = yres[[ii]]$lores
       gp2[[y]] = yres[[ii]]$gp2
-      gp2.cv[[y]] = yres[[ii]]$gp2.cv
+      gp2_cv[[y]] = yres[[ii]]$gp2_cv
     }
-    list(res=res,m.pos=m.pos,m0=m0,lo=lores,up=upres,gp=tail(gp2,1),gp2=gp2,gp2.cv=gp2.cv);
+    list(res=res,m_pos=m_pos,m0=m0,lo=lores,up=upres,gp =utils::tail(gp2,1),gp2=gp2,gp2_cv=gp2_cv);
   }## end do.one
   noAges=length(ages);
-  rr=lapply(1:noAges,do.one.a);
+  rr=lapply(1:noAges,do_one_a);
   logl=0;
   for(a in 1:noAges){
     resMat[,a]=rr[[a]]$res;
@@ -662,7 +748,7 @@ redo_surveyidx <- function(
     upMat[,a]=rr[[a]]$up;
     gPreds[[a]]=rr[[a]]$gp;
     gPreds2[[a]]=rr[[a]]$gp2
-    gPreds2.CV[[a]]=rr[[a]]$gp2.cv
+    gPreds2.CV[[a]]=rr[[a]]$gp2_cv
   }
   rownames(resMat)<-yearRange
   colnames(resMat)<-ages
@@ -694,21 +780,23 @@ redo_surveyidx <- function(
 
 #' Survey index using the stratified mean method using ICES statistical rectangles as strata.
 #'
+#' Previously named get_surveyidxStratMean.
+#'
 #' @title Survey index using the stratified mean method using ICES statistical rectangles as strata.
 #' @param x DATRASraw object. Must contain a matrix: x[[2]]$Nage.
 #' @param ageCols which columns of the Nage matrix should be included?
 #' @param doLog log-transform?
 #' @return a matrix with survey indices
 #' @export
-get_surveyidxStratMean <-
+get_surveyidx_stratmean <-
   function(x,ageCols,doLog=FALSE){
     ysplit=split(x,x$Year);
     res=matrix(NA,nrow=length(ysplit),ncol=length(ageCols))
     for(y in 1:length(ysplit)){
 
       if(!doLog) {
-        byRec=aggregate(ysplit[[y]][[2]]$Nage[,ageCols],by=list(ysplit[[y]][[2]]$StatRec),FUN="mean")  } else {
-          byRec=aggregate(log(ysplit[[y]][[2]]$Nage[,ageCols]+1),by=list(ysplit[[y]][[2]]$StatRec),FUN="mean")
+        byRec=stats::aggregate(ysplit[[y]][[2]]$Nage[,ageCols],by=list(ysplit[[y]][[2]]$StatRec),FUN="mean")  } else {
+          byRec=stats::aggregate(log(ysplit[[y]][[2]]$Nage[,ageCols]+1),by=list(ysplit[[y]][[2]]$StatRec),FUN="mean")
         }
 
       res[y,]=colMeans(byRec[,-1])
@@ -718,26 +806,65 @@ get_surveyidxStratMean <-
 
 
 
-# Assess Index -----------------------------------------------------------------
+# Post-process survey index ----------------------------------------------------
 
 #' Calculate internal consistency of a survey index.
 #'
+#' Previously called internalCons.
+#'
 #' @title Calculate internal consistency of a survey index.
 #' @param tt A matrix with survey indices (rows=years, cols=ages)
-#' @param do.plot Plot it?
+#' @param print_plot Plot it?
 #' @return a vector of consistencies
 #' @export
-internalCons <-
-  function(tt,do.plot=FALSE){
+consistency_internal <-
+  function(tt,print_plot=FALSE){
     tt[tt==0]=NA
     sel1=1:(nrow(tt)-1);
     sel2=2:nrow(tt);
-    if(do.plot){ X11(); b=ceiling((ncol(tt)-1)/2); par(mfrow=c(b,b));}
+    if(print_plot){ grDevices::dev.new(); b=ceiling((ncol(tt)-1)/2); graphics::par(mfrow=c(b,b));}
     for(a in 1:(ncol(tt)-1)){
-      cat("Age ",a," vs ",a+1," : ",cor(log(tt[sel1,a]),log(tt[sel2,a+1]),use="pairwise.complete.obs"),"\n")
-      if(do.plot) {plot(log(tt[sel1,a]),log(tt[sel2,a+1])); abline(0,1);}
+      cat("Age ",a," vs ",a+1," : ",
+          stats::cor(log(tt[sel1,a]),log(tt[sel2,a+1]),
+                     use="pairwise.complete.obs"),"\n")
+      if(print_plot) {
+        plot(x = log(tt[sel1,a]),y = log(tt[sel2,a+1]))
+        graphics::abline(0,1)
+      }
     }
-    return( sapply(1:(ncol(tt)-1), function(a) cor(log(tt[sel1,a]),log(tt[sel2,a+1]),use="pairwise.complete.obs")));
+    return( sapply(1:(ncol(tt)-1), function(a) stats::cor(log(tt[sel1,a]),log(tt[sel2,a+1]),use="pairwise.complete.obs")));
+  }
+
+
+
+
+
+#' Calculate external consistencies between two survey indices.
+#'
+#' Previously called externalCons.
+#'
+#' Proper alignment of years and ages must be ensured by the user.
+#' @title Calculate external consistencies between two survey indices.
+#' @param tt A matrix with survey indices (rows=years, cols=ages)
+#' @param tt2 A matrix with survey indices (rows=years, cols=ages)
+#' @param print_plot plot it?
+#' @return A vector of correlations (consistencies)
+#' @export
+consistency_external <-
+  function(tt,tt2,print_plot=FALSE){
+    tt[tt==0]=NA
+    tt2[tt2==0]=NA
+    if(print_plot){ grDevices::dev.new(); b=ceiling((ncol(tt))/2); graphics::par(mfrow=c(b,b));}
+    for(a in 1:ncol(tt)){
+      cat("Survey 1 Age ",a," vs Survey 2 ",a," : ",
+          stats::cor(log(tt[,a]),log(tt2[,a]),
+                     use="pairwise.complete.obs"),"\n")
+      if(print_plot) {
+        plot(x = log(tt[,a]), y = log(tt2[,a]))
+        graphics::abline(0,1)
+      }
+    }
+    return( sapply(1:ncol(tt),function(a) stats::cor(log(tt[,a]),log(tt2[,a]),use="pairwise.complete.obs") ));
   }
 
 
@@ -746,6 +873,8 @@ internalCons <-
 
 #' Simulate data from a surveyIdx model (experimental and subject to change)
 #'
+#' Previously named simulate surveyIdx.simulate.
+#'
 #' @title Simulate data from a surveyIndex model (experimental and subject to change)
 #' @param model object of class 'surveyIdx'
 #' @param d A dataset (DATRASraw object)
@@ -753,7 +882,7 @@ internalCons <-
 #' @param condSim optional results of previous call to this function. Use this if you want to generate many datasets (much faster, since mean predictions are re-used).
 #' @return list with  1) simulated observations with noise 2) mean (no noise) 3) zero probability.
 #' @export
-surveyIdx.simulate<-function(model,d,sampleFit=FALSE,condSim=NULL){
+simulate_surveyidx<-function(model,d,sampleFit=FALSE,condSim=NULL){
   ages = as.numeric(colnames(model$idx))
   dataAges <- model$dataAges
   famVec = model$family
@@ -766,32 +895,32 @@ surveyIdx.simulate<-function(model,d,sampleFit=FALSE,condSim=NULL){
 
 
     if(sampleFit && is.null(condSim)){
-      m.pos = model$pModels[[a]]
+      m_pos = model$pModels[[a]]
 
-      Xp.1=predict(m.pos,newdata=d[[2]],type="lpmatrix");
-      brp.1=MASS::mvrnorm(n=1,coef(m.pos),m.pos$Vp);
-      OS.pos = matrix(0,nrow(d[[2]]),1);
-      terms.pos=terms(m.pos)
-      if(!is.null(m.pos$offset)){
-        off.num.pos <- attr(terms.pos, "offset")
-        for (i in off.num.pos) OS.pos <- OS.pos + eval(attr(terms.pos,
+      Xp.1 = stats::predict(m_pos,newdata=d[[2]],type="lpmatrix");
+      brp_1<- MASS::mvrnorm(n=1,stats::coef(m_pos),m_pos$Vp);
+      OS_pos = matrix(0,nrow(d[[2]]),1);
+      terms_pos = stats::terms(m_pos)
+      if(!is.null(m_pos$offset)){
+        off.num.pos <- attr(terms_pos, "offset")
+        for (i in off.num.pos) OS_pos <- OS_pos + eval(attr(terms_pos,
                                                             "variables")[[i + 1]], d[[2]])
       }
-      mu = Xp.1%*%brp.1+OS.pos
+      mu = Xp.1%*%brp_1+OS_pos
       out.mu[[a]] = exp(mu) ## obs, assumes log link!
 
       if(!famVec[a] %in% c("Tweedie","negbin")){
         m0 = model$zModels[[a]]
-        Xp.0=predict(m0,newdata=d[[2]],type="lpmatrix");
-        brp.0=MASS::mvrnorm(n=1,coef(m0),m0$Vp);
+        Xp.0 = stats::predict(m0,newdata=d[[2]],type="lpmatrix");
+        brp_0 <- MASS::mvrnorm(n=1,stats::coef(m0),m0$Vp);
         OS0 = matrix(0,nrow(d[[2]]),1);
-        terms.0=terms(m0)
+        terms_0 = stats::terms(m0)
         if(!is.null(m0$offset)){
-          off.num.0 <- attr(terms.0, "offset")
-          for (i in off.num.0) OS0 <- OS0 + eval(attr(terms.0,
+          off.num.0 <- attr(terms_0, "offset")
+          for (i in off.num.0) OS0 <- OS0 + eval(attr(terms_0,
                                                       "variables")[[i + 1]], d[[2]])
         }
-        mu0=m0$family$linkinv(Xp.0%*%brp.0+OS0);
+        mu0=m0$family$linkinv(Xp.0%*%brp_0+OS0);
         out.mu0[[a]] = mu0
       }
 
@@ -802,24 +931,24 @@ surveyIdx.simulate<-function(model,d,sampleFit=FALSE,condSim=NULL){
     if(famVec[a]==c("Tweedie")){
       p = model$pModels[[a]]$family$getTheta(TRUE)
       phi = model$pModels[[a]]$scale
-      if(!sampleFit && is.null(condSim)) {  out.mu[[a]] = predict(model$pModels[[a]],newdata=d[[2]],type="response") }
-      out[,a] = rTweedie(out.mu[[a]],p,phi)
+      if(!sampleFit && is.null(condSim)) {  out.mu[[a]] = stats::predict(model$pModels[[a]],newdata=d[[2]],type="response") }
+      out[,a] = mgcv::rTweedie(out.mu[[a]],p,phi)
     } else if(famVec[a]=="LogNormal"){
-      if(!sampleFit && is.null(condSim)) out.mu0[[a]] = predict(model$zModels[[a]],newdata=d[[2]],type="response")
-      pa = rbinom(nrow(out),1,prob=out.mu0[[a]])
+      if(!sampleFit && is.null(condSim)) out.mu0[[a]] = stats::predict(model$zModels[[a]],newdata=d[[2]],type="response")
+      pa = stats::rbinom(nrow(out),1,prob=out.mu0[[a]])
       sig2 = model$pModels[[a]]$sig2
-      if(!sampleFit && is.null(condSim)) out.mu[[a]] = exp(predict(model$pModels[[a]],newdata=d[[2]]))
-      pos = exp( rnorm(nrow(out),log(out.mu[[a]]),sqrt(sig2)) )
+      if(!sampleFit && is.null(condSim)) out.mu[[a]] = exp(stats::predict(model$pModels[[a]],newdata=d[[2]]))
+      pos = exp( stats::rnorm(nrow(out),log(out.mu[[a]]),sqrt(sig2)) )
       out[,a] = pa*pos
     } else if(famVec[a]=="Gamma"){
-      if(!sampleFit && is.null(condSim)) out.mu0[[a]] = predict(model$zModels[[a]],newdata=d[[2]],type="response")
-      pa = rbinom(nrow(out),1,prob=out.mu0[[a]])
+      if(!sampleFit && is.null(condSim)) out.mu0[[a]] = stats::predict(model$zModels[[a]],newdata=d[[2]],type="response")
+      pa = stats::rbinom(nrow(out),1,prob=out.mu0[[a]])
 
       if(!sampleFit && is.null(condSim)){
-        out.mu[[a]]= predict(model$pModels[[a]],newdata=d[[2]],type="response")
+        out.mu[[a]]= stats::predict(model$pModels[[a]],newdata=d[[2]],type="response")
       }
       shape = 1/model$pModels[[a]]$scale
-      pos = rgamma(nrow(out),rate=shape/out.mu[[a]],shape=shape)
+      pos = stats::rgamma(nrow(out),rate=shape/out.mu[[a]],shape=shape)
       out[,a] = pa*pos
     }
 
@@ -831,12 +960,14 @@ surveyIdx.simulate<-function(model,d,sampleFit=FALSE,condSim=NULL){
 
 #' Randomized quantile residuals for class 'surveyIndex'
 #'
+#' Previously named residuals.surveyIdx.
+#'
 #' @title Randomized quantile residuals for class 'surveyIndex'
 #' @param x An object of type 'surveyIndex' as created by 'get_surveyidx'
 #' @param a age group
 #' @return A vector of residuals, which should be iid standard normal distributed
 #' @export
-residuals.surveyIdx <- function(x,a=1){
+get_surveyidx_resid <- function(x,a=1){
   if (pmatch("Tweedie", x$pModels[[a]]$family$family,
              nomatch = -1) == 1) {
     resi = qres_tweedie(x$pModels[[a]])
@@ -847,13 +978,13 @@ residuals.surveyIdx <- function(x,a=1){
     psel = y>x$cutOff
     logy[psel] = log( y[psel] )
 
-    p0 = predict(x$zModels[[a]],type="response") ## P( obs > cutOff )
+    p0 = stats::predict(x$zModels[[a]],type="response") ## P( obs > cutOff )
     vari = x$pModels[[a]]$sig2
     cdfpos = rep(0,length(y))
-    cdfpos[psel] = pnorm( q=logy[psel],mean=predict(x$pModels[[a]],type="link"), sd=sqrt(vari))
+    cdfpos[psel] = stats::pnorm( q=logy[psel],mean = stats::predict(x$pModels[[a]],type="link"), sd=sqrt(vari))
     u = (1-p0) + cdfpos*p0
-    u[ !psel ] = runif(sum(!psel), min = 0, max = u[!psel])
-    resi = qnorm(u)
+    u[ !psel ] = stats::runif(sum(!psel), min = 0, max = u[!psel])
+    resi = stats::qnorm(u)
 
   } else if(pmatch("Gamma", x$pModels[[a]]$family$family,
                    nomatch = -1) == 1 ){
@@ -861,31 +992,33 @@ residuals.surveyIdx <- function(x,a=1){
     y = x$allobs[[a]]
     psel = y>x$cutOff
 
-    p0 = predict(x$zModels[[a]],type="response")
-    means = predict(x$pModels[[a]],type="response")
+    p0 = stats::predict(x$zModels[[a]],type="response")
+    means = stats::predict(x$pModels[[a]],type="response")
     shape = MASS::gamma.shape(x$pModels[[a]])$alpha
     cdfpos = rep(0,length(y))
-    cdfpos[psel] = pgamma( q=y[psel],shape=shape,rate=shape/means)
+    cdfpos[psel] = stats::pgamma( q=y[psel],shape=shape,rate=shape/means)
     u = (1-p0) + cdfpos*p0
-    u[ !psel ] = runif(sum(!psel), min = 0, max = u[!psel])
-    resi = qnorm(u)
+    u[ !psel ] = stats::runif(sum(!psel), min = 0, max = u[!psel])
+    resi <- stats::qnorm(u)
 
   } else if(pmatch("Negative Binomial", x$pModels[[a]]$family$family,
                    nomatch = -1) == 1 ){
-    y = x$pModels[[a]]$y
-    size = x$pModels[[a]]$family$getTheta(TRUE)
-    mu = fitted(x$pModels[[a]])
-    p = size/(mu + size)
-    a = ifelse(y > 0, pbeta(p, size, pmax(y, 1)), 0)
-    b = pbeta(p, size, y + 1)
-    u = runif(n = length(y), min = a, max = b)
-    resi = qnorm(u)
+    y <- x$pModels[[a]]$y
+    size <- x$pModels[[a]]$family$getTheta(TRUE)
+    mu <- stats::fitted(x$pModels[[a]])
+    p <- size/(mu + size)
+    a <- ifelse(y > 0, stats::pbeta(p, size, pmax(y, 1)), 0)
+    b <- stats::pbeta(p, size, y + 1)
+    u <- stats::runif(n = length(y), min = a, max = b)
+    resi <- stats::qnorm(u)
   }
 
   resi
 }
 
 #' Randomized quantile residuals for Tweedie models
+#'
+#' Previously named qres.tweedie.
 #'
 #' @title Randomized quantile residuals for Tweedie models
 #' @param gam.obj A gam object (mgcv package)
@@ -894,7 +1027,7 @@ residuals.surveyIdx <- function(x,a=1){
 #' @import tweedie
 qres_tweedie<-function (gam.obj){
   requireNamespace("tweedie")
-  mu <- fitted(gam.obj)
+  mu <- stats::fitted(gam.obj)
   y <- gam.obj$y
   df <- gam.obj$df.residual
   w <- gam.obj$prior.weights
@@ -903,38 +1036,62 @@ qres_tweedie<-function (gam.obj){
   p <- gam.obj$family$getTheta(TRUE)
   dispersion <- gam.obj$scale
   u <- numeric(length(y))
-  fitt <- fitted(gam.obj)
+  fitt <- stats::fitted(gam.obj)
   for(i in 1:length(u)){
-    u[i] <- tweedie::ptweedie(q = y[i], power = p, mu = fitt[i],phi = dispersion/w[i])
+    u[i] <- tweedie::ptweedie(q = y[i], power = p, mu = fitt[i], phi = dispersion/w[i])
   }
-  if (p > 1 && p < 2)
-    u[y == 0] <- runif(sum(y == 0), min = 0, max = u[y == 0])
 
+  if (p > 1 && p < 2) {
+    u[y == 0] <- stats::runif(sum(y == 0), min = 0, max = u[y == 0])
+  }
 
-  return(qnorm(u))
+  return(stats::qnorm(u))
 
 }
 
 
 
-
-
 #' Plot a surveyIndexGrid
 #'
-#' @title Plot a surveyIndexGrid
 #' @param grid a surveyIndexGrid (as created by the "get_grid" function)
+#' @param pch Inherited from base::plot(). plotting ‘character’, i.e., symbol to use.
+#' @param gridCol Color of grid plot output.
+#'
 #' @return nothing
 #' @export
-plot_surveyidx_grid<-function(grid, pch=1,gridCol="lightgrey"){
-  plot(grid[[1]],grid[[2]],xlab="Longitude",ylab="Latitude",pch=pch)
-  lonbps = grid[[4]]
-  latbps = grid[[5]]
-  for(i in 1:nrow(lonbps)) abline(v=lonbps[i,1],col=gridCol)
-  abline(v=tail(lonbps,1)[2],col=gridCol)
-  for(i in 1:nrow(latbps)) abline(h=latbps[i,1],col=gridCol)
-  abline(h=tail(latbps,1)[2],col=gridCol)
-  maps::map("worldHires", fill = TRUE, plot = TRUE,
-            add = TRUE, col = grey(0.5))
+#'
+#' @examples
+#' # TOLEDO
+plot_surveyidx_grid <- function(
+    grid,
+    pch = 1,
+    gridCol = "lightgrey"){
+
+  plot(grid[[1]],
+       grid[[2]],
+       xlab = "Longitude",
+       ylab = "Latitude",
+       pch = pch)
+  lonbps <- grid[[4]]
+  latbps <- grid[[5]]
+
+  for(i in 1:nrow(lonbps)) {
+    graphics::abline(v=lonbps[i,1],col=gridCol)
+  }
+
+  graphics::abline(v =utils::tail(lonbps,1)[2],col=gridCol)
+
+  for(i in 1:nrow(latbps)) {
+    graphics::abline(h=latbps[i,1],col=gridCol)
+  }
+
+  graphics::abline(h = utils::tail(latbps,1)[2], col=gridCol)
+
+  maps::map("worldHires",
+            fill = TRUE,
+            plot = TRUE,
+            add = TRUE,
+            col = grDevices::grey(0.5))
 }
 
 
@@ -942,6 +1099,8 @@ plot_surveyidx_grid<-function(grid, pch=1,gridCol="lightgrey"){
 
 
 #' Write survey index to file in standard XSA/SAM format
+#'
+#' Previously named exportSI.
 #'
 #' @title Write survey index to file in standard XSA/SAM format
 #' @param x matrix with survey indices
@@ -952,7 +1111,7 @@ plot_surveyidx_grid<-function(grid, pch=1,gridCol="lightgrey"){
 #' @param nam file description header
 #' @return nothing
 #' @export
-exportSI <- function(
+export_si <- function(
     x,
     ages,
     years,
@@ -964,7 +1123,7 @@ exportSI <- function(
   cat(range(as.numeric(as.character(years))),"\n",file=file,append=TRUE)
   cat("1 1 ",rep(toy,2),"\n",file=file,append=TRUE)
   cat(min(ages),max(ages),"\n",file=file,append=TRUE)
-  write.table(round(cbind(1,x[,]),4),file=file,row.names=FALSE,col.names=FALSE,append=TRUE)
+  utils::write.table(round(cbind(1,x[,]),4),file=file,row.names=FALSE,col.names=FALSE,append=TRUE)
 }
 
 #' Visualize results from a survey index model fitted with get_surveyidx().
@@ -1004,7 +1163,7 @@ plot_surveyidx<-function (x,
                           cols = 1:length(x$pModels),
                           select = c("index", "map", "residuals", "fitVsRes"),
                           par = list(mfrow = c(3,3)),
-                          colors = rev(heat.colors(6)),
+                          colors = rev(grDevices::heat.colors(6)),
                           map.cex = 1,
                           plotByAge = TRUE,
                           legend = TRUE,
@@ -1019,155 +1178,236 @@ plot_surveyidx<-function (x,
                           ...) {
 
   if (!plotByAge & !is.null(par)){
-    op<-par(par)
+    op <- par(par)
     if(restoreOldPar) on.exit(par(op))
   }
   mainwasnull <- is.null(main)
   for (a in cols) {
     if(mainwasnull) main <- paste("Age group", colnames(dat$Nage)[a])
     if (plotByAge & !is.null(par)){
-      op<-par(par)
-      if(restoreOldPar) on.exit(par(op))
+      op <- par(par)
+      if(restoreOldPar) {
+        on.exit(par(op))
+      }
     }
     if (any(select == "index")) {
-      ys = range(as.numeric(levels(dat$Year)))
-      ys = ys[1]:ys[2]
-      yl = range(c(x$idx[, a],0,x$lo[,a],x$up[,a])/mean(x$idx[, a]),na.rm=TRUE)
+      ys <- range(as.numeric(levels(dat$Year)))
+      ys <- ys[1]:ys[2]
+      yl <- range(c(x$idx[, a],0,x$lo[,a],x$up[,a])/mean(x$idx[, a]),na.rm=TRUE)
       if (!is.null(alt.idx) && a <= ncol(alt.idx)) {
-        yl = range(c(alt.idx[, a]/mean(alt.idx[, a]),
+        yl <- range(c(alt.idx[, a]/mean(alt.idx[, a]),
                      yl)) * 1.1
-        plot(ys, alt.idx[, a]/mean(alt.idx[, a], na.rm = TRUE),
-             ylim = yl, col = 2, ylab = "Index", xlab = "Year",
+        plot(x = ys,
+             y = alt.idx[, a]/mean(alt.idx[, a], na.rm = TRUE),
+             ylim = yl,
+             col = 2,
+             ylab = "Index",
+             xlab = "Year",
              main = main)
+      } else {
+        plot(x = ys,
+             y = rep(NA, length(ys)),
+             ylim = yl,
+             col = 2,
+             ylab = "Index",
+             xlab = "Year",
+             main = main )
       }
-      else {
-        plot(ys, rep(NA, length(ys)), ylim = yl, col = 2,
-             ylab = "Index", xlab = "Year", main = main )
-      }
-      idx = x$idx
-      lo = x$lo
-      up = x$up
-      idx[x$idx <= 0] = NA
-      lo[x$idx <= 0] = NA
-      up[x$idx <= 0] = NA
-      lines(ys, idx[, a]/mean(idx[, a], na.rm = TRUE),
+      idx <- x$idx
+      lo <- x$lo
+      up <- x$up
+      idx[x$idx <= 0] <- lo[x$idx <= 0] <- up[x$idx <= 0] <- NA
+      graphics::lines(x = ys,
+            idx[, a]/mean(idx[, a], na.rm = TRUE),
             lwd = 2)
-      lines(ys, lo[, a]/mean(idx[, a], na.rm = TRUE), lwd = 2,
+      graphics::lines(x = ys,
+            lo[, a]/mean(idx[, a], na.rm = TRUE),
+            lwd = 2,
             lty = 2)
-      lines(ys, up[, a]/mean(idx[, a], na.rm = TRUE), lwd = 2,
+      graphics::lines(ys, up[, a]/mean(idx[, a], na.rm = TRUE),
+            lwd = 2,
             lty = 2)
-      if (legend && !is.null(alt.idx))
-        legend(legend.pos, pch = c(1, NA), lty = c(NA,
-                                                   1), col = c(2, 1), legend = c("alt.idx", "GAM"))
+
+      if (legend && !is.null(alt.idx)) {
+        legend(legend.pos, pch = c(1, NA),
+               lty = c(NA, 1),
+               col = c(2, 1),
+               legend = c("alt.idx", "GAM"))
+        }
     }
     if (any(select == "map")) {
-      xlims = range(dat$lon, na.rm = TRUE)
-      ylims = range(dat$lat, na.rm = TRUE)
+      xlims <- range(dat$lon, na.rm = TRUE)
+      ylims <- range(dat$lat, na.rm = TRUE)
       mapvals = NULL
       if (is.null(predD)) {
-        tmp = subset(dat, haul.id %in% myids)
+        tmp <- dat[dat$haul.id %in% myids, ] #subset(dat, haul.id %in% myids)
       }
       else {
-        tmp = predD
+        tmp <- predD
       }
       if (is.null(year)) {
-        concT = surveyIndex:::concentration_transform(log(x$gPreds[[a]]))
-        mapvals = x$gPreds[[a]]
+        concT <- surveyIndex::concentration_transform(log(x$gPreds[[a]]))
+        mapvals <- x$gPreds[[a]]
       }
       else {
-        y = which(as.numeric(as.character(names(x$gPreds2[[a]]))) ==
+        y <- which(as.numeric(as.character(names(x$gPreds2[[a]]))) ==
                     year)
         if (length(y) == 0)
           stop(paste("Year", year, "age group", a, "not found."))
-        concT = surveyIndex:::concentration_transform(log(x$gPreds2[[a]][[y]]))
-        mapvals = x$gPreds2[[a]][[y]]
+        concT <- surveyIndex::concentration_transform(log(x$gPreds2[[a]][[y]]))
+        mapvals <- x$gPreds2[[a]][[y]]
       }
-      if (length(colors) > 1)
-        zFac = cut(concT, 0:length(colors)/length(colors))
-      else zFac = 1
-      if (length(map.cex) > 1)
-        sFac = cut(log(x$gPreds[[a]]), length(map.cex))
-      else sFac = 1
-      myCols = colors
-      plot(tmp$lon, y = tmp$lat, col = 1, pch = 1, cex = map.cex[sFac],
-           xlim = xlims, ylim = ylims, xlab = "Longitude",
-           ylab = "Latitude", main = main, ...)
-      points(tmp$lon, y = tmp$lat, col = myCols[zFac],
-             pch = 16, cex = map.cex[sFac])
-      maps::map("worldHires", xlim = xlims, ylim = ylims,
-                fill = TRUE, plot = TRUE, add = TRUE, col = grey(0.5))
-      if (legend){
-        maxcuts = aggregate(mapvals ~ zFac, FUN=max)
-        mincuts = aggregate(mapvals ~ zFac, FUN=min)
-        mm = mean(mapvals)
-        ml = signif(mincuts[,2]/mm,legend.signif)
+
+      if (length(colors) > 1) {
+        zFac <- cut(concT, 0:length(colors)/length(colors))
+      } else {
+        zFac <- 1
+      }
+
+      if (length(map.cex) > 1) {
+        sFac <- cut(log(x$gPreds[[a]]), length(map.cex))
+      } else {
+        sFac <- 1
+      }
+      myCols <- colors
+      plot(tmp$lon,
+           y = tmp$lat,
+           col = 1,
+           pch = 1,
+           cex = map.cex[sFac],
+           xlim = xlims,
+           ylim = ylims,
+           xlab = "Longitude",
+           ylab = "Latitude",
+           main = main,
+           ...)
+
+      graphics::points(tmp$lon,
+             y = tmp$lat,
+             col = myCols[zFac],
+             pch = 16,
+             cex = map.cex[sFac])
+
+      maps::map(database = "worldHires",
+                xlim = xlims,
+                ylim = ylims,
+                fill = TRUE,
+                plot = TRUE,
+                add = TRUE,
+                col = grDevices::grey(0.5))
+
+      if (legend) {
+        maxcuts <- stats::aggregate(mapvals ~ zFac, FUN=max)
+        mincuts <- stats::aggregate(mapvals ~ zFac, FUN=min)
+        mm <- mean(mapvals)
+        ml <- signif(mincuts[,2]/mm,legend.signif)
         ml[1] = 0
-        leg = paste0("[",ml,",",signif(maxcuts[,2]/mm,legend.signif),"]")
-        legend(legend.pos, legend = leg, pch = 16, col = colors, bg = "white")
+        leg <- paste0("[",ml,",",signif(maxcuts[,2]/mm,legend.signif),"]")
+        legend(legend.pos,
+               legend = leg,
+               pch = 16,
+               col = colors,
+               bg = "white")
       }
     }
     if (any(select == "absolutemap") || any(select == "CVmap")) {
-      if(is.null(year) || length(year)<1) stop("argument 'year' must be vector of length>=1 for type 'absolutemap'")
-      if( !all(year %in% levels(dat$Year)) ) stop("invalid years selected")
-      xlims = range(dat$lon, na.rm = TRUE)
-      ylims = range(dat$lat, na.rm = TRUE)
+      if (is.null(year) || length(year)<1) {stop("argument 'year' must be vector of length>=1 for type 'absolutemap'")}
+      if (!all(year %in% levels(dat$Year)) ) {stop("invalid years selected")}
+      xlims <- range(dat$lon, na.rm = TRUE)
+      ylims <- range(dat$lat, na.rm = TRUE)
 
-      if(any(select == "absolutemap")) colsel = "gPreds2" else colsel = "gPreds2.CV"
+      if(any(select == "absolutemap")) {
+        colsel <- "gPreds2"
+      } else {
+          colsel <- "gPreds2.CV"
+      }
+
       ## collect all years as data.frame
-      ally = data.frame(val=x[[colsel]][[a]][[1]],year=as.character(levels(dat$Year)[1]))
-      cc=0
+      ally <- data.frame(val = x[[colsel]][[a]][[1]],
+                         year = as.character(levels(dat$Year)[1]))
+      cc <- 0
+
       for(y in levels(dat$Year)){
-        cc=cc+1
-        ally = rbind(ally, data.frame(val=x[[colsel]][[a]][[cc]],
+        cc <- cc+1
+        ally <- rbind(ally, data.frame(val=x[[colsel]][[a]][[cc]],
                                       year=as.character(levels(dat$Year)[cc])))
       }
-      ally$conc = surveyIndex:::concentration_transform(log(ally$val))
-      if(is.null(cutp)){
-        ally$zFac=cut( ally$conc,0:length(colors)/length(colors))
+
+      ally$conc <- surveyIndex::concentration_transform(log(ally$val))
+      if (is.null(cutp)) {
+        ally$zFac <- cut( ally$conc,0:length(colors)/length(colors))
       } else {
-        if(length(cutp) != length(colors) + 1) stop("incompatible number of colors and length of cutp")
-        ally$zFac=cut( ally$val,cutp)
+        if (length(cutp) != length(colors) + 1) {stop("incompatible number of colors and length of cutp")}
+        ally$zFac <- cut( ally$val,cutp)
       }
-      bubbleScale = 0.005*max(dat$Nage[,a])
-      for(yy in year){
+      bubbleScale <- 0.005*max(dat$Nage[,a])
+      for (yy in year){
 
         if (is.null(predD)) {
-          tmp = subset(dat, haul.id %in% myids)
+          tmp = dat[dat$haul.id %in% myids, ] # subset(dat, haul.id %in% myids)
         }
         else {
           tmp = predD
           if(is.list(tmp) && !class(tmp)%in%c("data.frame","DATRASraw")) tmp = predD[[as.character(yy)]]
         }
 
-        plot(tmp$lon,y=tmp$lat,col=1,pch=1,cex=map.cex,xlab="Longitude",ylab="Latitude",axes=FALSE)
-        box()
-        title(yy,line=1)
+        plot(x = tmp$lon,
+             y = tmp$lat,
+             col = 1,
+             pch = 1,
+             cex = map.cex,
+             xlab = "Longitude",
+             ylab = "Latitude",
+             axes = FALSE)
+        graphics::box()
+        title::graphics(main = yy,line=1)
         sel = which(ally$year==yy)
-        points(tmp$lon,y=tmp$lat,col=colors[as.numeric(ally$zFac[sel])],pch=16,cex=map.cex)
-        maps::map('worldHires',xlim=xlims,ylim=ylims,fill=TRUE,plot=TRUE,add=TRUE,col=grey(0.5))
-        if(mapBubbles){
-          dy = subset(dat,Year==yy)
-          points(dy$lon,dy$lat,cex=sqrt(dy$Nage[,a]/bubbleScale))
+        graphics::points(x = tmp$lon,
+               y = tmp$lat, col = colors[as.numeric(ally$zFac[sel])],
+               pch=16,
+               cex=map.cex)
+        maps::map(database = 'worldHires',
+                  xlim = xlims,
+                  ylim = ylims,
+                  fill = TRUE,
+                  plot = TRUE,
+                  add = TRUE,
+                  col = grDevices::grey(0.5))
+
+        if (mapBubbles) {
+          dy <- dat[dat$Year == y, ] # subset(dat,Year==yy)
+          graphics::points(x = dy$lon,
+                 y = dy$lat,
+                 cex = sqrt(dy$Nage[,a]/bubbleScale))
         }
-        if (legend && yy==year[1]){
-          if(is.null(cutp)){
-            maxcuts = aggregate(val ~ zFac, data=ally, FUN=max)
-            mincuts = aggregate(val ~ zFac, data=ally, FUN=min)
-            mm = mean(ally$val)
-            ml = signif(mincuts[,2]/mm,legend.signif)
+
+        if (legend && yy==year[1]) {
+          if (is.null(cutp)){
+            maxcuts <- stats::aggregate(val ~ zFac, data = ally, FUN = max)
+            mincuts <- stats::aggregate(val ~ zFac, data = ally, FUN = min)
+            mm <- base::mean(ally$val)
+            ml <- base::signif(mincuts[,2]/mm,legend.signif)
             ml[1] = 0
-            leg = paste0("[",ml,",",signif(maxcuts[,2]/mm,legend.signif),"]")
-            legend(legend.pos, legend = leg, pch = 16, col = colors, bg = "white")
+            leg <- paste0("[",ml,",",signif(maxcuts[,2]/mm,legend.signif),"]")
+            legend(legend.pos,
+                   legend = leg,
+                   pch = 16,
+                   col = colors,
+                   bg = "white")
           }
-          legend(legend.pos, legend = levels(ally$zFac), pch = 16, col = colors, bg = "white")
+          legend(legend.pos,
+                 legend = levels(ally$zFac),
+                 pch = 16,
+                 col = colors,
+                 bg = "white")
         }
       }##rof year
     }## absolutemap
 
     for (k in 1:length(select)) {
-      ss = suppressWarnings(as.numeric(select[k]))
+      ss <- base::suppressWarnings(as.numeric(select[k]))
       if (!is.na(ss)) {
-        plot.gam(x$pModels[[a]], select = ss, main = main, ...)
+        mgcv::plot.gam(x$pModels[[a]], select = ss, main = main, ...)
       }
     }
     if (any(select == "residuals") || any(select == "fitVsRes") ||
@@ -1177,35 +1417,58 @@ plot_surveyidx<-function (x,
       resi <- x$residuals[[a]] ##residuals(x,a)
     }
     if (any(select == "residuals")) {
-      hist(resi, nclass = 30, main = main, xlab = "Residuals",...)
+      graphics::hist(resi, nclass = 30, main = main, xlab = "Residuals",...)
     }
     if (any(select == "fitVsRes")) {
-      plot(fitted(x$pModels[[a]]), residuals(x$pModels[[a]]), xlab = "Fitted",
-           ylab = "Residuals", main = main,...) ## TODO: use quantile residuals here too
+      plot(x = stats::fitted(x$pModels[[a]]),
+           y = stats::residuals(x$pModels[[a]]),
+           xlab = "Fitted",
+           ylab = "Residuals",
+           main = main,
+           ...) ## TODO: use quantile residuals here too
     }
     if (any(select == "resVsYear")) {
-      plot(dat$Year, resi, main = main, xlab = "Year", ylab = "Residuals",
+      plot(x = dat$Year,
+           y = resi,
+           main = main,
+           xlab = "Year",
+           ylab = "Residuals",
            ...)
     }
     if (any(select == "resVsShip")) {
-      plot(dat$Ship, resi, main = main, xlab = "Year", ylab = "Residuals",
+      plot(x = dat$Ship,
+           y = resi,
+           main = main,
+           xlab = "Year",
+           ylab = "Residuals",
            ...)
     }
     if (any(select == "spatialResiduals")) {
       scale <- 3 * map.cex
-      if (is.null(year) || length(year)>1)
+      if (is.null(year) || length(year)>1) {
         stop("a single year must be supplied")
+      }
       sel <- which(dat[[2]]$Year == as.character(year))
-      plot(dat$lon, dat$lat, type = "n",
-           xlab = "Longitude", ylab = "Latitude", main = main,...)
-      maps::map("worldHires", fill = TRUE, plot = TRUE,
-                add = TRUE, col = grey(0.5))
+      plot(x = dat$lon,
+           y = dat$lat,
+           type = "n",
+           xlab = "Longitude",
+           ylab = "Latitude",
+           main = main,
+           ...)
+      maps::map(database = "worldHires",
+                fill = TRUE,
+                plot = TRUE,
+                add = TRUE,
+                col = grDevices::grey(0.5))
       positive = resi[sel] > 0
-      points(dat$lon[sel][positive], dat$lat[sel][positive],
-             pch = 1, cex = scale * sqrt(resi[sel][positive]),
+      graphics::points(dat$lon[sel][positive], dat$lat[sel][positive],
+             pch = 1,
+             cex = scale * sqrt(resi[sel][positive]),
              col = "blue")
-      points(dat$lon[sel][!positive], dat$lat[sel][!positive],
-             pch = 1, cex = scale * sqrt(-resi[sel][!positive]),
+      graphics::points(dat$lon[sel][!positive], dat$lat[sel][!positive],
+             pch = 1,
+             cex = scale * sqrt(-resi[sel][!positive]),
              col = "red")
     }
   }
@@ -1250,19 +1513,27 @@ anova_likelihood_ratio_test <- function(m1, m2) {
 
 #' Akaike Information Criterion (or BIC) for survey index models
 #'
+#' previously named AIC.surveyIdx.
+#'
 #' @title Akaike Information Criterion (or BIC) for survey index models
 #' @param x survey index as return from get_surveyidx
 #' @param BIC if TRUE compute BIC instead of AIC
 #' @return numeric value
-#' @export get_surveyidx_aic
+#' @export
 get_surveyidx_aic<-function(x, BIC=FALSE){
-  if(!BIC) return(2*x$edfs-2*x$logLik)
-  if(pmatch("Tweedie",x$pModels[[1]]$family$family,nomatch=-1)==1 ||
-     pmatch("negbin",x$pModels[[1]]$family$family,nomatch=-1)==1 ){
-    log(length(x$pModels[[1]]$y)*(length(x$pModels)))*x$edfs-2*x$logLik
-  } else {
-    log(length(x$zModels[[1]]$y)*(length(x$zModels)))*x$edfs-2*x$logLik
+
+  if(!BIC) {
+    out <- (2*x$edfs-2*x$logLik)
   }
+
+  if(pmatch("Tweedie",x$pModels[[1]]$family$family,nomatch=-1)==1 ||
+     pmatch("negbin",x$pModels[[1]]$family$family,nomatch=-1)==1 ) {
+    out <- log(length(x$pModels[[1]]$y)*(length(x$pModels)))*x$edfs-2*x$logLik
+  } else {
+    out <- log(length(x$zModels[[1]]$y)*(length(x$zModels)))*x$edfs-2*x$logLik
+  }
+
+  return(out)
 }
 
 
@@ -1283,36 +1554,13 @@ get_surveyidx_aic<-function(x, BIC=FALSE){
 #'
 #' @examples
 #' plot(concentration_transform(x = seq(1,100,5)))
-#' plot(concentration_transform(x = rnorm(n = 123, mean = 5, sd = 25)))
+#' plot(concentration_transform(x = stats::rnorm(n = 123, mean = 5, sd = 25)))
 concentration_transform <- function (x) {
     i <- order(x)
     ys <- sort(exp(x))
     p <- ys/sum(ys)
     x[i] <- cumsum(p)
     return(x)
-  }
-
-
-
-#' Calculate external consistencies between two survey indices.
-#'
-#' Proper alignment of years and ages must be ensured by the user.
-#' @title Calculate external consistencies between two survey indices.
-#' @param tt A matrix with survey indices (rows=years, cols=ages)
-#' @param tt2 A matrix with survey indices (rows=years, cols=ages)
-#' @param do.plot plot it?
-#' @return A vector of correlations (consistencies)
-#' @export
-externalCons <-
-  function(tt,tt2,do.plot=FALSE){
-    tt[tt==0]=NA
-    tt2[tt2==0]=NA
-    if(do.plot){ X11(); b=ceiling((ncol(tt))/2); par(mfrow=c(b,b));}
-    for(a in 1:ncol(tt)){
-      cat("Survey 1 Age ",a," vs Survey 2 ",a," : ",cor(log(tt[,a]),log(tt2[,a]),use="pairwise.complete.obs"),"\n")
-      if(do.plot) {plot(log(tt[,a]),log(tt2[,a])); abline(0,1);}
-    }
-    return( sapply(1:ncol(tt),function(a) cor(log(tt[,a]),log(tt2[,a]),use="pairwise.complete.obs") ));
   }
 
 
@@ -1338,7 +1586,7 @@ fix_age_group <-
     d=split(x,x$Year)
     subsLength=f(x[[3]]$LngtCm,na.rm=TRUE)
     for(y in 1:length(d)){
-      nobs = sum(d[[y]][[1]]$Age==age,na.rm=TRUE)
+      nobs <- sum(d[[y]][[1]]$Age==age,na.rm=TRUE)
       if(nobs<n) {
         sel=sample(1:nrow(d[[y]][[1]]),n-nobs)
         d[[y]][[1]]=rbind(d[[y]][[1]][sel,],d[[y]][[1]]);
@@ -1348,12 +1596,58 @@ fix_age_group <-
       }
     }
     dd <- do.call("c",d)
-    if(!is.null(cm.breaks)) dd<-addSpectrum(dd,cm.breaks=cm.breaks)
+    if(!is.null(cm.breaks)) {
+      dd<-DATRAS::addSpectrum(dd,cm.breaks=cm.breaks)
+    }
     dd
   }
 
 
 # Covert and process raw data ------------------------------------------------------------------
+
+
+
+#' Change CRS of coordinates
+#'
+#' @param x Decimal degrees longititude.
+#' @param y Decimal degrees latitude.
+#' @param crs_in Default = "+proj=longlat +datum=WGS84".
+#' @param crs_out Default = "EPSG:3338".
+#'
+#' @return data.frame with 3 columns: ID, Longitude, and Latitude
+#' @export
+#'
+#' @examples
+#' convert_crs(x = 170, y = 62)
+convert_crs <- function(
+    x,
+    y,
+    crs_in = "+proj=longlat +datum=WGS84",
+    crs_out = "EPSG:3338" # "+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs",
+    ) {
+  xy <- data.frame(ID = 1:length(x), X = x, Y = y)
+  coordinates(xy) <- c("X", "Y")
+  proj4string(xy) <- CRS(crs_in)
+  res <- spTransform(xy, CRS(crs_out))
+  return(as.data.frame(res))
+}
+
+
+
+#' Convert decimal degrees to radians
+#' Previously called deg2rad.
+#'
+#' @param deg Numeric Decimal degrees of a latitude or longitude.
+#'
+#' @return The value of degrees in radians.
+#' @export
+#'
+#' @examples
+#' convert_deg_rad(170.1)
+#' convert_deg_rad(-60.1)
+convert_deg_rad <- function(deg) {
+  return(deg*pi/180)
+}
 
 
 #' Get bathymetric prediction grid corresponding to the area for a DATRASraw object using the 'marmap' package
@@ -1384,10 +1678,10 @@ get_bathy_grid <- function(
          call. = FALSE)
   }
   bathy <- marmap::getNOAA.bathy(lon1=min(d$lon),lon2=max(d$lon),lat1=min(d$lat),lat2=max(d$lat),resolution=resolution, keep=keep)
-  xyzbathy <- as.data.frame( as.xyz(bathy) )
+  xyzbathy <- as.data.frame( marmap::as.xyz(bathy) )
   colnames(xyzbathy) <- c("lon","lat","Depth")
   xyzbathy$Depth <- -xyzbathy$Depth
-  xyzbathy <- subset(xyzbathy, Depth>minDepth & Depth<maxDepth)
+  xyzbathy <- xyzbathy[xyzbathy$Depth>minDepth & xyzbathy$Depth<maxDepth,]#subset(xyzbathy, Depth>minDepth & Depth<maxDepth)
   if(is.finite(maxDist)){
     if (!requireNamespace("RANN", quietly = TRUE)) {
       stop("Package \"RANN\" needed for this function to work when 'maxDist' is used. Please install it.",
@@ -1411,9 +1705,8 @@ get_bathy_grid <- function(
     xyzbathy <- cbind(xyzbathy, xtra)
   }
 
-  xyzbathy
+  return(xyzbathy)
 }
-
 
 
 
@@ -1440,26 +1733,56 @@ calc_distance <-
     delta.lat <- (lat2 - lat1)
     a <- sin(delta.lat/2)^2 + cos(lat1) * cos(lat2) * sin(delta.long/2)^2
     c <- 2 * asin(min(1,sqrt(a)))
-    d = R * c
+    d <- R * c
 
     return(d) # Distance in km
   }
 
+# Data -------------------------------------------------------------------------
 
-#' Convert decimal degrees to radians
-#' Previously called deg2rad.
-#'
-#' @param deg Numeric Decimal degrees of a latitude or longitude.
-#'
-#' @return The value of degrees in radians.
-#' @export
-#'
+#' @title Public data from FOSS
+#' @description Public data from FOSS
+#' @usage data("public_data")
+#' @author Emily Markowitz (emily.markowitz AT noaa.gov)
+#' @format A data frame with 878805 observations on the following 33 variables.
+#' \describe{
+#'   \item{\code{year}}{a numeric vector; Year the survey was conducted in. }
+#'   \item{\code{srvy}}{a character vector; Abbreviated survey names. The column “srvy” is associated with the “survey” and “survey_id” columns. Northern Bering Sea (NBS), Southeastern Bering Sea (EBS), Bering Sea Slope (BSS), Gulf of Alaska (GOA), Aleutian Islands (AI). }
+#'   \item{\code{survey}}{a character vector; Name and description of survey. The column “survey” is associated with the “srvy” and “survey_id” columns. }
+#'   \item{\code{survey_id}}{a numeric vector; This number uniquely identifies a survey. Name and description of survey. The column “survey_id” is associated with the “srvy” and “survey” columns. For a complete list of surveys go to https://www.fisheries.noaa.gov/resource/document/groundfish-survey-species-code-manual-and-data-codes-manual}
+#'   \item{\code{cruise}}{a numeric vector; This is a six-digit number identifying the cruise number of the form: YYYY99 (where YYYY = year of the cruise; 99 = 2-digit number and is sequential; 01 denotes the first cruise that vessel made in this year, 02 is the second, etc.)}
+#'   \item{\code{haul}}{a numeric vector; This number uniquely identifies a sampling event (haul) within a cruise. It is a sequential number, in chronological order of occurrence.}
+#'   \item{\code{stratum}}{a numeric vector; RACE database statistical area for analyzing data. Strata were designed using bathymetry and other geographic and habitat-related elements. The strata are unique to each survey series. Stratum of value 0 indicates experimental tows. }
+#'   \item{\code{station}}{a character vector; Alpha-numeric designation for the station established in the design of a survey. }
+#'   \item{\code{vessel_name}}{a character vector; Name of the vessel used to collect data for that haul. The column “vessel_name” is associated with the “vessel_id” column. Note that it is possible for a vessel to have a new name but the same vessel id number. For a complete list of vessel ID codes: https://www.fisheries.noaa.gov/resource/document/groundfish-survey-species-code-manual-and-data-codes-manual}
+#'   \item{\code{vessel_id}}{a numeric vector; ID number of the vessel used to collect data for that haul. The column “vessel_id” is associated with the “vessel_name” column. Note that it is possible for a vessel to have a new name but the same vessel id number. For a complete list of vessel ID codes: https://www.fisheries.noaa.gov/resource/document/groundfish-survey-species-code-manual-and-data-codes-manual}
+#'   \item{\code{date_time}}{a character vector; The date (MM/DD/YYYY) and time (HH:MM) of the beginning of the haul. }
+#'   \item{\code{latitude_dd}}{a numeric vector; Latitude (one hundred thousandth of a decimal degree) of the start of the haul.}
+#'   \item{\code{longitude_dd}}{a numeric vector; Longitude (one hundred thousandth of a decimal degree) of the start of the haul.}
+#'   \item{\code{species_code}}{a numeric vector; The species code of the organism associated with the “common_name” and “scientific_name” columns. For a complete species list go to https://www.fisheries.noaa.gov/resource/document/groundfish-survey-species-code-manual-and-data-codes-manual}
+#'   \item{\code{common_name}}{a character vector; The common name of the marine organism associated with the “scientific_name” and “species_code” columns. For a complete species list go to https://www.fisheries.noaa.gov/resource/document/groundfish-survey-species-code-manual-and-data-codes-manual}
+#'   \item{\code{scientific_name}}{a character vector; The scientific name of the organism associated with the “common_name” and “species_code” columns. For a complete taxon list go to https://www.fisheries.noaa.gov/resource/document/groundfish-survey-species-code-manual-and-data-codes-manual}
+#'   \item{\code{taxon_confidence}}{a character vector; Confidence in the ability of the survey team to correctly identify the taxon to the specified level, based solely on identification skill (e.g., not likelihood of a taxon being caught at that station on a location-by-location basis). Quality codes follow: “High”: High confidence and consistency. Taxonomy is stable and reliable at this level, and field identification characteristics are well known and reliable. “Moderate”: Moderate confidence. Taxonomy may be questionable at this level, or field identification characteristics may be variable and difficult to assess consistently. “Low”: Low confidence. Taxonomy is incompletely known, or reliable field identification characteristics are unknown. Species identification confidence in the eastern Bering Sea shelf survey (1982-2008): http://apps-afsc.fisheries.noaa.gov/Publications/ProcRpt/PR2009-04.pdf Species identification confidence in the eastern Bering Sea slope survey (1976-2010): http://apps-afsc.fisheries.noaa.gov/Publications/ProcRpt/PR2014-05.pdf Species identification confidence in the Gulf of Alaska and Aleutian Islands surveys (1980-2011): http://apps-afsc.fisheries.noaa.gov/Publications/ProcRpt/PR2014-01.pdf}
+#'   \item{\code{cpue_kgha}}{a numeric vector; Relative Density. Catch weight (kilograms) divided by area (hectares) swept by the net. }
+#'   \item{\code{cpue_kgkm2}}{a numeric vector; Relative Density. Catch weight (kilograms) divided by area (squared kilometers) swept by the net. }
+#'   \item{\code{cpue_kg1000km2}}{a numeric vector; Relative Density. Catch weight (kilograms) divided by area (thousand square kilometers) swept by the net. }
+#'   \item{\code{cpue_noha}}{a numeric vector; Relative Abundance. Catch number (in number of organisms) per area (hectares) swept by the net. }
+#'   \item{\code{cpue_nokm2}}{a numeric vector; Relative Abundance. Catch number (in number of organisms) per area (squared kilometers) swept by the net. }
+#'   \item{\code{cpue_no1000km2}}{a numeric vector; Relative Abundance. Catch weight (in number of organisms) divided by area (thousand square kilometers) swept by the net.}
+#'   \item{\code{weight_kg}}{a numeric vector; Weight (thousandths of a kilogram) of individuals in a haul by taxon. }
+#'   \item{\code{count}}{a numeric vector; Total number of individuals caught in haul by taxon, represented in whole numbers. }
+#'   \item{\code{bottom_temperature_c}}{a numeric vector; Bottom temperature (tenths of a degree Celsius); NA indicates removed or missing values.}
+#'   \item{\code{surface_temperature_c}}{a numeric vector; Surface temperature (tenths of a degree Celsius); NA indicates removed or missing values. }
+#'   \item{\code{depth_m}}{a numeric vector; Bottom depth (tenths of a meter).}
+#'   \item{\code{distance_fished_km}}{a numeric vector; Distance the net fished (thousandths of kilometers). }
+#'   \item{\code{net_width_m}}{a numeric vector; Measured or estimated distance (meters) between wingtips of the trawl.}
+#'   \item{\code{net_height_m}}{a numeric vector; Measured or estimated distance (meters) between footrope and headrope of the trawl.}
+#'   \item{\code{area_swept_ha}}{a numeric vector; The area the net covered while the net was fishing (hectares), defined as the distance fished times the net width. }
+#'   \item{\code{duration_hr}}{a numeric vector; This is the elapsed time between start and end of a haul (decimal hours). }
+#'   }
+#' @source https://github.com/afsc-gap-products/gap_public_data
+#' @keywords species code data
 #' @examples
-#' convert_deg_rad(170.1)
-#' convert_deg_rad(-60.1)
-convert_deg_rad <- function(deg) {
-    return(deg*pi/180)
-  }
-
-
-
+#' data(racebase_public_foss)
+#' @details DETAILS
+"racebase_public_foss"

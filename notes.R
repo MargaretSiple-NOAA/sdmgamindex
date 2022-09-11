@@ -1,8 +1,4 @@
 
-########### Create Package Readme.md -------------------------------------------
-rmarkdown::render(paste0("./README.Rmd"),
-                  output_dir = "./",
-                  output_file = paste0("README.md"))
 
 ########### Document and create Package ----------------------------------------
 .rs.restartR()
@@ -20,6 +16,11 @@ install("surveyIndex")
 3
 setwd(here::here())
 # devtools::check()
+
+########### Create Package Readme.md -------------------------------------------
+rmarkdown::render(paste0("./README.Rmd"),
+                  output_dir = "./",
+                  output_file = "README.md")
 
 ########### Create Documentation GitHub-Pages ----------------------------------
 
@@ -39,7 +40,7 @@ pkgdown::build_site(pkg = here::here())
 # usethis::use_github_action("pkgdown")
 
 # Save Package tar.gz
-date0 <- "2022.10.01"
+date0 <- "0.1.0"
 file.remove(paste0(dirname(here::here()), "/surveyIndex_",date0,".tar.gz"))
 file.remove(paste0((here::here()), "/surveyIndex_",date0,".tar.gz"))
 devtools::build()
