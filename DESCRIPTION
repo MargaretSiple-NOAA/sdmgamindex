@@ -1,11 +1,35 @@
 Package: surveyIndex
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Calculate survey indices of abundance from DATRAS exchange data.
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Authors@R: 
+  c(person(given = "Emily",
+           family = "Markowitz", 
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0001-5757-4230"),
+           email = "Emily.Markowitz@noaa.gov"),
+    person(given = "Margaret",
+           family = "Siple", 
+           role = c("aut"),
+           email = "Margaret.Siple@noaa.gov"),
+    person(given = "Casper",
+           family = "Berg",
+           role = "aut",
+           email = "cbe@aqua.dtu.dk"))
+Description: This is an implementation of the methods described in
+  Berg et al. (2014): "Evaluation of alternative age-based methods for estimating relative abundance from survey data in relation to assessment models", Fisheries Research 151(2014) 91-99.
+License: GPL (>=3)
 Encoding: UTF-8
 LazyData: true
+Depends:
+    R (>= 3.0),
+    DATRAS,	
+    mgcv,
+    parallel,
+    maps,
+    mapdata
+Imports:
+    MASS,
+    tweedie	, 
+    mvrnorm
+RoxygenNote: 7.2.1
