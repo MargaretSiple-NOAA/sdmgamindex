@@ -42,12 +42,12 @@ crs_latlon = "+proj=longlat +datum=WGS84"
 crs_proj = "EPSG:3338"
 
 
-public_data <- dat <- readr::read_csv("./data/cpue_station.csv") 
+public_data <- dat <- surveyIndex::noaa_afsc_public_foss 
 
 crs_latlon = "+proj=longlat +datum=WGS84"
 crs_proj = "EPSG:3338"
 
-ll <- crs_in2out(x = public_data$longitude_dd,
+ll <- surveyIndex::convert_crs(x = public_data$longitude_dd,
                  y = public_data$latitude_dd, 
                  crs_in = crs_latlon, 
                  crs_out = crs_proj)  
