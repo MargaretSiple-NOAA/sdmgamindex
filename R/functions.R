@@ -1,6 +1,6 @@
 
 # Produce Index ----------------------------------------------------------------
-#
+
 
 #' Calculate survey indices by age.
 #'
@@ -118,7 +118,7 @@ get_surveyidx <- function(
     CIlevel=0.95,
     ... ){
 
-  if (is.null(modelZ) & is.null(modelP)) {
+  if (is.null(modelZ) & is.null(modelP) & fam != "Tweedie") {
     modelZ <- modelP <- rep("Year+s(lon,lat,k=kvecZ[a],bs='ts')+s(Ship,bs='re',by=dum)+s(Depth,bs='ts')+s(TimeShotHour,bs='cc')",
                             length(ages)  )
   }
@@ -434,8 +434,10 @@ get_surveyidx <- function(
     gPreds2.CV[[a]]=rr[[a]]$gp2_cv
     allobs[[a]]=x[[2]]$Nage[,a]
   }
-  getEdf <-function(m) {sum(m$edf)}
-  totEdf <- sum(unlist(lapply(zModels,getEdf))) + sum( unlist( lapply(pModels,getEdf)))
+
+  get_edf <-function(m) { return(sum(m$edf)) }
+
+  totEdf <- sum(unlist(lapply(zModels,get_edf))) + sum( unlist( lapply(pModels,get_edf)))
   rownames(resMat) <- yearRange
   colnames(resMat) <- ages
 
@@ -891,36 +893,6 @@ get_surveyidx_aic<-function(x, BIC=FALSE){
 
 
 
-#' Calculate internal consistency of a survey index.
-#'
-#' Previously called internalCons.
-#'
-#' @title Calculate internal consistency of a survey index.
-#' @param tt A matrix with survey indices (rows=years, cols=ages)
-#' @param print_plot Plot it?
-#' @return a vector of consistencies
-#' @export
-consistency_internal <-
-  function(tt,print_plot=FALSE){
-    tt[tt==0]=NA
-    sel1=1:(nrow(tt)-1);
-    sel2=2:nrow(tt);
-    if(print_plot){ grDevices::dev.new(); b=ceiling((ncol(tt)-1)/2); graphics::par(mfrow=c(b,b));}
-    for(a in 1:(ncol(tt)-1)){
-      cat("Age ",a," vs ",a+1," : ",
-          stats::cor(log(tt[sel1,a]),log(tt[sel2,a+1]),
-                     use="pairwise.complete.obs"),"\n")
-      if(print_plot) {
-        plot(x = log(tt[sel1,a]),y = log(tt[sel2,a+1]))
-        graphics::abline(0,1)
-      }
-    }
-    return( sapply(1:(ncol(tt)-1), function(a) stats::cor(log(tt[sel1,a]),log(tt[sel2,a+1]),use="pairwise.complete.obs")));
-  }
-
-
-
-
 #' Helper function to "borrow" missing age groups from other years
 #'
 #' In years where there are less than 'n' individuals of age 'age',
@@ -957,6 +929,35 @@ fix_age_group <-
       dd<-DATRAS::addSpectrum(dd,cm.breaks=cm.breaks)
     }
     dd
+  }
+
+
+
+#' Calculate internal consistency of a survey index.
+#'
+#' Previously called internalCons.
+#'
+#' @title Calculate internal consistency of a survey index.
+#' @param tt A matrix with survey indices (rows=years, cols=ages)
+#' @param print_plot Plot it?
+#' @return a vector of consistencies
+#' @export
+consistency_internal <-
+  function(tt,print_plot=FALSE){
+    tt[tt==0]=NA
+    sel1=1:(nrow(tt)-1);
+    sel2=2:nrow(tt);
+    if(print_plot){ grDevices::dev.new(); b=ceiling((ncol(tt)-1)/2); graphics::par(mfrow=c(b,b));}
+    for(a in 1:(ncol(tt)-1)){
+      cat("Age ",a," vs ",a+1," : ",
+          stats::cor(log(tt[sel1,a]),log(tt[sel2,a+1]),
+                     use="pairwise.complete.obs"),"\n")
+      if(print_plot) {
+        plot(x = log(tt[sel1,a]),y = log(tt[sel2,a+1]))
+        graphics::abline(0,1)
+      }
+    }
+    return( sapply(1:(ncol(tt)-1), function(a) stats::cor(log(tt[sel1,a]),log(tt[sel2,a+1]),use="pairwise.complete.obs")));
   }
 
 

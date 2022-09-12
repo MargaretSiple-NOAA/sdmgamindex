@@ -80,11 +80,11 @@ This "problem child" will have patchier and less understood availability to the 
 
 In this example, we will use data from NOAA Fisheries' eastern Bering sea (EBS) bottom trawl survey. The Resource Assessment and Conservation Engineering (RACE) Division Groundfish Assessment Program (GAP) of the Alaska Fisheries Science Center (AFSC) conducts fisheries-independent bottom trawl surveys to assess the populations of demersal fish and crab stocks of Alaska. Data presented here are presence-only (non-zero) observations from those surveys and therefore CANNOT be aggregated. 
 
-For the sake of a simple example, we will only assess data from 2010 to 2021. 
+For the sake of a simple example, we will only assess data from 2015 to 2021. 
 
 ```{r vars} 
 SPECIES <- c("yellowfin sole", "walleye pollock", "red king crab")
-YEARS <- 2010:2021
+YEARS <- 2015:2021
 SRVY <- "EBS"
 ```
 
@@ -212,8 +212,17 @@ plot(tmp)
 Here we want to match covariate data to the prediction grid. 
 
 ```{r dat_cov}
-dat_cov <- pred_grid %>% 
-  dplyr::select(-Shape_Area)
+
+dat_cov <- surveyIndex::pred_grid_ebs %>% 
+  dplyr::select(-Shape_Area) %>% 
+    dplyr::mutate( 
+    sx = ((lon - mean(lon, na.rm = TRUE))/1000),
+    sy = ((lat - mean(lat, na.rm = TRUE))/1000))
+
+sp_extrap_raster <- SpatialPoints(
+  coords = coordinates(as.matrix(dat_cov[,c("lon", "lat")])), 
+  proj4string = CRS(crs_latlon) )
+
 ```
 
 ### 4a. Data that varies over only space (depth)
@@ -234,20 +243,16 @@ idw_fit <- gstat::gstat(formula = BOTTOM_DEPTH ~ 1,
                         locations = x,
                         nmax = 4)
 
-stn_predict <- raster::predict(idw_fit, x)
-
-sp_extrap_raster <- SpatialPoints(
-  coords = coordinates(as.matrix(dat_cov[,c("lon", "lat")])), 
-  proj4string = CRS(crs_latlon) )
+# stn_predict <- raster::predict(idw_fit, x)
 
 extrap_data0 <- raster::predict(
-  idw_fit, 
-  as(sp_extrap_raster, Class = "SpatialPoints")) %>%
+  idw_fit, sp_extrap_raster) %>%
+  # as(sp_extrap_raster, Class = "SpatialPoints")) %>%
   sf::st_as_sf() %>%
   sf::st_transform(crs = crs_latlon)  %>%
   stars::st_rasterize() 
 
-plot(extrap_data0) # Just so we can see what we are looking at: 
+plot(extrap_data0, main = "Interpolated Bottom Depths") # Just so we can see what we are looking at:
 
 extrap_data <- stars::st_extract(x = extrap_data0,
                                  at = as.matrix(dat_cov[,c("lon", "lat")]))
@@ -267,27 +272,33 @@ Here, bottom temperature, and thereby the cold pool extent, have been show to dr
 For this we are going to lean on our in-house prepared validated and pre-prepared [{coldpool} R package](https://github.com/afsc-gap-products/coldpool) (S. Rohan, L. Barnett, and N. Charriere). This data interpolates over the whole area of the survey so there are no missing data. 
 
 ```{r covar_bt}
-x <- coldpool::ebs_bottom_temperature %>%
-  raster::projectRaster(., crs = crs_latlon) %>%
-  raster::extract(x = ., 
-                  y = as.matrix(dat_cov[,c("sx", "sy")])) %>% 
-  as.data.frame()
 
-names(x) <- paste0("GEAR_TEMPERATURE", 
-                          gsub(pattern = "_", replacement = "", 
-                               x = gsub(pattern = "[a-zA-Z]+", 
-                                        replacement = "", 
-                                        x = names(x))))
-dat_cov <- dplyr::bind_cols(dat_cov, x) %>% 
+plot(coldpool::ebs_bottom_temperature[[1]]) # Just so we can see what we are looking at: 
+
+tmp <- c()
+for (i in 1:length(YEARS)) {
+  tmp <- c(tmp, 
+           grep(pattern = YEARS[i], x = names(coldpool::ebs_bottom_temperature)))
+}
+
+extrap_data0 <- coldpool::ebs_bottom_temperature[[tmp]] %>% 
+    as(., Class = "SpatialPointsDataFrame") %>%
+      sf::st_as_sf() %>%
+  sf::st_transform(crs = crs_latlon)  %>%
+  stars::st_rasterize() %>% 
+    stars::st_extract(x = .,
+                      at = as.matrix(dat_cov[,c("lon", "lat")]))
+
+names(extrap_data0) <- paste0("GEAR_TEMPERATURE", YEARS)
+
+dat_cov <- dplyr::bind_cols(dat_cov, extrap_data0) %>% 
   na.omit()
 
 head(dat_cov)
 
 ```
 
-
 ## 5. DATRAS structure
-
 
 Now, we need to fill in the data with the zeros!
 
@@ -357,12 +368,18 @@ get_pd <- function(year,
   return(pd)
 }
 
- allpd <- lapply(YEARS, FUN = get_pd, x = dat_cov, vars = vars, varsbyyr = varsbyyr)
+ allpd <- lapply(YEARS, FUN = get_pd, x = dat_cov, 
+                 vars = vars, varsbyyr = varsbyyr)
   names(allpd) <- as.character(YEARS)
+  for (i in 1:length(allpd)){
+    names(allpd[i][[1]]) <- gsub(pattern = "[0-9]+", replacement = "", x = names(allpd[i][[1]]))
+  }
   
   head(allpd[1])
   
 ```
+
+
 
 ```{r cov_datras}
 
@@ -393,26 +410,17 @@ ds
 
 ```{r formulas}
 fm <-  list(
-#   # Null model spatial
-#   "fm_1null_s" = #"Year +
-#     "s(sx,sy,bs=c('ts'),k=520)",
-#   # Null model temporal
-#   "fm_1null_t" = "Year",
-#   # Null model spatial and temporal
-#   "fm_1null_s_t" = "Year +
-# s(sx,sy,bs=c('ts'),k=520)",
-# 
-#   # Null model spatial and temporal with an additional spatiotemporal effect
-#   "fm_1null_s_t" = "Year +
-# s(sx,sy,bs=c('ts'),k=520)  + 
-# s(sx,sy,bs=c('ts'),k=50,by=Year,id=1)",
+  # Null model spatial
+  "fm_1null_s" = #"Year +
+    "s(sx,sy,bs=c('ts'),k=520)",
 
   # Mdoel with simple covariates
-  "fm_2cov" = "Year + 
-s(sx,sy,bs=c('ts'),k=520) + 
-s(BOTTOM_DEPTH,bs='ts',k=10) + 
+  "fm_2cov" = #"Year +
+# s(sx,sy,bs=c('ts'),k=520) +
+"s(BOTTOM_DEPTH,bs='ts',k=10) +
 s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)"#,
-  # Model with an additional year effect
+
+# Model with an additional year effect
 #   "fm_3smyr" = "Year + 
 # s(sx,sy,bs=c('ts'),k=520) + 
 # s(BOTTOM_DEPTH,bs='ts',k=10) + 
@@ -434,11 +442,15 @@ s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)"#,
 Here are all of the models we want to try fitting:
 
 ```{r model_combos}
-  comb <- tidyr::crossing("SPECIES" = SPECIES, 
-                          "fm_name" = gsub(pattern = " ", replacement = "_", x = names(fm))) %>% 
-    dplyr::left_join(x = ., 
-                     y = data.frame("fm" = gsub(pattern = "\n", replacement = "", x = unlist(fm), fixed = TRUE), 
-                                    "fm_name" = gsub(pattern = " ", replacement = "_", x = names(fm))), 
+  comb <- tidyr::crossing(
+    "SPECIES" = SPECIES, 
+    "fm_name" = gsub(pattern = " ", replacement = "_", x = names(fm))) %>% 
+    dplyr::left_join(
+      x = ., 
+      y = data.frame("fm" = gsub(pattern = "\n", replacement = "", 
+                                 x = unlist(fm), fixed = TRUE), 
+                     "fm_name" = gsub(pattern = " ", replacement = "_", 
+                                      x = names(fm))), 
                      by = "fm_name")
 
 comb
@@ -448,17 +460,18 @@ comb
 ```{r model_fit}
   
   models <- fittimes <- list()
-  
+
   for(i in 1:nrow(comb)){
     cat("Fitting ",comb$SPECIES[i],"\n", comb$fm_name[i], ": ", comb$fm[i], "\n")
-    
+
     temp <- paste0(comb$SPECIES[i], " ", comb$fm_name[i])
-    
-    fittimes[[ temp ]] <- 
-      system.time ( models[[ temp ]] <- 
-                     surveyIndex::get_surveyidx(x = ds[[ comb$SPECIES[i] ]], 
+
+    fittimes[[ temp ]] <-
+      system.time ( models[[ temp ]] <-
+                     surveyIndex::get_surveyidx(
+                       x = ds[[ comb$SPECIES[i] ]],
                                    ages = 1,
-                                   myids = NULL, 
+                                   myids = NULL,
                                    predD = allpd,
                                    cutOff = 0,
                                    fam = "Tweedie",
@@ -466,23 +479,23 @@ comb
                                    gamma = 1,
                                    control = list(trace = TRUE,
                                                   maxit = 20))  )
-    
+
   }
-  
+
   save(models, fittimes, file = paste0(dir_out, "model_fits.Rdata"))
 ```
 
 
 ```{r model_check}
-  ## Check basis dimensions splines (spatial resolution)
-  sink(paste0(dir_out, "gamcheck.txt"))
+  # ## Check basis dimensions splines (spatial resolution)
+  # sink(paste0(dir_out, "gamcheck.txt"))
   lapply(models,function(x) gam.check(x$pModels[[1]]))
-  sink()
-  
-  ## Model summaries
-  sink(paste0(dir_out, "summaries.txt"))
+  # sink()
+  # 
+  # ## Model summaries
+  # sink(paste0(dir_out, "summaries.txt"))
   lapply(models,function(x) summary(x$pModels[[1]]))
-  sink()
+  # sink()
 
 ```
 
