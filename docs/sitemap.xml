@@ -58,10 +58,16 @@
     <loc>/reference/get_bathy_grid.html</loc>
   </url>
   <url>
+    <loc>/reference/get_datrasraw.html</loc>
+  </url>
+  <url>
     <loc>/reference/get_effect.html</loc>
   </url>
   <url>
     <loc>/reference/get_grid.html</loc>
+  </url>
+  <url>
+    <loc>/reference/get_prediction_grid.html</loc>
   </url>
   <url>
     <loc>/reference/get_surveyidx.html</loc>

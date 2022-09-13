@@ -1651,6 +1651,98 @@ plot_surveyidx <- function (x,
 # Covert and process raw data ------------------------------------------------------------------
 
 
+#' Data frame with one row per haul to DATRASraw alike object
+#'
+#' @param x Data.frame. Zero filled catch data.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' dat <- data.frame(
+#'           species = 1:2,
+#'           Year = 2016:2020,
+#'           lon = rnorm(n = 10, mean = 170, sd = 10),
+#'           lat = rnorm(n = 10, mean = 170, sd = 10),
+#'           sx = rnorm(n = 10, mean = 60, sd = 10),
+#'           sy = rnorm(n = 10, mean = 170, sd = 10),
+#'           covA = rnorm(n = 10, mean = 3, sd = 10),
+#'           covB = rnorm(n = 10, mean = 20, sd = 10),
+#'           EFFORT = rnorm(n = 10, mean = 20, sd = 10))
+#'  ds <- split(dat,dat$species)
+#'  lapply(ds, get_datrasraw)
+#'
+get_datrasraw <- function(x){
+  x$haul.id = 1:nrow(x)
+  dd = list()
+  dd[[1]] = data.frame()
+  dd[[2]] = x
+  dd[[3]] = data.frame()
+  class(dd)<-"DATRASraw"
+  dd
+}
+
+#' Prediction a grid for a specific year
+#'
+#' @param year Numeric string. The years the data is available for.
+#' @param x Data.frame. The data.frame of the covariate data going into the model.
+#' @param subsel Default = NULL.
+#' @param varsbyyr Character string. The name of the variables that vary by year.
+#' @param vars Character string. The name of the variables that do not vary by year.
+#'
+#' @return list of data by year
+#' @export
+#'
+#' @examples
+#' dat <- data.frame(
+#'           lon = rnorm(n = 10, mean = 170, sd = 10),
+#'           lat = rnorm(n = 10, mean = 170, sd = 10),
+#'           sx = rnorm(n = 10, mean = 60, sd = 10),
+#'           sy = rnorm(n = 10, mean = 170, sd = 10),
+#'           covA = rnorm(n = 10, mean = 3, sd = 10),
+#'           covB2019 = rnorm(n = 10, mean = 20, sd = 10),
+#'           covB2020 = rnorm(n = 10, mean = 20, sd = 10),
+#'           covB2021 = rnorm(n = 10, mean = 20, sd = 10),
+#'           covB2022 = rnorm(n = 10, mean = 20, sd = 10),
+#'           EFFORT = rnorm(n = 10, mean = 20, sd = 10))
+#'
+#' vars <- "covA"
+#' varsbyyr <- "covB"
+#' YEARS <- 2019:2022
+#' pg <- lapply(YEARS,
+#'        FUN = get_prediction_grid,
+#'        x = dat,
+#'        vars = vars,
+#'        varsbyyr = varsbyyr)
+#' names(pg) <- YEARS
+#' pg
+get_prediction_grid <- function(year,
+                   x,
+                   subsel=NULL,
+                   varsbyyr,
+                   vars){
+  nam = c("lon","lat","sx","sy", vars)
+  nam2 <- tidyr::crossing(varsbyyr, year) %>%
+    dplyr::mutate(vars0 = paste0(varsbyyr, year)) %>%
+    dplyr::select(vars0) %>%
+    unlist()
+  # nam2 = paste0(c(vars),year)
+
+  pd <- data.frame(x[,c(nam,nam2)])
+  colnames(pd)<-c(nam,
+                  unique(gsub(pattern = "[0-9]+",
+                              replacement = "", x = nam2)))
+
+  pd$EFFORT <- 1.0
+  ## Note, Better to use median effort here if splines on effort is used.
+  ## Otherwise uncertainty is inflated because it is outside normal effort range.
+
+  if (!is.null(subsel)) {
+    pd = pd[subsel,]
+  }
+  return(pd)
+}
+
 #' Create a grid of haul positions from a DATRASraw object.
 #'
 #' @title Create a grid of haul positions from a DATRASraw object.

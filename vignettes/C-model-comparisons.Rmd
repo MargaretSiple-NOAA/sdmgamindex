@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# GAMs, the old fashioned way
+# GAMs; the old fashioned way
 
 ```{r setup, echo = FALSE}
 # library(remotes)
@@ -37,7 +37,7 @@ for (p in PKG) {
 }
 ```
 
-## Wrangle Data
+## 1. Wrangle Data
 
 ```{r regular_gams}
 SPECIES <- c(# must match common name column
@@ -56,16 +56,9 @@ crs_proj = "EPSG:3338"
 
 dat <- surveyIndex::noaa_afsc_public_foss
 
-# ll <- surveyIndex::convert_crs(x = dat$longitude_dd,
-#                  y = dat$latitude_dd, 
-#                  crs_in = crs_latlon, 
-#                  crs_out = crs_proj)  
-
 # Get cold pool data using cold pool data from the {coldpool} R package
 dat <- dat %>%
-  dplyr::mutate(#lon = ll$X,
-                #lat = ll$Y,
-                sx = ((longitude_dd - mean(longitude_dd, na.rm = TRUE))/1000),
+  dplyr::mutate(sx = ((longitude_dd - mean(longitude_dd, na.rm = TRUE))/1000),
                 sy = ((latitude_dd - mean(latitude_dd, na.rm = TRUE))/1000)) %>% 
   stats::na.omit() %>% 
   dplyr::filter(common_name %in% SPECIES &
@@ -78,7 +71,7 @@ dat <- dat %>%
 head(dat)
 ```
 
-## 6. Formulas
+## 2. Formulas
 
 ```{r formulas}
 fm <-  list(
@@ -94,7 +87,7 @@ s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)"
 )
 ```
 
-## Run simple GAM models
+## 3. Run simple GAM models
 
 Here are all of the models we want to try fitting:
 
@@ -141,9 +134,13 @@ comb
 load(system.file("vigC_model_output.rdata", package = "surveyIndex" ) ) 
 ```
 
-## Assess the model
+## 4. Assess the model
 
 ```{r model_AIC}
+
+b <- lapply(X = models, FUN = AIC)
+bb <- sapply(models, `[`, 1)
+
 
 # surveyIndex::get_surveyidx_aic(models)
 
@@ -192,8 +189,6 @@ figure <- ggplot() +
              mapping = aes(x= longitude_dd, y = latitude_dd, color = pred))
 
 ```
-
-
 
 
 

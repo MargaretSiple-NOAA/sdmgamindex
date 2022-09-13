@@ -85,54 +85,12 @@
     
     
 <div class="section level2">
-<h2 id="gams-the-old-fashioned-way">GAMs, the old fashioned way<a class="anchor" aria-label="anchor" href="#gams-the-old-fashioned-way"></a>
+<h2 id="gams-the-old-fashioned-way">GAMs; the old fashioned way<a class="anchor" aria-label="anchor" href="#gams-the-old-fashioned-way"></a>
 </h2>
-<pre><code><span><span class="co">#&gt; Loading required package: surveyIndex</span></span>
-<span><span class="co">#&gt; Loading required package: DATRAS</span></span>
-<span><span class="co">#&gt; Loading required package: mgcv</span></span>
-<span><span class="co">#&gt; Loading required package: nlme</span></span>
-<span><span class="co">#&gt; This is mgcv 1.8-40. For overview type 'help("mgcv-package")'.</span></span>
-<span><span class="co">#&gt; Loading required package: parallel</span></span>
-<span><span class="co">#&gt; Loading required package: maps</span></span>
-<span><span class="co">#&gt; Loading required package: mapdata</span></span>
-<span><span class="co">#&gt; Loading required package: maptools</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
-<span><span class="co">#&gt; Checking rgeos availability: TRUE</span></span>
-<span><span class="co">#&gt; Please note that 'maptools' will be retired by the end of 2023,</span></span>
-<span><span class="co">#&gt; plan transition at your earliest convenience;</span></span>
-<span><span class="co">#&gt; some functionality will be moved to 'sp'.</span></span>
-<span><span class="co">#&gt; Loading required package: RANN</span></span>
-<span><span class="co">#&gt; Loading required package: marmap</span></span>
-<span><span class="co">#&gt; Registered S3 methods overwritten by 'adehabitatMA':</span></span>
-<span><span class="co">#&gt;   method                       from</span></span>
-<span><span class="co">#&gt;   print.SpatialPixelsDataFrame sp  </span></span>
-<span><span class="co">#&gt;   print.SpatialPixels          sp</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: 'marmap'</span></span>
-<span><span class="co">#&gt; The following object is masked from 'package:grDevices':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     as.raster</span></span>
-<span><span class="co">#&gt; Loading required package: ggplot2</span></span>
-<span><span class="co">#&gt; Loading required package: dplyr</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: 'dplyr'</span></span>
-<span><span class="co">#&gt; The following object is masked from 'package:nlme':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     collapse</span></span>
-<span><span class="co">#&gt; The following objects are masked from 'package:stats':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     filter, lag</span></span>
-<span><span class="co">#&gt; The following objects are masked from 'package:base':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, setdiff, setequal, union</span></span>
-<span><span class="co">#&gt; Loading required package: sf</span></span>
-<span><span class="co">#&gt; Linking to GEOS 3.9.1, GDAL 3.4.3, PROJ 7.2.1; sf_use_s2() is TRUE</span></span>
-<span><span class="co">#&gt; Loading required package: gstat</span></span>
-<span><span class="co">#&gt; Loading required package: magrittr</span></span></code></pre>
 <div class="section level3">
-<h3 id="wrangle-data">Wrangle Data<a class="anchor" aria-label="anchor" href="#wrangle-data"></a>
+<h3 id="wrangle-data">1. Wrangle Data<a class="anchor" aria-label="anchor" href="#wrangle-data"></a>
 </h3>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">SPECIES</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="co"># must match common name column</span></span>
 <span>  <span class="st">"walleye pollock"</span>,</span>
 <span>  <span class="st">"yellowfin sole"</span>,</span>
@@ -149,21 +107,14 @@
 <span></span>
 <span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu">surveyIndex</span><span class="fu">::</span><span class="va"><a href="../reference/noaa_afsc_public_foss.html">noaa_afsc_public_foss</a></span></span>
 <span></span>
-<span><span class="co"># ll &lt;- surveyIndex::convert_crs(x = dat$longitude_dd,</span></span>
-<span><span class="co">#                  y = dat$latitude_dd, </span></span>
-<span><span class="co">#                  crs_in = crs_latlon, </span></span>
-<span><span class="co">#                  crs_out = crs_proj)  </span></span>
-<span></span>
 <span><span class="co"># Get cold pool data using cold pool data from the {coldpool} R package</span></span>
-<span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="va">dat</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span><span class="co">#lon = ll$X,</span></span>
-<span>                <span class="co">#lat = ll$Y,</span></span>
-<span>                sx <span class="op">=</span> <span class="op">(</span><span class="op">(</span><span class="va">longitude_dd</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">longitude_dd</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fl">1000</span><span class="op">)</span>,</span>
-<span>                sy <span class="op">=</span> <span class="op">(</span><span class="op">(</span><span class="va">latitude_dd</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">latitude_dd</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fl">1000</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">na.omit</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
+<span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="va">dat</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>sx <span class="op">=</span> <span class="op">(</span><span class="op">(</span><span class="va">longitude_dd</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">longitude_dd</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fl">1000</span><span class="op">)</span>,</span>
+<span>                sy <span class="op">=</span> <span class="op">(</span><span class="op">(</span><span class="va">latitude_dd</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">latitude_dd</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fl">1000</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
+<span>  <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">na.omit</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">common_name</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">SPECIES</span> <span class="op">&amp;</span></span>
 <span>                  <span class="va">year</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">YEARS</span> <span class="op">&amp;</span></span>
-<span>                  <span class="va">srvy</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">SRVY</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
+<span>                  <span class="va">srvy</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">SRVY</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>GEAR_TEMPERATURE <span class="op">=</span> <span class="va">bottom_temperature_c</span>, </span>
 <span>                BOTTOM_DEPTH <span class="op">=</span> <span class="va">depth_m</span>, </span>
 <span>                Year <span class="op">=</span> <span class="va">year</span><span class="op">)</span></span>
@@ -187,9 +138,9 @@
 <span><span class="co">#&gt; <span style="color: #949494;">#   net_width_m &lt;dbl&gt;, net_height_m &lt;dbl&gt;, area_swept_ha &lt;dbl&gt;, …</span></span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="formulas">6. Formulas<a class="anchor" aria-label="anchor" href="#formulas"></a>
+<h3 id="formulas">2. Formulas<a class="anchor" aria-label="anchor" href="#formulas"></a>
 </h3>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fm</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="co"># Null model spatial and temporal with an additional year effect</span></span>
 <span>  <span class="st">"fm_1_s_t_st"</span> <span class="op">=</span> <span class="st">"Year +</span></span>
@@ -203,13 +154,13 @@
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="run-simple-gam-models">Run simple GAM models<a class="anchor" aria-label="anchor" href="#run-simple-gam-models"></a>
+<h3 id="run-simple-gam-models">3. Run simple GAM models<a class="anchor" aria-label="anchor" href="#run-simple-gam-models"></a>
 </h3>
 <p>Here are all of the models we want to try fitting:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">comb</span> <span class="op">&lt;-</span> <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/expand.html" class="external-link">crossing</a></span><span class="op">(</span></span>
 <span>    <span class="st">"SPECIES"</span> <span class="op">=</span> <span class="va">SPECIES</span>, </span>
-<span>    <span class="st">"fm_name"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">" "</span>, replacement <span class="op">=</span> <span class="st">"_"</span>, x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fm</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
+<span>    <span class="st">"fm_name"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">" "</span>, replacement <span class="op">=</span> <span class="st">"_"</span>, x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fm</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
 <span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span></span>
 <span>      x <span class="op">=</span> <span class="va">.</span>, </span>
 <span>      y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="st">"fm"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">"\n"</span>, replacement <span class="op">=</span> <span class="st">""</span>, </span>
@@ -228,7 +179,7 @@
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> walleye pollock fm_2_cov    s(BOTTOM_DEPTH,bs='ts',k=10) +s(log(GEAR_TEMPERAT…</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> yellowfin sole  fm_1_s_t_st Year +    s(sx,sy,bs=c('ts'),k=376) +     s(sx,sy…</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> yellowfin sole  fm_2_cov    s(BOTTOM_DEPTH,bs='ts',k=10) +s(log(GEAR_TEMPERAT…</span></span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">models</span> <span class="op">&lt;-</span> <span class="va">fittimes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span>  <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">comb</span><span class="op">)</span><span class="op">)</span><span class="op">{</span></span>
@@ -236,7 +187,7 @@
 <span></span>
 <span>    <span class="va">temp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">comb</span><span class="op">$</span><span class="va">SPECIES</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="st">" "</span>, <span class="va">comb</span><span class="op">$</span><span class="va">fm_name</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span></span>
 <span></span>
-<span>    <span class="va">dat0</span> <span class="op">&lt;-</span> <span class="va">dat</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
+<span>    <span class="va">dat0</span> <span class="op">&lt;-</span> <span class="va">dat</span> <span class="op">%&gt;%</span> </span>
 <span>      <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">common_name</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">comb</span><span class="op">$</span><span class="va">SPECIES</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span></span>
 <span>    </span>
 <span>    <span class="va">fittimes</span><span class="op">[[</span> <span class="va">temp</span> <span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span></span>
@@ -251,10 +202,14 @@
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/save.html" class="external-link">save</a></span><span class="op">(</span><span class="va">models</span>, <span class="va">fittimes</span>, file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"../inst/vigC_model_output.rdata"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="assess-the-model">Assess the model<a class="anchor" aria-label="anchor" href="#assess-the-model"></a>
+<h3 id="assess-the-model">4. Assess the model<a class="anchor" aria-label="anchor" href="#assess-the-model"></a>
 </h3>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
+<span><span class="va">b</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span>X <span class="op">=</span> <span class="va">models</span>, FUN <span class="op">=</span> <span class="va">AIC</span><span class="op">)</span></span>
+<span><span class="va">bb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">models</span>, <span class="va">`[`</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span></span>
+<span></span>
 <span><span class="co"># surveyIndex::get_surveyidx_aic(models)</span></span>
 <span></span>
 <span></span>
@@ -269,7 +224,7 @@
 <span><span class="co"># b$df %in% min(b$df):(min(b$df)+5) </span></span>
 <span></span>
 <span><span class="co"># bb</span></span></code></pre></div>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bb</span> <span class="op">&lt;-</span> <span class="va">models</span><span class="op">$</span><span class="va">`yellowfin sole fm_1_s_t_st`</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>,<span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/gam.check.html" class="external-link">gam.check</a></span><span class="op">(</span><span class="va">bb</span><span class="op">)</span></span></code></pre></div>
@@ -286,20 +241,20 @@
 <span><span class="co">#&gt; indicate that k is too low, especially if edf is close to k'.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                   k'    edf k-index p-value</span></span>
-<span><span class="co">#&gt; s(sx,sy)      375.00  95.70    0.94    0.61</span></span>
-<span><span class="co">#&gt; s(sx,sy):Year  10.00   3.08    0.94    0.59</span></span>
+<span><span class="co">#&gt; s(sx,sy)      375.00  95.70    0.94    0.57</span></span>
+<span><span class="co">#&gt; s(sx,sy):Year  10.00   3.08    0.94    0.60</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/vis.gam.html" class="external-link">vis.gam</a></span><span class="op">(</span><span class="va">bb</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">cc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/predict.gam.html" class="external-link">predict.gam</a></span><span class="op">(</span>object <span class="op">=</span> <span class="va">bb</span>, newdata <span class="op">=</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">dat0</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
+<span><span class="va">dat0</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span> <span class="op">%&gt;%</span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>pred <span class="op">=</span> <span class="va">cc</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">figure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">dat0</span>, </span>
-<span>             mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span> <span class="va">longitude_dd</span>, y <span class="op">=</span> <span class="va">latitude_dd</span>, color <span class="op">=</span> <span class="va">pred</span><span class="op">)</span><span class="op">)</span></span></code></pre>
+<span><span class="va">figure</span> <span class="op">&lt;-</span> <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_point</span><span class="op">(</span>data <span class="op">=</span> <span class="va">dat0</span>, </span>
+<span>             mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span> <span class="va">longitude_dd</span>, y <span class="op">=</span> <span class="va">latitude_dd</span>, color <span class="op">=</span> <span class="va">pred</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <p><img src="C-model-comparisons_files/figure-html/model_plots_1-2.png" width="700"></p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bb</span> <span class="op">&lt;-</span> <span class="va">models</span><span class="op">$</span><span class="va">`yellowfin sole fm_2_cov`</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>,<span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/gam.check.html" class="external-link">gam.check</a></span><span class="op">(</span><span class="va">bb</span><span class="op">)</span></span></code></pre></div>
@@ -324,12 +279,12 @@
 <span></span>
 <span><span class="va">cc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/predict.gam.html" class="external-link">predict.gam</a></span><span class="op">(</span>object <span class="op">=</span> <span class="va">bb</span>, newdata <span class="op">=</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">dat0</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
+<span><span class="va">dat0</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span> <span class="op">%&gt;%</span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>pred <span class="op">=</span> <span class="va">cc</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">figure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">dat0</span>, </span>
-<span>             mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span> <span class="va">longitude_dd</span>, y <span class="op">=</span> <span class="va">latitude_dd</span>, color <span class="op">=</span> <span class="va">pred</span><span class="op">)</span><span class="op">)</span></span></code></pre>
+<span><span class="va">figure</span> <span class="op">&lt;-</span> <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_point</span><span class="op">(</span>data <span class="op">=</span> <span class="va">dat0</span>, </span>
+<span>             mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span> <span class="va">longitude_dd</span>, y <span class="op">=</span> <span class="va">latitude_dd</span>, color <span class="op">=</span> <span class="va">pred</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <p><img src="C-model-comparisons_files/figure-html/model_plots_2-2.png" width="700"></p>
 </div>
 </div>

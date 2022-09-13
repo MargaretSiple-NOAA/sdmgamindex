@@ -45,10 +45,10 @@ For this example, let's say we want to assess:
 
 :::: {style="display: flex;"}
 ::: {style="width:500px;"}
-![Yellowfin Sole](https://github.com/EmilyMarkowitz-NOAA/gap_bs_data_report/blob/main/img/yellowfin_sole.png?raw=true){width=25%}
+![](https://github.com/EmilyMarkowitz-NOAA/gap_bs_data_report/blob/main/img/yellowfin_sole.png?raw=true){width=60%}
 :::
 ::: {}
-This commonly caught "golden child" species has been realitively easy to model and assess because of it's high abundance, large distribution over the survey area, and consistent availability to the survey. 
+**Yellowfin Sole** is a commonly caught "golden child" species has been realitively easy to model and assess because of it's high abundance, large distribution over the survey area, and consistent availability to the survey. 
 :::
 ::::
 
@@ -56,10 +56,10 @@ This commonly caught "golden child" species has been realitively easy to model a
 
 :::: {style="display: flex;"}
 ::: {style="width:500px;"}
-![Walleye Pollock](https://github.com/EmilyMarkowitz-NOAA/gap_bs_data_report/blob/main/img/walleye_pollock.png?raw=true){width=25%}
+![](https://github.com/EmilyMarkowitz-NOAA/gap_bs_data_report/blob/main/img/walleye_pollock.png?raw=true){width=75%}
 :::
 ::: {}
-Walleye pollock are also common to the survey, but their distribution and availability to the survey are driven by density-dependence and temperature and the cold pool extent. Including covariates in model fits could help uncover structure that could help us better understand this specie's abundance. 
+**Walleye pollock** are also common to the survey, but their distribution and availability to the survey are driven by density-dependence and temperature and the cold pool extent. Including covariates in model fits could help uncover structure that could help us better understand this specie's abundance. 
 :::
 ::::
 
@@ -67,10 +67,10 @@ Walleye pollock are also common to the survey, but their distribution and availa
 
 :::: {style="display: flex;"}
 ::: {style="width:500px;"}
-![Red King Crab](https://github.com/EmilyMarkowitz-NOAA/gap_bs_data_report/blob/main/img/red_king_crab.png?raw=true){width=25%}
+![](https://github.com/EmilyMarkowitz-NOAA/gap_bs_data_report/blob/main/img/red_king_crab.png?raw=true){width=35%}
 :::
 ::: {}
-This "problem child" will have patchier and less understood availability to the survey. 
+**Red King Crab** is a "problem child" will have patchier and less understood availability to the survey. 
 :::
 ::::
 
@@ -190,9 +190,13 @@ pred_grid <- pred_grid %>%
 head(pred_grid)
 ```
 
-It is also good to have a shapefile on hand to crop and constrain your outputs too. Here at AFSC GAP, we have developed the [{akgfmaps} R package](https://github.com/afsc-gap-products/akgfmaps) to save and share such shapefiles.  
+ 
 
-```{r survey_shapefile}
+```{r survey_shapefile, eval=FALSE, echo=FALSE}
+
+
+# It is also good to have a shapefile on hand to crop and constrain your outputs too. Here at AFSC GAP, we have developed the [{akgfmaps} R package](https://github.com/afsc-gap-products/akgfmaps) to save and share such shapefiles. 
+
 # library(devtools)
 # devtools::install_github("afsc-gap-products/akgfmaps", build_vignettes = TRUE)
 library(akgfmaps)
@@ -315,6 +319,8 @@ head(dat_cov)
 
 ## 5. DATRAS structure
 
+### 5b. Catch Data
+
 Now, we need to fill in the data with the zeros!
 
 ```{r catch_haul_fill_0}
@@ -357,63 +363,21 @@ Now, we need to fill in the data with the zeros!
 ```
   
 ```{r catch_haul_datras }
-  ## prediction a grid for a specific year 
-get_pd <- function(year, 
-                  x,
-                  subsel=NULL, 
-                  varsbyyr, 
-                  vars){
-  nam = c("lon","lat","sx","sy", vars)
-  nam2 <- tidyr::crossing(varsbyyr, year) %>% 
-    dplyr::mutate(vars0 = paste0(varsbyyr, year)) %>% 
-    dplyr::select(vars0) %>% 
-    unlist()
-  # nam2 = paste0(c(vars),year)
-  
-  pd = data.frame(x[,c(nam,nam2)])
-  colnames(pd)<-c(nam,
-                  unique(gsub(pattern = "[0-9]+", 
-                              replacement = "", x = nam2)))
-  
-  pd$EFFORT = 1.0 
-  ## Note, Better to use median effort here if splines on effort is used.
-  ## Otherwise uncertainty is inflated because it is outside normal effort range.
-  
-  if (!is.null(subsel)) {
-    pd = pd[subsel,]
-  }
-  return(pd)
-}
-
- allpd <- lapply(YEARS, FUN = get_pd, x = dat_cov, 
+ allpd <- lapply(YEARS, FUN = surveyIndex::get_prediction_grid, x = dat_cov, 
                  vars = vars, varsbyyr = varsbyyr)
   names(allpd) <- as.character(YEARS)
-  for (i in 1:length(allpd)){
-    # names(allpd[i][[1]]) <- gsub(pattern = "[0-9]+", replacement = "", x = names(allpd[i][[1]]))
-  }
   
   head(allpd[1][[1]])
   
 ```
 
-
+### 5a. Covariate Data
 
 ```{r cov_datras}
 
-## Data frame with one row per haul to DATRASraw alike object
-df2dr <- function(x){
-  x$haul.id = 1:nrow(x)
-  dd = list()
-  dd[[1]] = data.frame()
-  dd[[2]] = x
-  dd[[3]] = data.frame()
-  class(dd)<-"DATRASraw"
-  dd
-}
-
   ## split data by species, make into DATRASraw + Nage matrix
   ds <- split(dat_catch_haul,dat_catch_haul$COMMON_NAME)
-  ds <- lapply(ds, df2dr)
+  ds <- lapply(ds, surveyIndex::get_datrasraw)
   ## OBS, response is added here in "Nage" matrix -- use wCPUE
   ds <- lapply(ds,function(x) { x[[2]]$Nage <- matrix(x$wCPUE,ncol=1); colnames(x[[2]]$Nage)<-1; x } )
   
@@ -489,12 +453,15 @@ load(system.file("VigA_model_fits.rdata", package = "surveyIndex") )
 ```
 
 
-```{r model_check}
+```{r model_check1}
   ## Check basis dimensions splines (spatial resolution)
   # sink(paste0(".", dir_out, "gamcheck.txt"))
-  # lapply(models,function(x) gam.check(x$pModels[[1]]))
+par(mfrow = c(2,2))
+  lapply(models,function(x) gam.check(x$pModels[[1]]))
   # sink()
+```
 
+```{r model_check2}
   ## Model summaries
   # sink(paste0(".", dir_out, "summaries.txt"))
   lapply(models,function(x) summary(x$pModels[[1]]))
@@ -504,4 +471,54 @@ load(system.file("VigA_model_fits.rdata", package = "surveyIndex") )
   
   
 ```
+
+
+``` {r mode_aic}
+  temp <- sapply(models, `[`, "pModels")
+  mods <- sapply(temp, `[`, 1)
+
+  lapply(X = mods, FUN = AIC)
+```
+
+## 8. Indicies of Abundance
+
+```{r indicie_abund}
+dat <- data.frame()
+for (i in 1:length(models)){
+  temp <- models[[i]]
+  dat <- dplyr::bind_rows(dat, 
+                data.frame(idx = temp$idx[,1], 
+                    Year = rownames(temp$idx), 
+                    group = names(models)[i]))
+}
+
+dat$facet_group <- sapply(X = strsplit(x = dat$group, split = " "), 
+                          `[`, 1)
+
+dat$idx[dat$Year == 2020] <- NA
+
+ggplot2::ggplot(data = dat, 
+            mapping = aes(x = Year, 
+                          y = idx, 
+                          group = group, 
+                          color = group)) +
+  geom_line(size = 1.5) + 
+  geom_point(size = 2) +
+  facet_wrap(vars(facet_group), scales = "free", ncol = 1) +
+  theme(legend.position = "bottom")
+
+```
+
+
+## 8. Predict and plot
+
+```{r predict}
+
+# predict.gam(object = models$`red king crab fm_2_cov`, 
+#             newdata = dat_catch_haul %>% 
+#               dplyr::filter(Year == 2021) %>%
+#               dplyr::select(Year, sx, sy, GEAR_TEMPERATURE, BOTTOM_DEPTH))
+
+```
+
 

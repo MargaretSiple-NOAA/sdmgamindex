@@ -1,73 +1,9 @@
 pandoc: '2.18'
 pkgdown: 2.0.6
 pkgdown_sha: ~
-last_built: 2022-09-13T10:18Z
-
-url: https://EmilyMarkowitz-NOAA.github.io/surveyIndex/
-
-news:
-  one_page: true
-
-navbar:
-  left:
-    - text: "Functions"
-      icon: far fa-file-code fa-lg
-      href: reference/index.html
-    - text: "News"
-      icon: fas fa-bullhorn fa-lg
-      href: news/index.html
-  right:
-    - icon: fas fa-paper-plane fa-lg
-      href: mailto:emily.markowitz@noaa.gov
-    - icon: fas fa-question-circle fa-lg
-      href: https://github.com/EmilyMarkowitz-NOAA/surveyIndex/issues/
-    - icon: fab fa-github fa-lg
-      href: https://github.com/EmilyMarkowitz-NOAA/surveyIndex
-    - icon: fa-fish
-      href: https://afsc-gap-products.github.io/
-
 articles:
-  - title: "At-sea data management tools for RACE GAP surveys"
-    desc: >
-      Learn how and why to use this tool. <br/>
-      <br/>
   A-data-prep: A-data-prep.html
   B-model-tuning: B-model-tuning.html
   C-model-comparisons: C-model-comparisons.html
-reference:
-  - title: Produce Survey Index
-    contents:
-      - '`get_surveyidx`'
-      - '`get_effect`'
-      - '`redo_surveyidx`'
-      - '`get_surveyidx_stratmean'
-  - title: Survey Index Post Processing
-    contents:
-      - '`anova_likelihood_ratio_test`'
-      - '`get_surveyidx_aic`'
-      - '`concentration_transform`'
-      - '`fix_age_group`'
-      - '`consistency_internal`'
-      - '`consistency_external`'
-  - title: Simulate
-    contents:
-      - '`get_surveyidx_sim`'
-  - title: Randomized Quantile Residuals
-    contents:
-      - '`get_surveyidx_resid`'
-      - '`qres_tweedie`'
-  - title: Standardarized Model Outputs
-    contents:
-      - '`plot_surveyidx_grid`'
-      - '`plot_surveyidx`'
-      - '`export_surveyidx`'
-  - title: Converters and Raw Data Processers
-    contents:
-      - '`convert_crs`'
-      - '`convert_deg_rad`'
-      - '`calc_distance`'
-      - '`get_grid`'
-      - '`get_bathygrid`'
-  - title: Example data
-    contents:
-      - '`noaa_afsc_public_foss`'
+last_built: 2022-09-13T23:03Z
+
