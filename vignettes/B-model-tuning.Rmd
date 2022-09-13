@@ -1,5 +1,5 @@
 ---
-title: "B-model-tuning"
+title: "Nuances in model choices"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{B-model-tuning}
@@ -9,7 +9,7 @@ vignette: >
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
+  collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE, 
   comment = "#>"
 )
 ```

@@ -1,5 +1,5 @@
 ---
-title: "C-model-comparisons"
+title: "Compare {surveyIndex} to regular GAMs"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{C-model-comparisons}
@@ -9,7 +9,7 @@ vignette: >
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
+  collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE, 
   comment = "#>"
 )
 ```

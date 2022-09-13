@@ -1,5 +1,5 @@
 ---
-title: "A-data-prep"
+title: "Simple {surveyIndex} example"
 description: "Prepare survey data for get_surveyidx()"
 date: "`r format(Sys.Date(), format='%B %d %Y') `"
 output: rmarkdown::html_vignette
