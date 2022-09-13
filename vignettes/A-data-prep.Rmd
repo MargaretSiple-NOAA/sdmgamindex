@@ -26,7 +26,7 @@ PKG <- c(
   "dplyr",
   "sf", 
   "gstat",
-  
+  "magrittr", 
   # RACE-GAP Specific R packages
   "akgfmaps", # devtools::install_github("sean-rohan-noaa/akgfmaps", build_vignettes = TRUE)
   "coldpool" # devtools::install_github("sean-rohan-noaa/coldpool")
@@ -231,7 +231,14 @@ Here in the Bering sea, the depth rarely changes. The modeler may consider makin
 
 For this, we are going to create a raster of depth in the Bering sea from the survey data so we can merge that into the dataset at the prediction grid lat/lons. 
 
-```{r covar_depth}
+
+```{r covar_depth_load, echo=FALSE}
+load(file = system.file(paste0("VigA_bottom_depth_raster_",
+     min(YEARS),"-",max(YEARS), ".rdata"), 
+                        package = "surveyIndex" ) )
+```
+
+```{r covar_depth, eval=FALSE}
 x <- dat_wrangled %>%
   dplyr::select(Lon, Lat, BOTTOM_DEPTH) %>%
   stats::na.omit()  %>% 
@@ -252,17 +259,25 @@ extrap_data0 <- raster::predict(
   sf::st_transform(crs = crs_latlon)  %>%
   stars::st_rasterize() 
 
-plot(extrap_data0, main = "Interpolated Bottom Depths") # Just so we can see what we are looking at:
-
 extrap_data <- stars::st_extract(x = extrap_data0,
                                  at = as.matrix(dat_cov[,c("lon", "lat")]))
+
+# to make future runs of this faster:
+save(extrap_data0, extrap_data, 
+     file = paste0("../inst/VigA_bottom_depth_raster_",
+     min(YEARS),"-",max(YEARS), ".rdata"))
+
+```
+
+```{r covar_depth_show}
+# Just so we can see what we are looking at:
+plot(extrap_data0, main = "Interpolated Bottom Depths") 
 
 dat_cov <- cbind.data.frame(dat_cov, 
                       "BOTTOM_DEPTH" = extrap_data$var1.pred) %>%
   stats::na.omit()
 
 head(dat_cov)
-
 ```
 
 ### 4b. Data that varies over space and time (bottom temperature)
@@ -356,7 +371,9 @@ get_pd <- function(year,
   # nam2 = paste0(c(vars),year)
   
   pd = data.frame(x[,c(nam,nam2)])
-  colnames(pd)<-c(nam,nam2)
+  colnames(pd)<-c(nam,
+                  unique(gsub(pattern = "[0-9]+", 
+                              replacement = "", x = nam2)))
   
   pd$EFFORT = 1.0 
   ## Note, Better to use median effort here if splines on effort is used.
@@ -372,10 +389,10 @@ get_pd <- function(year,
                  vars = vars, varsbyyr = varsbyyr)
   names(allpd) <- as.character(YEARS)
   for (i in 1:length(allpd)){
-    names(allpd[i][[1]]) <- gsub(pattern = "[0-9]+", replacement = "", x = names(allpd[i][[1]]))
+    # names(allpd[i][[1]]) <- gsub(pattern = "[0-9]+", replacement = "", x = names(allpd[i][[1]]))
   }
   
-  head(allpd[1])
+  head(allpd[1][[1]])
   
 ```
 
@@ -403,36 +420,19 @@ df2dr <- function(x){
 ds
 ```
 
-
-
-
 ## 6. Formulas
 
 ```{r formulas}
 fm <-  list(
-  # Null model spatial
-  "fm_1null_s" = #"Year +
-    "s(sx,sy,bs=c('ts'),k=520)",
+  # Null model spatial and temporal with an additional year effect
+  "fm_1_s_t_st" = "Year +
+    s(sx,sy,bs=c('ts'),k=376) + 
+    s(sx,sy,bs=c('ts'),k=10,by=Year)",
 
   # Mdoel with simple covariates
-  "fm_2cov" = #"Year +
-# s(sx,sy,bs=c('ts'),k=520) +
+  "fm_2_cov" = 
 "s(BOTTOM_DEPTH,bs='ts',k=10) +
-s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)"#,
-
-# Model with an additional year effect
-#   "fm_3smyr" = "Year + 
-# s(sx,sy,bs=c('ts'),k=520) + 
-# s(BOTTOM_DEPTH,bs='ts',k=10) + 
-# s(log(GEAR_TEMPERATURE+3),bs='ts',k=10) + 
-# s(Year, bs=c('ts'), k=10)",
-#   # model with an additional spatiotemporal effect
-#   "fm_4st" = "Year + 
-# s(sx,sy,bs=c('ts'),k=520) + 
-# s(BOTTOM_DEPTH,bs='ts',k=10) + 
-# s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)  +
-# s(Year, bs=c('ts'), k=10) + 
-# s(sx,sy,bs=c('ts'),k=50,by=Year,id=1)" 
+s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)"
 )
 ```
 
@@ -456,8 +456,11 @@ Here are all of the models we want to try fitting:
 comb
 ```
 
+```{r model_fit_load, echo = FALSE}
+load(system.file("VigA_model_fits.rdata", package = "surveyIndex") )
+```
 
-```{r model_fit}
+```{r model_fit, eval = FALSE}
   
   models <- fittimes <- list()
 
@@ -482,20 +485,23 @@ comb
 
   }
 
-  save(models, fittimes, file = paste0(dir_out, "model_fits.Rdata"))
+  save(models, fittimes, file = paste0("../inst/VigA_model_fits.Rdata"))
 ```
 
 
 ```{r model_check}
-  # ## Check basis dimensions splines (spatial resolution)
-  # sink(paste0(dir_out, "gamcheck.txt"))
-  lapply(models,function(x) gam.check(x$pModels[[1]]))
+  ## Check basis dimensions splines (spatial resolution)
+  # sink(paste0(".", dir_out, "gamcheck.txt"))
+  # lapply(models,function(x) gam.check(x$pModels[[1]]))
   # sink()
-  # 
-  # ## Model summaries
-  # sink(paste0(dir_out, "summaries.txt"))
+
+  ## Model summaries
+  # sink(paste0(".", dir_out, "summaries.txt"))
   lapply(models,function(x) summary(x$pModels[[1]]))
   # sink()
 
+  surveyIndex::get_surveyidx_aic(x = models)
+  
+  
 ```
 

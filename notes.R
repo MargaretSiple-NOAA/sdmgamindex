@@ -38,9 +38,9 @@ library(pkgdown)
 # devtools::install_github("r-lib/pkgdown")
 # pkgdown::build_favicons()
 # devtools::build_vignettes()
-usethis::use_pkgdown(config_file = "./docs/pkgdown.yml")
+# usethis::use_pkgdown(config_file = "./docs/pkgdown.yml")
 
-# pkgdown::build_site(pkg = here::here())
+pkgdown::build_site(pkg = here::here())
 # usethis::use_github_action("pkgdown")
 
 # Save Package tar.gz

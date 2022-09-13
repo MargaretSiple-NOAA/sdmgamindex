@@ -14,133 +14,159 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
-library(surveyIndex)
+# GAMs, the old fashioned way
+
+```{r setup, echo = FALSE}
+# library(remotes)
+PKG <- c(
+  "surveyIndex", # remotes::install_github("casperwberg/surveyIndex/surveyIndex")
+  "DATRAS", # remotes::install_github("DTUAqua/DATRAS/DATRAS")
+  
+  # "rgdal", 
+  "ggplot2", 
+  "dplyr",
+  "sf", 
+  "gstat",
+  "magrittr"
+)
+
+for (p in PKG) {
+  if(!require(p,character.only = TRUE)) {  
+    install.packages(p)
+    require(p,character.only = TRUE)}
+}
 ```
 
+## Wrangle Data
 
 ```{r regular_gams}
-
-
-# data wrangle -----------------------------------------------------------------
-
-# SRVY <- c("EBS")
-SPP <- c(# must match common name column
-  # "arrowtooth flounder",
-  # "Pacific cod",
+SPECIES <- c(# must match common name column
   "walleye pollock",
   "yellowfin sole",
-  "red king crab")
-yrs <- 1995:2021
+  "red king crab"
+  )
+YEARS <- 2015:2021
 SRVY <- "EBS"
-
-i <- 1
-
-# yearS <- c(2010, 2017, 2019, 2021) #1995:2021
-crs_latlon = "+proj=longlat +datum=WGS84"
-# crs_proj = "+proj=aea +lat_1=57 +lat_2=63 +lat_0=59 +lon_0=-170 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs"
-crs_proj = "EPSG:3338"
-
-
-public_data <- dat <- surveyIndex::noaa_afsc_public_foss 
+method <- "ML"
+knotsP <- 376
+dir_out <- "../inst/regular_gam_approach"
 
 crs_latlon = "+proj=longlat +datum=WGS84"
 crs_proj = "EPSG:3338"
 
-ll <- surveyIndex::convert_crs(x = public_data$longitude_dd,
-                 y = public_data$latitude_dd, 
-                 crs_in = crs_latlon, 
-                 crs_out = crs_proj)  
+dat <- surveyIndex::noaa_afsc_public_foss
+
+# ll <- surveyIndex::convert_crs(x = dat$longitude_dd,
+#                  y = dat$latitude_dd, 
+#                  crs_in = crs_latlon, 
+#                  crs_out = crs_proj)  
 
 # Get cold pool data using cold pool data from the {coldpool} R package
 dat <- dat %>%
-  dplyr::mutate(lon = ll$X,
-                lat = ll$Y,
+  dplyr::mutate(#lon = ll$X,
+                #lat = ll$Y,
                 sx = ((longitude_dd - mean(longitude_dd, na.rm = TRUE))/1000),
                 sy = ((latitude_dd - mean(latitude_dd, na.rm = TRUE))/1000)) %>% 
   stats::na.omit() %>% 
-  dplyr::filter(common_name == SPP[i] &
-                  year %in% yrs &
-                  srvy %in% SRVY)
+  dplyr::filter(common_name %in% SPECIES &
+                  year %in% YEARS &
+                  srvy %in% SRVY) %>% 
+  dplyr::rename(GEAR_TEMPERATURE = bottom_temperature_c, 
+                BOTTOM_DEPTH = depth_m, 
+                Year = year)
 
-method <- "ML"
-knotsP <- 376
+head(dat)
+```
 
-# model ------------------------------------------------------------------------
+## 6. Formulas
+
+```{r formulas}
+fm <-  list(
+  # Null model spatial and temporal with an additional year effect
+  "fm_1_s_t_st" = "Year +
+    s(sx,sy,bs=c('ts'),k=376) + 
+    s(sx,sy,bs=c('ts'),k=10,by=Year)",
+
+  # Mdoel with simple covariates
+  "fm_2_cov" = 
+"s(BOTTOM_DEPTH,bs='ts',k=10) +
+s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)"
+)
+```
+
+## Run simple GAM models
+
+Here are all of the models we want to try fitting:
+
+```{r model_combos}
+  comb <- tidyr::crossing(
+    "SPECIES" = SPECIES, 
+    "fm_name" = gsub(pattern = " ", replacement = "_", x = names(fm))) %>% 
+    dplyr::left_join(
+      x = ., 
+      y = data.frame("fm" = gsub(pattern = "\n", replacement = "", 
+                                 x = unlist(fm), fixed = TRUE), 
+                     "fm_name" = gsub(pattern = " ", replacement = "_", 
+                                      x = names(fm))), 
+                     by = "fm_name")
+
+comb
+```
 
 
-# null spatial model
-b1 <- gam(cpue_kgha~s(sx,sy,bs=c('ts'),k=376), 
-          data = dat, family = tw, gamma = 1.4)
+```{r models, eval=FALSE}
+  models <- fittimes <- list()
 
-# null temporal model
-b2 <- gam(cpue_kgha ~ year, 
-          data=dat, family = tw, gamma = 1.4, method = method)
+  for(i in 1:nrow(comb)){
+    cat("Fitting ",comb$SPECIES[i],"\n", comb$fm_name[i], ": ", comb$fm[i], "\n")
 
-# null spatiotemporal model
-b3 <- gam(cpue_kgha ~ year + s(sx,sy,bs=c('ts'),k=376), 
-          data=dat, family = tw, gamma = 1.4, method = method)
+    temp <- paste0(comb$SPECIES[i], " ", comb$fm_name[i])
 
-# null covariate temperature model
-b4 <- gam(cpue_kgha ~ #year + s(sx,sy,bs=c('ts'),k=376) + 
-            # s(depth_m,bs='ts',k=10) +
-            s(log(bottom_temperature_c+3),bs='ts',k=10), 
-          data=dat, family = tw, gamma = 1.4, method = method)
+    dat0 <- dat %>% 
+      dplyr::filter(common_name %in% comb$SPECIES[i])
+    
+    fittimes[[ temp ]] <-
+      system.time ( models[[ temp ]] <-
+                     gam(formula = as.formula(paste0("cpue_kgha ~ ", comb$fm[i])), 
+                         data = dat0, 
+                         family = tw, 
+                         gamma = 1.4)  )
 
-# null covariate depth model
-b5 <- gam(cpue_kgha ~ #year + s(sx,sy,bs=c('ts'),k=376) + 
-            s(depth_m,bs='ts',k=10),# + 
-            # s(log(bottom_temperature_c+3),bs='ts',k=10),  
-          data=dat, family = tw, gamma = 1.4, method = method)
+  }
 
-# null covariate model
-b6 <- gam(cpue_kgha ~ #year + s(sx,sy,bs=c('ts'),k=376) + 
-            s(depth_m,bs='ts',k=10) + 
-          s(log(bottom_temperature_c+3),bs='ts',k=10),
-          data=dat, family = tw, gamma = 1.4, method = method)
+  save(models, fittimes, file = paste0("../inst/vigC_model_output.rdata"))
+```
 
-# full model
-b7 <- gam(cpue_kgha ~ year + s(sx,sy,bs=c('ts'),k=376) + 
-            s(depth_m,bs='ts',k=10) + 
-            s(log(bottom_temperature_c+3),bs='ts',k=10),
-          data=dat, family = tw, gamma = 1.4, method = method)
+```{r model_file_load, echo = FALSE}
+load(system.file("vigC_model_output.rdata", package = "surveyIndex" ) ) 
+```
 
-# full model with ship effect
-b8 <- gam(cpue_kgha ~ year + s(sx,sy,bs=c('ts'),k=376) + 
-            s(depth_m,bs='ts',k=10) + 
-            s(log(bottom_temperature_c+3),bs='ts',k=10) + 
-            vessel_id,
-          data=dat, family = tw, gamma = 1.4, method = method)
+## Assess the model
 
-# full model with year fixed effect (right?)
-b9 <- gam(cpue_kgha ~ year + s(sx,sy,bs=c('ts'),k=376) + 
-            s(depth_m,bs='ts',k=10) + 
-            s(log(bottom_temperature_c+3),bs='ts',k=10) + 
-            s(sx,sy,bs=c('ts'),k=50,by=year,id=1),
-          data=dat, family = tw, gamma = 1.4, method = method)
+```{r model_AIC}
 
-# full model with year fixed effect (right?) and vessel
-b10 <- gam(cpue_kgha ~ year + s(sx,sy,bs=c('ts'),k=376) + 
-            s(depth_m,bs='ts',k=10) + 
-            s(log(bottom_temperature_c+3),bs='ts',k=10) + 
-            vessel_id + 
-            s(sx,sy,bs=c('ts'),k=50,by=year,id=1),
-          data=dat, family = tw, gamma = 1.4, method = method)
+# surveyIndex::get_surveyidx_aic(models)
 
-b <- AIC(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10)# get(paste0("b", 1:9))
 
-save(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, file = "./output/basic_gams.rdata")
+b <- AIC(models$`yellowfin sole fm_1_s_t_st`, models$`yellowfin sole fm_2_cov`)# get(paste0("b", 1:9))
 
-bb <- get(rownames(b)[b$AIC %in% min(b$AIC):(min(b$AIC)+5)])
+b
+
+# bb <- get(rownames(b)[b$AIC %in% min(b$AIC):(min(b$AIC)+5)])
 # b$df %in% min(b$df):(min(b$df)+5) 
 
+# bb
+```
+
+```{r model_plots_1}
+bb <- models$`yellowfin sole fm_1_s_t_st`
 par(mfrow = c(2,3))
 gam.check(bb)
 vis.gam(bb)
 
-cc <- predict.gam(object = bb, newdata = dat[dat$year == 2021,])
+cc <- predict.gam(object = bb, newdata = dat[dat$Year == 2021,])
 
-dat0 <- dat[dat$year == 2021,] %>% 
+dat0 <- dat[dat$Year == 2021,] %>% 
   dplyr::mutate(pred = cc)
 
 figure <- ggplot() +
@@ -148,3 +174,28 @@ figure <- ggplot() +
              mapping = aes(x= longitude_dd, y = latitude_dd, color = pred))
 
 ```
+
+
+```{r model_plots_2}
+bb <- models$`yellowfin sole fm_2_cov`
+par(mfrow = c(2,3))
+gam.check(bb)
+vis.gam(bb)
+
+cc <- predict.gam(object = bb, newdata = dat[dat$Year == 2021,])
+
+dat0 <- dat[dat$Year == 2021,] %>% 
+  dplyr::mutate(pred = cc)
+
+figure <- ggplot() +
+  geom_point(data = dat0, 
+             mapping = aes(x= longitude_dd, y = latitude_dd, color = pred))
+
+```
+
+
+
+
+
+
+
