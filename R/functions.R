@@ -1127,6 +1127,97 @@ get_surveyidx_sim <- function(
               prob0=out_mu0))
 }
 
+
+##' Plot survey index list (e.g. retrospective analysis)
+##'
+##' @title Plot survey index list (e.g. retrospective analysis)
+##' @param x (named) list of "surveyIdx" objects for example from "retro.surveyIdx" or "leaveout.surveyIdx"
+##' @param base Either index of x that should considered the "base run" (integer), OR object of class "surveyIdx". Confidence bounds will be shown for this model only.
+##' @param rescale Should indices be rescaled to have mean 1 (over the set of intersecting years)? Default: FALSE
+##' @param lwd line width argument to plot
+##' @param main if not NULL override main plotting default title of "Age group a"
+##' @param allCI show 95\% confidence lines for all indices? Default FALSE.
+##' @param includeCI Show confidence intervals? Default TRUE.
+##' @param ylim Y axis range. If NULL (default) then determine automatically.
+##' @return nothing
+##' @export
+plot_simulation_list<-function(x, base=1, rescale=FALSE,lwd=1.5,main=NULL,allCI=FALSE,includeCI=TRUE,ylim=NULL){
+  if(class(base)=="surveyIdx"){
+    x = c( list(base), x)
+    base = 1
+  }
+  stopifnot(is.numeric(base))
+  nx = length(x)
+  mainwasnull = is.null(main)
+  n = ncol(x[[base]]$idx)
+  if(n>1){
+    op <- par(mfrow=n2mfrow(n))
+    on.exit(par(op))
+  }
+
+  cols = rainbow(nx)
+  if(nx==2) cols = 2:3
+  cols[base] = "black"
+  allyears = lapply(x, function(x) rownames(x$idx))
+  rsidx = 1:nrow(x[[nx]]$idx)
+  if(rescale){
+    commonyears = allyears[[1]]
+    if(nx>1){
+      for(i in 2:nx){
+        commonyears = intersect(commonyears,allyears[[i]])
+      }
+      if(length(commonyears)==0) stop("rescaling not possible because the set of common years is empty")
+    }
+  }
+
+  ss <- ssbase <- 1
+
+  for(aa in 1:n){
+
+    rangevec = x[[1]]$idx[,aa]
+    for(xx in 2:nx) rangevec = c(rangevec,x[[xx]]$idx[,aa])
+    if(includeCI){
+      for(xx in 1:nx) rangevec = c(rangevec,x[[xx]]$lo[,aa],x[[xx]]$up[,aa])
+    }
+
+    yl = range(rangevec)
+    if(rescale){
+      rsidx = which(rownames(x[[base]]$idx) %in% commonyears )
+      ssbase =  mean( x[[base]]$idx[rsidx,aa], na.rm=TRUE)
+      yl = yl/ssbase
+    }
+    if(!is.null(ylim)) yl = ylim
+
+    if(mainwasnull) main <- paste("Age group", colnames(x[[base]]$idx)[aa])
+    y = as.numeric(rownames(x[[base]]$idx))
+    plot(y,x[[base]]$idx[,aa]/ssbase,type="b",ylim=yl,main=main,xlab="Year",ylab="Index")
+
+    if(includeCI)
+      polygon(c(y, rev(y)), c(x[[base]]$lo[,aa], rev(x[[base]]$up[,aa]))/ssbase, col = "lightgrey", border = NA)
+
+    for(i in 1:length(x)){
+      y = as.numeric(rownames(x[[i]]$idx))
+      if(rescale){
+        rsidx = which(rownames(x[[i]]$idx) %in% commonyears )
+        ss = mean( x[[i]]$idx[rsidx,aa], na.rm=TRUE)
+      }
+      lines(y,x[[i]]$idx[,aa]/ss,col=cols[i],type="b", lwd=lwd)
+
+      if(includeCI && allCI && i!=base){
+        lines(y,x[[i]]$lo[,aa]/ss,col=cols[i],lwd=lwd*0.6,lty=2)
+        lines(y,x[[i]]$up[,aa]/ss,col=cols[i],lwd=lwd*0.6,lty=2)
+      }
+
+    }
+    y = as.numeric(rownames(x[[base]]$idx))
+    lines(y,x[[base]]$idx[,aa]/ssbase,type="b",lwd=lwd)
+
+  }
+  if(!is.null(names(x))){
+    legend("topleft",legend=names(x),col=cols,lty=1,lwd=lwd,pch=1)
+  }
+}
+
 # Randomized quantile residuals ------------------------------------------------
 
 #' Randomized quantile residuals for class 'surveyIndex'

@@ -6,7 +6,6 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-link_foss <- "https://github.com/EmilyMarkowitz-NOAA/surveyIndex"
 ```
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -36,13 +35,19 @@ cat(
 )
 ```
 
-> Code is still in development
+> Code is still in development at https://github.com/EmilyMarkowitz-NOAA/surveyIndex
 
-Code was originally developed by: **Casper W. Berg** (@casperwberg)
+*Code was originally developed by:*
 
-> Berg et al. (2014): "Evaluation of alternative age-based methods for estimating relative abundance from survey data in relation to assessment models", Fisheries Research 151(2014) 91-99.
+**Casper W. Berg** (@casperwberg)
 
-And then modified and adapted for the AFSC by:
+National Institute of Aquatic Resources, 
+
+Technical University of Denmark
+
+[**Berg et al. (2014): "Evaluation of alternative age-based methods for estimating relative abundance from survey data in relation to assessment models", Fisheries Research 151(2014) 91-99.**](https://doi.org/10.1016/j.fishres.2013.10.005)
+
+*And then modified and adapted for the AFSC by:*
 
 **Emily Markowitz** (@EmilyMarkowitz-noaa; Emily.Markowitz AT noaa.gov)
 

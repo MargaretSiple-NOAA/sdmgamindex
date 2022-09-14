@@ -27,6 +27,8 @@ PKG <- c(
   "sf", 
   "gstat",
   "magrittr", 
+  "raster", 
+  
   # RACE-GAP Specific R packages
   "akgfmaps", # devtools::install_github("sean-rohan-noaa/akgfmaps", build_vignettes = TRUE)
   "coldpool" # devtools::install_github("sean-rohan-noaa/coldpool")
@@ -158,8 +160,8 @@ dat_wrangled <- dat %>%
     Quarter = "2")  %>%
   dplyr::mutate(across((c("Year", "Ship", "COMMON_NAME")), as.factor)) %>% 
   dplyr::select(wCPUE, GEAR_TEMPERATURE, BOTTOM_DEPTH, COMMON_NAME, EFFORT, 
-                Year, Ship, Lon, Lat, lat, lon, sx, sy, ctime, 
-                TimeShotHour, timeOfYear, Gear, Quarter, HaulDur, hauljoin)
+                Year, Ship, Lon, Lat, lat, lon, sx, sy, 
+                ctime, TimeShotHour, timeOfYear, Gear, Quarter, HaulDur, hauljoin)
 
 head(dat_wrangled)
 
@@ -190,7 +192,7 @@ pred_grid <- pred_grid %>%
 head(pred_grid)
 ```
 
- 
+
 
 ```{r survey_shapefile, eval=FALSE, echo=FALSE}
 
@@ -219,7 +221,7 @@ Here we want to match covariate data to the prediction grid.
 
 dat_cov <- surveyIndex::pred_grid_ebs %>% 
   dplyr::select(-Shape_Area) %>% 
-    dplyr::mutate( 
+  dplyr::mutate( 
     sx = ((lon - mean(lon, na.rm = TRUE))/1000),
     sy = ((lat - mean(lat, na.rm = TRUE))/1000))
 
@@ -238,7 +240,7 @@ For this, we are going to create a raster of depth in the Bering sea from the su
 
 ```{r covar_depth_load, echo=FALSE}
 load(file = system.file(paste0("VigA_bottom_depth_raster_",
-     min(YEARS),"-",max(YEARS), ".rdata"), 
+                               min(YEARS),"-",max(YEARS), ".rdata"), 
                         package = "surveyIndex" ) )
 ```
 
@@ -269,7 +271,7 @@ extrap_data <- stars::st_extract(x = extrap_data0,
 # to make future runs of this faster:
 save(extrap_data0, extrap_data, 
      file = paste0("../inst/VigA_bottom_depth_raster_",
-     min(YEARS),"-",max(YEARS), ".rdata"))
+                   min(YEARS),"-",max(YEARS), ".rdata"))
 
 ```
 
@@ -278,7 +280,7 @@ save(extrap_data0, extrap_data,
 plot(extrap_data0, main = "Interpolated Bottom Depths") 
 
 dat_cov <- cbind.data.frame(dat_cov, 
-                      "BOTTOM_DEPTH" = extrap_data$var1.pred) %>%
+                            "BOTTOM_DEPTH" = extrap_data$var1.pred) %>%
   stats::na.omit()
 
 head(dat_cov)
@@ -301,12 +303,12 @@ for (i in 1:length(YEARS)) {
 }
 
 extrap_data0 <- coldpool::ebs_bottom_temperature[[tmp]] %>% 
-    as(., Class = "SpatialPointsDataFrame") %>%
-      sf::st_as_sf() %>%
+  as(., Class = "SpatialPointsDataFrame") %>%
+  sf::st_as_sf() %>%
   sf::st_transform(crs = crs_latlon)  %>%
   stars::st_rasterize() %>% 
-    stars::st_extract(x = .,
-                      at = as.matrix(dat_cov[,c("lon", "lat")]))
+  stars::st_extract(x = .,
+                    at = as.matrix(dat_cov[,c("lon", "lat")]))
 
 names(extrap_data0) <- paste0("GEAR_TEMPERATURE", YEARS)
 
@@ -325,62 +327,62 @@ Now, we need to fill in the data with the zeros!
 
 ```{r catch_haul_fill_0}
 
-  # Identify vars that will be used --------------------------------------------
+# Identify vars that will be used --------------------------------------------
 
-  varsbyyr <- unique( # c("GEAR_TEMPERATURE", "cpi")
-    gsub(pattern = "[0-9]+", 
-         replacement = "", 
-         x = names(dat_cov)[grepl(names(dat_cov), 
-                                   pattern = "[0-9]+")]))
-  
-  vars <- unique( # c("BOTTOM_DEPTH")
-    names(dat_cov)[!grepl(names(dat_cov), 
-                           pattern = "[0-9]+")])
-  vars <- vars[!(vars %in% c("LONG", "LAT", "lon", "lat", "sx", "sy"))]
-  
-  ## Fill catch data with zeros ---------------------------------------------------------
-  
-  data_hauls <- dat_wrangled %>% 
-    dplyr::select(Year, sx, sy, 
-                  dplyr::all_of(varsbyyr), dplyr::all_of(vars), 
-                  Ship, hauljoin, 
-                  lat, lon, 
-                  ctime, TimeShotHour, timeOfYear, Gear, Quarter, 
-                  EFFORT, HaulDur)  %>% 
-    # dplyr::filter(!is.na(GEAR_TEMPERATURE)) %>% 
-    na.omit() %>%
-    dplyr::distinct()
-  
-  data_catch <- dat_wrangled %>% 
-    dplyr::select(COMMON_NAME, wCPUE, hauljoin)
-  
-  dat_catch_haul <- dplyr::left_join(x = data_hauls, 
-                        y = data_catch, 
-                        by = c("hauljoin")) %>% 
-    dplyr::mutate(wCPUE = ifelse(is.na(wCPUE), 0, wCPUE))
-  
-  head(dat_catch_haul)
+varsbyyr <- unique( # c("GEAR_TEMPERATURE", "cpi")
+  gsub(pattern = "[0-9]+", 
+       replacement = "", 
+       x = names(dat_cov)[grepl(names(dat_cov), 
+                                pattern = "[0-9]+")]))
+
+vars <- unique( # c("BOTTOM_DEPTH")
+  names(dat_cov)[!grepl(names(dat_cov), 
+                        pattern = "[0-9]+")])
+vars <- vars[!(vars %in% c("LONG", "LAT", "lon", "lat", "sx", "sy"))]
+
+## Fill catch data with zeros ---------------------------------------------------------
+
+data_hauls <- dat_wrangled %>% 
+  dplyr::select(Year, sx, sy, 
+                dplyr::all_of(varsbyyr), dplyr::all_of(vars), 
+                Ship, hauljoin, 
+                lat, lon, Lat, Lon, 
+                ctime, TimeShotHour, timeOfYear, Gear, Quarter, 
+                EFFORT, HaulDur)  %>% 
+  # dplyr::filter(!is.na(GEAR_TEMPERATURE)) %>% 
+  na.omit() %>%
+  dplyr::distinct()
+
+data_catch <- dat_wrangled %>% 
+  dplyr::select(COMMON_NAME, wCPUE, hauljoin)
+
+dat_catch_haul <- dplyr::left_join(x = data_hauls, 
+                                   y = data_catch, 
+                                   by = c("hauljoin")) %>% 
+  dplyr::mutate(wCPUE = ifelse(is.na(wCPUE), 0, wCPUE))
+
+head(dat_catch_haul)
 ```
-  
+
 ```{r catch_haul_datras }
- allpd <- lapply(YEARS, FUN = surveyIndex::get_prediction_grid, x = dat_cov, 
-                 vars = vars, varsbyyr = varsbyyr)
-  names(allpd) <- as.character(YEARS)
-  
-  head(allpd[1][[1]])
-  
+allpd <- lapply(YEARS, FUN = surveyIndex::get_prediction_grid, x = dat_cov, 
+                vars = vars, varsbyyr = varsbyyr)
+names(allpd) <- as.character(YEARS)
+
+head(allpd[1][[1]])
+
 ```
 
 ### 5a. Covariate Data
 
 ```{r cov_datras}
 
-  ## split data by species, make into DATRASraw + Nage matrix
-  ds <- split(dat_catch_haul,dat_catch_haul$COMMON_NAME)
-  ds <- lapply(ds, surveyIndex::get_datrasraw)
-  ## OBS, response is added here in "Nage" matrix -- use wCPUE
-  ds <- lapply(ds,function(x) { x[[2]]$Nage <- matrix(x$wCPUE,ncol=1); colnames(x[[2]]$Nage)<-1; x } )
-  
+## split data by species, make into DATRASraw + Nage matrix
+ds <- split(dat_catch_haul,dat_catch_haul$COMMON_NAME)
+ds <- lapply(ds, surveyIndex::get_datrasraw)
+## OBS, response is added here in "Nage" matrix -- use wCPUE
+ds <- lapply(ds,function(x) { x[[2]]$Nage <- matrix(x$wCPUE,ncol=1); colnames(x[[2]]$Nage)<-1; x } )
+
 ds
 ```
 
@@ -392,10 +394,10 @@ fm <-  list(
   "fm_1_s_t_st" = "Year +
     s(sx,sy,bs=c('ts'),k=376) + 
     s(sx,sy,bs=c('ts'),k=10,by=Year)",
-
+  
   # Mdoel with simple covariates
   "fm_2_cov" = 
-"s(BOTTOM_DEPTH,bs='ts',k=10) +
+    "s(BOTTOM_DEPTH,bs='ts',k=10) +
 s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)"
 )
 ```
@@ -406,16 +408,16 @@ s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)"
 Here are all of the models we want to try fitting:
 
 ```{r model_combos}
-  comb <- tidyr::crossing(
-    "SPECIES" = SPECIES, 
-    "fm_name" = gsub(pattern = " ", replacement = "_", x = names(fm))) %>% 
-    dplyr::left_join(
-      x = ., 
-      y = data.frame("fm" = gsub(pattern = "\n", replacement = "", 
-                                 x = unlist(fm), fixed = TRUE), 
-                     "fm_name" = gsub(pattern = " ", replacement = "_", 
-                                      x = names(fm))), 
-                     by = "fm_name")
+comb <- tidyr::crossing(
+  "SPECIES" = SPECIES, 
+  "fm_name" = gsub(pattern = " ", replacement = "_", x = names(fm))) %>% 
+  dplyr::left_join(
+    x = ., 
+    y = data.frame("fm" = gsub(pattern = "\n", replacement = "", 
+                               x = unlist(fm), fixed = TRUE), 
+                   "fm_name" = gsub(pattern = " ", replacement = "_", 
+                                    x = names(fm))), 
+    by = "fm_name")
 
 comb
 ```
@@ -425,100 +427,243 @@ load(system.file("VigA_model_fits.rdata", package = "surveyIndex") )
 ```
 
 ```{r model_fit, eval = FALSE}
+
+models <- fittimes <- list()
+
+for(i in 1:nrow(comb)){
+  cat("Fitting ",comb$SPECIES[i],"\n", comb$fm_name[i], ": ", comb$fm[i], "\n")
   
-  models <- fittimes <- list()
+  temp <- paste0(comb$SPECIES[i], " ", comb$fm_name[i])
+  
+  fittimes[[ temp ]] <-
+    system.time ( models[[ temp ]] <-
+                    surveyIndex::get_surveyidx(
+                      x = ds[[ comb$SPECIES[i] ]],
+                      ages = 1,
+                      myids = NULL,
+                      predD = allpd,
+                      cutOff = 0,
+                      fam = "Tweedie",
+                      modelP = comb$fm[i],
+                      gamma = 1,
+                      control = list(trace = TRUE,
+                                     maxit = 20))  )
+  
+}
 
-  for(i in 1:nrow(comb)){
-    cat("Fitting ",comb$SPECIES[i],"\n", comb$fm_name[i], ": ", comb$fm[i], "\n")
-
-    temp <- paste0(comb$SPECIES[i], " ", comb$fm_name[i])
-
-    fittimes[[ temp ]] <-
-      system.time ( models[[ temp ]] <-
-                     surveyIndex::get_surveyidx(
-                       x = ds[[ comb$SPECIES[i] ]],
-                                   ages = 1,
-                                   myids = NULL,
-                                   predD = allpd,
-                                   cutOff = 0,
-                                   fam = "Tweedie",
-                                   modelP = comb$fm[i],
-                                   gamma = 1,
-                                   control = list(trace = TRUE,
-                                                  maxit = 20))  )
-
-  }
-
-  save(models, fittimes, file = paste0("../inst/VigA_model_fits.Rdata"))
+save(models, fittimes, file = paste0("../inst/VigA_model_fits.Rdata"))
 ```
 
 
 ```{r model_check1}
-  ## Check basis dimensions splines (spatial resolution)
-  # sink(paste0(".", dir_out, "gamcheck.txt"))
+## Check basis dimensions splines (spatial resolution)
+# sink(paste0(".", dir_out, "gamcheck.txt"))
 par(mfrow = c(2,2))
-  lapply(models,function(x) gam.check(x$pModels[[1]]))
-  # sink()
+lapply(models,function(x) gam.check(x$pModels[[1]]))
+# sink()
 ```
 
 ```{r model_check2}
-  ## Model summaries
-  # sink(paste0(".", dir_out, "summaries.txt"))
-  lapply(models,function(x) summary(x$pModels[[1]]))
-  # sink()
+## Model summaries
+# sink(paste0(".", dir_out, "summaries.txt"))
+lapply(models,function(x) summary(x$pModels[[1]]))
+# sink()
 
-  surveyIndex::get_surveyidx_aic(x = models)
-  
-  
+surveyIndex::get_surveyidx_aic(x = models)
+
+
 ```
 
 
 ``` {r mode_aic}
-  temp <- sapply(models, `[`, "pModels")
-  mods <- sapply(temp, `[`, 1)
+temp <- sapply(models, `[`, "pModels")
+mods <- sapply(temp, `[`, 1)
 
-  lapply(X = mods, FUN = AIC)
+lapply(X = mods, FUN = AIC)
 ```
 
 ## 8. Indicies of Abundance
 
+```{r design_based_load, eval = FALSE, echo = FALSE}
+design_based <- read.csv(file = "../output/cpue_ebs_plusnw.csv") %>% 
+  dplyr::filter(#srvy == SRVY &
+    YEAR %in% YEARS &
+      COMMON_NAME %in% SPECIES)
+```
+
 ```{r indicie_abund}
+
 dat <- data.frame()
 for (i in 1:length(models)){
   temp <- models[[i]]
-  dat <- dplyr::bind_rows(dat, 
-                data.frame(idx = temp$idx[,1], 
-                    Year = rownames(temp$idx), 
-                    group = names(models)[i]))
+  dat0 <- data.frame(idx = temp$idx[,1], 
+                     lo = temp$lo[,1], 
+                     up = temp$up[,1],
+                     Year = rownames(temp$idx), 
+                     group = names(models)[i], 
+                     formula = paste0("cpue_kgha ~ ", 
+                                      as.character(temp$pModels[[1]]$formula)[[3]]))
+  
+  dat <- dplyr::bind_rows(dat, dat0) 
 }
 
-dat$facet_group <- sapply(X = strsplit(x = dat$group, split = " "), 
-                          `[`, 1)
+dat$facet_group <- paste0(sapply(X = strsplit(x = dat$group, split = " fm"), `[`, 1))
+# dat$model <- paste0(sapply(X = strsplit(x = dat$group, split = " fm"), `[`, 2))
 
-dat$idx[dat$Year == 2020] <- NA
+dat[dat$Year == 2020, c("idx", "up", "lo")] <- NA
 
 ggplot2::ggplot(data = dat, 
-            mapping = aes(x = Year, 
-                          y = idx, 
-                          group = group, 
-                          color = group)) +
+                mapping = aes(x = Year, 
+                              y = idx, 
+                              group = formula, 
+                              color = formula)) +
   geom_line(size = 1.5) + 
-  geom_point(size = 2) +
+  geom_point(size = 2)  + 
+  geom_ribbon(aes(ymin = lo, ymax = up, fill = formula), 
+              alpha=0.1, 
+              linetype="dashed",
+              color="grey") + 
+  ggtitle("Annual Index Model Results") +
   facet_wrap(vars(facet_group), scales = "free", ncol = 1) +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom", 
+        legend.direction = "vertical")
 
 ```
 
-
-## 8. Predict and plot
+## 9. Predict and plot
 
 ```{r predict}
 
-# predict.gam(object = models$`red king crab fm_2_cov`, 
-#             newdata = dat_catch_haul %>% 
-#               dplyr::filter(Year == 2021) %>%
-#               dplyr::select(Year, sx, sy, GEAR_TEMPERATURE, BOTTOM_DEPTH))
+dat_pred <- dat_catch_haul %>%
+  dplyr::select(Year, sx, sy, Lon, Lat, GEAR_TEMPERATURE, BOTTOM_DEPTH)
+
+dat <- data.frame()
+for (i in 1:length(models)) {
+  temp <- models[[i]]
+  dat0 <- data.frame(idx = 
+                 predict.gam(
+                   object = temp$pModels[[1]],
+                   newdata = dat_pred),  
+                     group = names(models)[i], 
+                     formula = paste0("cpue_kgha ~ ", 
+                                      as.character(temp$pModels[[1]]$formula)[[3]])
+               )
+  dat00 <- dplyr::bind_cols(dat0, dat_pred) 
+  dat <- dplyr::bind_rows(dat, dat00) 
+  
+# dat_r <- raster::rasterFromXYZ(xyz = dat00[,c("lon", "lat", "idx")])
+    
+}
+
+dat$facet_group <- paste0(sapply(X = strsplit(x = dat$group, split = " fm"), `[`, 1))
+
+for (i in 1:length(unique(dat$facet_group))){
+  
+  ggplot2::ggplot(data = dat %>% 
+                  dplyr::filter(facet_group == unique(dat$facet_group)[i]), 
+                mapping = aes(x = Lon, 
+                              y = Lat, 
+                              group = group, 
+                              color = idx)) +
+  geom_point()  + 
+  ggtitle(paste0("Annual Index Model Results for ", unique(dat$facet_group)[i])) +
+  facet_grid(cols = vars(group), 
+             rows = vars(Year)) +
+  theme_bw()
+  
+}
+```
+
+```{r}
+
+surveyIndex::plot_surveyidx(
+  x = models, 
+  dat = ds, 
+  myids = NULL, 
+  predD = allpd)
 
 ```
 
+## 10. Simulations
 
+```{r sim_gam, echo=FALSE, eval=FALSE}
+
+# sims <- fittimes_sims <- list()
+# for(i in 1:nrow(comb)){
+#   
+#   cat("Simulating ",comb$SPECIES[i],"\n", comb$fm_name[i], ": ", comb$fm[i], "\n")
+#   
+#   temp <- paste0(comb$SPECIES[i], " ", comb$fm_name[i])
+#   
+#   fittimes[[ temp ]] <-
+#     system.time ( sims[[ temp ]] <-
+#                     surveyIndex::get_surveyidx_sim(
+#                       model = models[[i]], 
+#                       d = ds[[ comb$SPECIES[i] ]]) )
+# }
+# 
+# par(mfrow = c(2, 2)) # Create a 2 x 2 plotting matrix
+# for(i in 1:nrow(comb)){
+#   plot(sims[[i]]$sim, main = paste0(names(sims)[i], " sims"))
+#   plot(sims[[i]]$mu[[1]], main = paste0(names(sims)[i], " mu"))
+# }
+
+```
+
+```{r sim_gam1, eval=FALSE}
+REPS <- 4
+ests <- list()
+
+for(i in 1:nrow(comb)){
+
+  cat("Simulating ",comb$SPECIES[i],"\n", comb$fm_name[i], ": ", comb$fm[i], "\n")
+  temp <- paste0(comb$SPECIES[i], " ", comb$fm_name[i])
+
+# for(SPECIES in specLevels){
+  ests[[ temp ]] <- list()
+  
+  ## simulate data
+  csim <- surveyIndex::get_surveyidx_sim(models[[i]], ds[[comb$SPECIES[i]]])
+  sims <-lapply(1:REPS,function(j) surveyIndex::get_surveyidx_sim(
+    model = models[[i]],
+    d = ds[[comb$SPECIES[i]]], 
+    sampleFit = FALSE,
+    condSim = csim) )
+  
+  ## re-estimate
+  tmp <- ds[[i]]
+  for(i in 1:REPS) {
+    tmp[[2]]$Nage <- matrix(sims[[i]][[1]][,1],ncol=1)
+    colnames(tmp$Nage)<-1
+    
+    ests[[SPECIES]][[i]]  <-
+      surveyIndex::get_surveyidx(
+        x = tmp,
+        ages = 1,
+        myids=NULL,
+        predD=allpd,
+        cutOff=0,
+        fam="Tweedie",
+        modelP=fm,
+        gamma=1,
+        control=list(trace=TRUE,maxit=10))
+    # cat(i, " done.\n")
+  }
+  
+}
+
+png("simest.png",width=640*pngscal,height=480*pngscal)
+par(mfrow=c(2,2))
+
+for(i in 1:nrow(comb)){
+
+# for(SPECIES in specLevels){
+  surveyIndex::plot_simulation_list(
+    x = ests[[temp]],
+    base=models[[temp]],
+    main=temp,
+    lwd=2)
+}
+dev.off()
+
+```

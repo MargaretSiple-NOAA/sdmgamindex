@@ -227,8 +227,8 @@ GitHub repo</a>.</p>
 <span>    Quarter <span class="op">=</span> <span class="st">"2"</span><span class="op">)</span>  <span class="op">%&gt;%</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span><span class="fu">across</span><span class="op">(</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Year"</span>, <span class="st">"Ship"</span>, <span class="st">"COMMON_NAME"</span><span class="op">)</span><span class="op">)</span>, <span class="va">as.factor</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">wCPUE</span>, <span class="va">GEAR_TEMPERATURE</span>, <span class="va">BOTTOM_DEPTH</span>, <span class="va">COMMON_NAME</span>, <span class="va">EFFORT</span>, </span>
-<span>                <span class="va">Year</span>, <span class="va">Ship</span>, <span class="va">Lon</span>, <span class="va">Lat</span>, <span class="va">lat</span>, <span class="va">lon</span>, <span class="va">sx</span>, <span class="va">sy</span>, <span class="va">ctime</span>, </span>
-<span>                <span class="va">TimeShotHour</span>, <span class="va">timeOfYear</span>, <span class="va">Gear</span>, <span class="va">Quarter</span>, <span class="va">HaulDur</span>, <span class="va">hauljoin</span><span class="op">)</span></span>
+<span>                <span class="va">Year</span>, <span class="va">Ship</span>, <span class="va">Lon</span>, <span class="va">Lat</span>, <span class="va">lat</span>, <span class="va">lon</span>, <span class="va">sx</span>, <span class="va">sy</span>, </span>
+<span>                <span class="va">ctime</span>, <span class="va">TimeShotHour</span>, <span class="va">timeOfYear</span>, <span class="va">Gear</span>, <span class="va">Quarter</span>, <span class="va">HaulDur</span>, <span class="va">hauljoin</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">dat_wrangled</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 20</span></span></span>
@@ -291,7 +291,7 @@ asking/checking that this is still current!).</p>
 <code class="sourceCode R"><span></span>
 <span><span class="va">dat_cov</span> <span class="op">&lt;-</span> <span class="fu">surveyIndex</span><span class="fu">::</span><span class="va"><a href="../reference/pred_grid_ebs.html">pred_grid_ebs</a></span> <span class="op">%&gt;%</span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">Shape_Area</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
-<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span> </span>
 <span>    sx <span class="op">=</span> <span class="op">(</span><span class="op">(</span><span class="va">lon</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">lon</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fl">1000</span><span class="op">)</span>,</span>
 <span>    sy <span class="op">=</span> <span class="op">(</span><span class="op">(</span><span class="va">lat</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">lat</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fl">1000</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -335,7 +335,7 @@ prediction grid lat/lons.</p>
 <span><span class="co"># to make future runs of this faster:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/save.html" class="external-link">save</a></span><span class="op">(</span><span class="va">extrap_data0</span>, <span class="va">extrap_data</span>, </span>
 <span>     file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"../inst/VigA_bottom_depth_raster_"</span>,</span>
-<span>     <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">YEARS</span><span class="op">)</span>,<span class="st">"-"</span>,<span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">YEARS</span><span class="op">)</span>, <span class="st">".rdata"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span>                   <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">YEARS</span><span class="op">)</span>,<span class="st">"-"</span>,<span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">YEARS</span><span class="op">)</span>, <span class="st">".rdata"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Just so we can see what we are looking at:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">extrap_data0</span>, main <span class="op">=</span> <span class="st">"Interpolated Bottom Depths"</span><span class="op">)</span> </span></code></pre></div>
@@ -343,7 +343,7 @@ prediction grid lat/lons.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">dat_cov</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind.data.frame</a></span><span class="op">(</span><span class="va">dat_cov</span>, </span>
-<span>                      <span class="st">"BOTTOM_DEPTH"</span> <span class="op">=</span> <span class="va">extrap_data</span><span class="op">$</span><span class="va">var1.pred</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>                            <span class="st">"BOTTOM_DEPTH"</span> <span class="op">=</span> <span class="va">extrap_data</span><span class="op">$</span><span class="va">var1.pred</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
 <span>  <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">na.omit</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">dat_cov</span><span class="op">)</span></span>
@@ -379,12 +379,12 @@ data.</p>
 <span><span class="op">}</span></span>
 <span></span>
 <span><span class="va">extrap_data0</span> <span class="op">&lt;-</span> <span class="fu">coldpool</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/coldpool/man/ebs_bottom_temperature.html" class="external-link">ebs_bottom_temperature</a></span><span class="op">[[</span><span class="va">tmp</span><span class="op">]</span><span class="op">]</span> <span class="op">%&gt;%</span> </span>
-<span>    <span class="fu">as</span><span class="op">(</span><span class="va">.</span>, Class <span class="op">=</span> <span class="st">"SpatialPointsDataFrame"</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
-<span>      <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">as</span><span class="op">(</span><span class="va">.</span>, Class <span class="op">=</span> <span class="st">"SpatialPointsDataFrame"</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
 <span>  <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_transform.html" class="external-link">st_transform</a></span><span class="op">(</span>crs <span class="op">=</span> <span class="va">crs_latlon</span><span class="op">)</span>  <span class="op">%&gt;%</span></span>
 <span>  <span class="fu">stars</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/stars/reference/st_rasterize.html" class="external-link">st_rasterize</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
-<span>    <span class="fu">stars</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/stars/reference/st_extract.html" class="external-link">st_extract</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">.</span>,</span>
-<span>                      at <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">dat_cov</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lon"</span>, <span class="st">"lat"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu">stars</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/stars/reference/st_extract.html" class="external-link">st_extract</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">.</span>,</span>
+<span>                    at <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">dat_cov</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lon"</span>, <span class="st">"lat"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">extrap_data0</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"GEAR_TEMPERATURE"</span>, <span class="va">YEARS</span><span class="op">)</span></span>
 <span></span>
@@ -424,59 +424,60 @@ data.</p>
 <p>Now, we need to fill in the data with the zeros!</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
-<span>  <span class="co"># Identify vars that will be used --------------------------------------------</span></span>
+<span><span class="co"># Identify vars that will be used --------------------------------------------</span></span>
 <span></span>
-<span>  <span class="va">varsbyyr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span> <span class="co"># c("GEAR_TEMPERATURE", "cpi")</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">"[0-9]+"</span>, </span>
-<span>         replacement <span class="op">=</span> <span class="st">""</span>, </span>
-<span>         x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">dat_cov</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">dat_cov</span><span class="op">)</span>, </span>
-<span>                                   pattern <span class="op">=</span> <span class="st">"[0-9]+"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
-<span>  </span>
-<span>  <span class="va">vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span> <span class="co"># c("BOTTOM_DEPTH")</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">dat_cov</span><span class="op">)</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">dat_cov</span><span class="op">)</span>, </span>
-<span>                           pattern <span class="op">=</span> <span class="st">"[0-9]+"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
-<span>  <span class="va">vars</span> <span class="op">&lt;-</span> <span class="va">vars</span><span class="op">[</span><span class="op">!</span><span class="op">(</span><span class="va">vars</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"LONG"</span>, <span class="st">"LAT"</span>, <span class="st">"lon"</span>, <span class="st">"lat"</span>, <span class="st">"sx"</span>, <span class="st">"sy"</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
-<span>  </span>
-<span>  <span class="co">## Fill catch data with zeros ---------------------------------------------------------</span></span>
-<span>  </span>
-<span>  <span class="va">data_hauls</span> <span class="op">&lt;-</span> <span class="va">dat_wrangled</span> <span class="op">%&gt;%</span> </span>
-<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">Year</span>, <span class="va">sx</span>, <span class="va">sy</span>, </span>
-<span>                  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyselect.r-lib.org/reference/all_of.html" class="external-link">all_of</a></span><span class="op">(</span><span class="va">varsbyyr</span><span class="op">)</span>, <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyselect.r-lib.org/reference/all_of.html" class="external-link">all_of</a></span><span class="op">(</span><span class="va">vars</span><span class="op">)</span>, </span>
-<span>                  <span class="va">Ship</span>, <span class="va">hauljoin</span>, </span>
-<span>                  <span class="va">lat</span>, <span class="va">lon</span>, </span>
-<span>                  <span class="va">ctime</span>, <span class="va">TimeShotHour</span>, <span class="va">timeOfYear</span>, <span class="va">Gear</span>, <span class="va">Quarter</span>, </span>
-<span>                  <span class="va">EFFORT</span>, <span class="va">HaulDur</span><span class="op">)</span>  <span class="op">%&gt;%</span> </span>
-<span>    <span class="co"># dplyr::filter(!is.na(GEAR_TEMPERATURE)) %&gt;% </span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">na.omit</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
-<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/distinct.html" class="external-link">distinct</a></span><span class="op">(</span><span class="op">)</span></span>
-<span>  </span>
-<span>  <span class="va">data_catch</span> <span class="op">&lt;-</span> <span class="va">dat_wrangled</span> <span class="op">%&gt;%</span> </span>
-<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">COMMON_NAME</span>, <span class="va">wCPUE</span>, <span class="va">hauljoin</span><span class="op">)</span></span>
-<span>  </span>
-<span>  <span class="va">dat_catch_haul</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">data_hauls</span>, </span>
-<span>                        y <span class="op">=</span> <span class="va">data_catch</span>, </span>
-<span>                        by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hauljoin"</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
-<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>wCPUE <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">wCPUE</span><span class="op">)</span>, <span class="fl">0</span>, <span class="va">wCPUE</span><span class="op">)</span><span class="op">)</span></span>
-<span>  </span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">dat_catch_haul</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 18</span></span></span>
-<span><span class="co">#&gt;   Year       sx       sy GEAR_TEMPE…¹ BOTTO…² Ship  haulj…³    lat     lon ctime</span></span>
+<span><span class="va">varsbyyr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span> <span class="co"># c("GEAR_TEMPERATURE", "cpi")</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">"[0-9]+"</span>, </span>
+<span>       replacement <span class="op">=</span> <span class="st">""</span>, </span>
+<span>       x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">dat_cov</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">dat_cov</span><span class="op">)</span>, </span>
+<span>                                pattern <span class="op">=</span> <span class="st">"[0-9]+"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span> <span class="co"># c("BOTTOM_DEPTH")</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">dat_cov</span><span class="op">)</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">dat_cov</span><span class="op">)</span>, </span>
+<span>                        pattern <span class="op">=</span> <span class="st">"[0-9]+"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">vars</span> <span class="op">&lt;-</span> <span class="va">vars</span><span class="op">[</span><span class="op">!</span><span class="op">(</span><span class="va">vars</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"LONG"</span>, <span class="st">"LAT"</span>, <span class="st">"lon"</span>, <span class="st">"lat"</span>, <span class="st">"sx"</span>, <span class="st">"sy"</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co">## Fill catch data with zeros ---------------------------------------------------------</span></span>
+<span></span>
+<span><span class="va">data_hauls</span> <span class="op">&lt;-</span> <span class="va">dat_wrangled</span> <span class="op">%&gt;%</span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">Year</span>, <span class="va">sx</span>, <span class="va">sy</span>, </span>
+<span>                <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyselect.r-lib.org/reference/all_of.html" class="external-link">all_of</a></span><span class="op">(</span><span class="va">varsbyyr</span><span class="op">)</span>, <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyselect.r-lib.org/reference/all_of.html" class="external-link">all_of</a></span><span class="op">(</span><span class="va">vars</span><span class="op">)</span>, </span>
+<span>                <span class="va">Ship</span>, <span class="va">hauljoin</span>, </span>
+<span>                <span class="va">lat</span>, <span class="va">lon</span>, <span class="va">Lat</span>, <span class="va">Lon</span>, </span>
+<span>                <span class="va">ctime</span>, <span class="va">TimeShotHour</span>, <span class="va">timeOfYear</span>, <span class="va">Gear</span>, <span class="va">Quarter</span>, </span>
+<span>                <span class="va">EFFORT</span>, <span class="va">HaulDur</span><span class="op">)</span>  <span class="op">%&gt;%</span> </span>
+<span>  <span class="co"># dplyr::filter(!is.na(GEAR_TEMPERATURE)) %&gt;% </span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">na.omit</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/distinct.html" class="external-link">distinct</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">data_catch</span> <span class="op">&lt;-</span> <span class="va">dat_wrangled</span> <span class="op">%&gt;%</span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">COMMON_NAME</span>, <span class="va">wCPUE</span>, <span class="va">hauljoin</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">dat_catch_haul</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">data_hauls</span>, </span>
+<span>                                   y <span class="op">=</span> <span class="va">data_catch</span>, </span>
+<span>                                   by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hauljoin"</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>wCPUE <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">wCPUE</span><span class="op">)</span>, <span class="fl">0</span>, <span class="va">wCPUE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">dat_catch_haul</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 20</span></span></span>
+<span><span class="co">#&gt;   Year       sx       sy GEAR_TEMPE…¹ BOTTO…² Ship  haulj…³    lat     lon   Lat</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 2016  0.006<span style="text-decoration: underline;">47</span> -<span style="color: #BB0000;">0.001</span><span style="color: #BB0000; text-decoration: underline;">83</span>          6.1      54 94    10_E-1… 7.26<span style="color: #949494;">e</span>5 -<span style="color: #BB0000;">4.32</span><span style="color: #949494;">e</span>5  <span style="text-decoration: underline;">2</span>016</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 2016  0.006<span style="text-decoration: underline;">47</span> -<span style="color: #BB0000;">0.001</span><span style="color: #BB0000; text-decoration: underline;">83</span>          6.1      54 94    10_E-1… 7.26<span style="color: #949494;">e</span>5 -<span style="color: #BB0000;">4.32</span><span style="color: #949494;">e</span>5  <span style="text-decoration: underline;">2</span>016</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> 2016  0.006<span style="text-decoration: underline;">47</span> -<span style="color: #BB0000;">0.001</span><span style="color: #BB0000; text-decoration: underline;">83</span>          6.1      54 94    10_E-1… 7.26<span style="color: #949494;">e</span>5 -<span style="color: #BB0000;">4.32</span><span style="color: #949494;">e</span>5  <span style="text-decoration: underline;">2</span>016</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 2016  0.005<span style="text-decoration: underline;">18</span> -<span style="color: #BB0000;">0.002</span><span style="color: #BB0000; text-decoration: underline;">17</span>          5.2      73 162   31_D-1… 6.98<span style="color: #949494;">e</span>5 -<span style="color: #BB0000;">5.16</span><span style="color: #949494;">e</span>5  <span style="text-decoration: underline;">2</span>016</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> 2016  0.005<span style="text-decoration: underline;">18</span> -<span style="color: #BB0000;">0.002</span><span style="color: #BB0000; text-decoration: underline;">17</span>          5.2      73 162   31_D-1… 6.98<span style="color: #949494;">e</span>5 -<span style="color: #BB0000;">5.16</span><span style="color: #949494;">e</span>5  <span style="text-decoration: underline;">2</span>016</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> 2016  0.005<span style="text-decoration: underline;">18</span> -<span style="color: #BB0000;">0.002</span><span style="color: #BB0000; text-decoration: underline;">17</span>          5.2      73 162   31_D-1… 6.98<span style="color: #949494;">e</span>5 -<span style="color: #BB0000;">5.16</span><span style="color: #949494;">e</span>5  <span style="text-decoration: underline;">2</span>016</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># … with 8 more variables: TimeShotHour &lt;dbl&gt;, timeOfYear &lt;dbl&gt;, Gear &lt;chr&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   Quarter &lt;chr&gt;, EFFORT &lt;dbl&gt;, HaulDur &lt;dbl&gt;, COMMON_NAME &lt;fct&gt;, wCPUE &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   and abbreviated variable names ¹​GEAR_TEMPERATURE, ²​BOTTOM_DEPTH, ³​hauljoin</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 2016  0.006<span style="text-decoration: underline;">47</span> -<span style="color: #BB0000;">0.001</span><span style="color: #BB0000; text-decoration: underline;">83</span>          6.1      54 94    10_E-1… 7.26<span style="color: #949494;">e</span>5 -<span style="color: #BB0000;">4.32</span><span style="color: #949494;">e</span>5  56.3</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 2016  0.006<span style="text-decoration: underline;">47</span> -<span style="color: #BB0000;">0.001</span><span style="color: #BB0000; text-decoration: underline;">83</span>          6.1      54 94    10_E-1… 7.26<span style="color: #949494;">e</span>5 -<span style="color: #BB0000;">4.32</span><span style="color: #949494;">e</span>5  56.3</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> 2016  0.006<span style="text-decoration: underline;">47</span> -<span style="color: #BB0000;">0.001</span><span style="color: #BB0000; text-decoration: underline;">83</span>          6.1      54 94    10_E-1… 7.26<span style="color: #949494;">e</span>5 -<span style="color: #BB0000;">4.32</span><span style="color: #949494;">e</span>5  56.3</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 2016  0.005<span style="text-decoration: underline;">18</span> -<span style="color: #BB0000;">0.002</span><span style="color: #BB0000; text-decoration: underline;">17</span>          5.2      73 162   31_D-1… 6.98<span style="color: #949494;">e</span>5 -<span style="color: #BB0000;">5.16</span><span style="color: #949494;">e</span>5  56.0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> 2016  0.005<span style="text-decoration: underline;">18</span> -<span style="color: #BB0000;">0.002</span><span style="color: #BB0000; text-decoration: underline;">17</span>          5.2      73 162   31_D-1… 6.98<span style="color: #949494;">e</span>5 -<span style="color: #BB0000;">5.16</span><span style="color: #949494;">e</span>5  56.0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> 2016  0.005<span style="text-decoration: underline;">18</span> -<span style="color: #BB0000;">0.002</span><span style="color: #BB0000; text-decoration: underline;">17</span>          5.2      73 162   31_D-1… 6.98<span style="color: #949494;">e</span>5 -<span style="color: #BB0000;">5.16</span><span style="color: #949494;">e</span>5  56.0</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># … with 10 more variables: Lon &lt;dbl&gt;, ctime &lt;dbl&gt;, TimeShotHour &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   timeOfYear &lt;dbl&gt;, Gear &lt;chr&gt;, Quarter &lt;chr&gt;, EFFORT &lt;dbl&gt;, HaulDur &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   COMMON_NAME &lt;fct&gt;, wCPUE &lt;dbl&gt;, and abbreviated variable names</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   ¹​GEAR_TEMPERATURE, ²​BOTTOM_DEPTH, ³​hauljoin</span></span></span></code></pre></div>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span> <span class="va">allpd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">YEARS</span>, FUN <span class="op">=</span> <span class="fu">surveyIndex</span><span class="fu">::</span><span class="va"><a href="../reference/get_prediction_grid.html">get_prediction_grid</a></span>, x <span class="op">=</span> <span class="va">dat_cov</span>, </span>
-<span>                 vars <span class="op">=</span> <span class="va">vars</span>, varsbyyr <span class="op">=</span> <span class="va">varsbyyr</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">allpd</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">YEARS</span><span class="op">)</span></span>
-<span>  </span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">allpd</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">allpd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">YEARS</span>, FUN <span class="op">=</span> <span class="fu">surveyIndex</span><span class="fu">::</span><span class="va"><a href="../reference/get_prediction_grid.html">get_prediction_grid</a></span>, x <span class="op">=</span> <span class="va">dat_cov</span>, </span>
+<span>                vars <span class="op">=</span> <span class="va">vars</span>, varsbyyr <span class="op">=</span> <span class="va">varsbyyr</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">allpd</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">YEARS</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">allpd</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;          lon      lat           sx          sy BOTTOM_DEPTH GEAR_TEMPERATURE</span></span>
 <span><span class="co">#&gt; 7  -176.2507 62.09301 -0.007524943 0.003800355     92.30377       0.06603578</span></span>
 <span><span class="co">#&gt; 11 -175.9816 62.13632 -0.007255819 0.003843669     91.79176      -0.19408995</span></span>
@@ -497,12 +498,12 @@ data.</p>
 </h3>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
-<span>  <span class="co">## split data by species, make into DATRASraw + Nage matrix</span></span>
-<span>  <span class="va">ds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span><span class="va">dat_catch_haul</span>,<span class="va">dat_catch_haul</span><span class="op">$</span><span class="va">COMMON_NAME</span><span class="op">)</span></span>
-<span>  <span class="va">ds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">ds</span>, <span class="fu">surveyIndex</span><span class="fu">::</span><span class="va"><a href="../reference/get_datrasraw.html">get_datrasraw</a></span><span class="op">)</span></span>
-<span>  <span class="co">## OBS, response is added here in "Nage" matrix -- use wCPUE</span></span>
-<span>  <span class="va">ds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">ds</span>,<span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span> <span class="va">x</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">Nage</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">wCPUE</span>,ncol<span class="op">=</span><span class="fl">1</span><span class="op">)</span>; <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">x</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">Nage</span><span class="op">)</span><span class="op">&lt;-</span><span class="fl">1</span>; <span class="va">x</span> <span class="op">}</span> <span class="op">)</span></span>
-<span>  </span>
+<span><span class="co">## split data by species, make into DATRASraw + Nage matrix</span></span>
+<span><span class="va">ds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span><span class="va">dat_catch_haul</span>,<span class="va">dat_catch_haul</span><span class="op">$</span><span class="va">COMMON_NAME</span><span class="op">)</span></span>
+<span><span class="va">ds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">ds</span>, <span class="fu">surveyIndex</span><span class="fu">::</span><span class="va"><a href="../reference/get_datrasraw.html">get_datrasraw</a></span><span class="op">)</span></span>
+<span><span class="co">## OBS, response is added here in "Nage" matrix -- use wCPUE</span></span>
+<span><span class="va">ds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">ds</span>,<span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span> <span class="va">x</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">Nage</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">wCPUE</span>,ncol<span class="op">=</span><span class="fl">1</span><span class="op">)</span>; <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">x</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">Nage</span><span class="op">)</span><span class="op">&lt;-</span><span class="fl">1</span>; <span class="va">x</span> <span class="op">}</span> <span class="op">)</span></span>
+<span></span>
 <span><span class="va">ds</span></span>
 <span><span class="co">#&gt; $`red king crab`</span></span>
 <span><span class="co">#&gt; Object of class 'DATRASraw'</span></span>
@@ -547,10 +548,10 @@ data.</p>
 <span>  <span class="st">"fm_1_s_t_st"</span> <span class="op">=</span> <span class="st">"Year +</span></span>
 <span><span class="st">    s(sx,sy,bs=c('ts'),k=376) + </span></span>
 <span><span class="st">    s(sx,sy,bs=c('ts'),k=10,by=Year)"</span>,</span>
-<span></span>
+<span>  </span>
 <span>  <span class="co"># Mdoel with simple covariates</span></span>
 <span>  <span class="st">"fm_2_cov"</span> <span class="op">=</span> </span>
-<span><span class="st">"s(BOTTOM_DEPTH,bs='ts',k=10) +</span></span>
+<span>    <span class="st">"s(BOTTOM_DEPTH,bs='ts',k=10) +</span></span>
 <span><span class="st">s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -559,16 +560,16 @@ data.</p>
 </h2>
 <p>Here are all of the models we want to try fitting:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="va">comb</span> <span class="op">&lt;-</span> <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/expand.html" class="external-link">crossing</a></span><span class="op">(</span></span>
-<span>    <span class="st">"SPECIES"</span> <span class="op">=</span> <span class="va">SPECIES</span>, </span>
-<span>    <span class="st">"fm_name"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">" "</span>, replacement <span class="op">=</span> <span class="st">"_"</span>, x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fm</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
-<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span></span>
-<span>      x <span class="op">=</span> <span class="va">.</span>, </span>
-<span>      y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="st">"fm"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">"\n"</span>, replacement <span class="op">=</span> <span class="st">""</span>, </span>
-<span>                                 x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">fm</span><span class="op">)</span>, fixed <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, </span>
-<span>                     <span class="st">"fm_name"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">" "</span>, replacement <span class="op">=</span> <span class="st">"_"</span>, </span>
-<span>                                      x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fm</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, </span>
-<span>                     by <span class="op">=</span> <span class="st">"fm_name"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">comb</span> <span class="op">&lt;-</span> <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/expand.html" class="external-link">crossing</a></span><span class="op">(</span></span>
+<span>  <span class="st">"SPECIES"</span> <span class="op">=</span> <span class="va">SPECIES</span>, </span>
+<span>  <span class="st">"fm_name"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">" "</span>, replacement <span class="op">=</span> <span class="st">"_"</span>, x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fm</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span></span>
+<span>    x <span class="op">=</span> <span class="va">.</span>, </span>
+<span>    y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="st">"fm"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">"\n"</span>, replacement <span class="op">=</span> <span class="st">""</span>, </span>
+<span>                               x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">fm</span><span class="op">)</span>, fixed <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, </span>
+<span>                   <span class="st">"fm_name"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">" "</span>, replacement <span class="op">=</span> <span class="st">"_"</span>, </span>
+<span>                                    x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fm</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, </span>
+<span>    by <span class="op">=</span> <span class="st">"fm_name"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">comb</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 3</span></span></span>
@@ -581,36 +582,36 @@ data.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> yellowfin sole  fm_1_s_t_st Year +    s(sx,sy,bs=c('ts'),k=376) +     s(sx,sy…</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> yellowfin sole  fm_2_cov    s(BOTTOM_DEPTH,bs='ts',k=10) +s(log(GEAR_TEMPERAT…</span></span></code></pre></div>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  </span>
-<span>  <span class="va">models</span> <span class="op">&lt;-</span> <span class="va">fittimes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<code class="sourceCode R"><span></span>
+<span><span class="va">models</span> <span class="op">&lt;-</span> <span class="va">fittimes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span>  <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">comb</span><span class="op">)</span><span class="op">)</span><span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Fitting "</span>,<span class="va">comb</span><span class="op">$</span><span class="va">SPECIES</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="st">"\n"</span>, <span class="va">comb</span><span class="op">$</span><span class="va">fm_name</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="st">": "</span>, <span class="va">comb</span><span class="op">$</span><span class="va">fm</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">comb</span><span class="op">)</span><span class="op">)</span><span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Fitting "</span>,<span class="va">comb</span><span class="op">$</span><span class="va">SPECIES</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="st">"\n"</span>, <span class="va">comb</span><span class="op">$</span><span class="va">fm_name</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="st">": "</span>, <span class="va">comb</span><span class="op">$</span><span class="va">fm</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="va">temp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">comb</span><span class="op">$</span><span class="va">SPECIES</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="st">" "</span>, <span class="va">comb</span><span class="op">$</span><span class="va">fm_name</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="va">fittimes</span><span class="op">[[</span> <span class="va">temp</span> <span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span> <span class="op">(</span> <span class="va">models</span><span class="op">[[</span> <span class="va">temp</span> <span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span></span>
+<span>                    <span class="fu">surveyIndex</span><span class="fu">::</span><span class="fu"><a href="../reference/get_surveyidx.html">get_surveyidx</a></span><span class="op">(</span></span>
+<span>                      x <span class="op">=</span> <span class="va">ds</span><span class="op">[[</span> <span class="va">comb</span><span class="op">$</span><span class="va">SPECIES</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">]</span><span class="op">]</span>,</span>
+<span>                      ages <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>                      myids <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>                      predD <span class="op">=</span> <span class="va">allpd</span>,</span>
+<span>                      cutOff <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>                      fam <span class="op">=</span> <span class="st">"Tweedie"</span>,</span>
+<span>                      modelP <span class="op">=</span> <span class="va">comb</span><span class="op">$</span><span class="va">fm</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,</span>
+<span>                      gamma <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>                      control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>trace <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>                                     maxit <span class="op">=</span> <span class="fl">20</span><span class="op">)</span><span class="op">)</span>  <span class="op">)</span></span>
+<span>  </span>
+<span><span class="op">}</span></span>
 <span></span>
-<span>    <span class="va">temp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">comb</span><span class="op">$</span><span class="va">SPECIES</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="st">" "</span>, <span class="va">comb</span><span class="op">$</span><span class="va">fm_name</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span></span>
-<span></span>
-<span>    <span class="va">fittimes</span><span class="op">[[</span> <span class="va">temp</span> <span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span></span>
-<span>      <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span> <span class="op">(</span> <span class="va">models</span><span class="op">[[</span> <span class="va">temp</span> <span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span></span>
-<span>                     <span class="fu">surveyIndex</span><span class="fu">::</span><span class="fu"><a href="../reference/get_surveyidx.html">get_surveyidx</a></span><span class="op">(</span></span>
-<span>                       x <span class="op">=</span> <span class="va">ds</span><span class="op">[[</span> <span class="va">comb</span><span class="op">$</span><span class="va">SPECIES</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">]</span><span class="op">]</span>,</span>
-<span>                                   ages <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>                                   myids <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>                                   predD <span class="op">=</span> <span class="va">allpd</span>,</span>
-<span>                                   cutOff <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>                                   fam <span class="op">=</span> <span class="st">"Tweedie"</span>,</span>
-<span>                                   modelP <span class="op">=</span> <span class="va">comb</span><span class="op">$</span><span class="va">fm</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,</span>
-<span>                                   gamma <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>                                   control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>trace <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                                                  maxit <span class="op">=</span> <span class="fl">20</span><span class="op">)</span><span class="op">)</span>  <span class="op">)</span></span>
-<span></span>
-<span>  <span class="op">}</span></span>
-<span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/save.html" class="external-link">save</a></span><span class="op">(</span><span class="va">models</span>, <span class="va">fittimes</span>, file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"../inst/VigA_model_fits.Rdata"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/save.html" class="external-link">save</a></span><span class="op">(</span><span class="va">models</span>, <span class="va">fittimes</span>, file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"../inst/VigA_model_fits.Rdata"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="co">## Check basis dimensions splines (spatial resolution)</span></span>
-<span>  <span class="co"># sink(paste0(".", dir_out, "gamcheck.txt"))</span></span>
+<code class="sourceCode R"><span><span class="co">## Check basis dimensions splines (spatial resolution)</span></span>
+<span><span class="co"># sink(paste0(".", dir_out, "gamcheck.txt"))</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">models</span>,<span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/gam.check.html" class="external-link">gam.check</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">pModels</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">models</span>,<span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/gam.check.html" class="external-link">gam.check</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">pModels</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="A-data-prep_files/figure-html/model_check1-1.png" width="700"></p>
 <pre><code><span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Method: ML   Optimizer: outer newton</span></span>
@@ -645,7 +646,7 @@ data.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                                 k'   edf k-index p-value    </span></span>
 <span><span class="co">#&gt; s(BOTTOM_DEPTH)              9.000 4.388    0.76  &lt;2e-16 ***</span></span>
-<span><span class="co">#&gt; s(log(GEAR_TEMPERATURE + 3)) 9.000 0.944    0.77  &lt;2e-16 ***</span></span>
+<span><span class="co">#&gt; s(log(GEAR_TEMPERATURE + 3)) 9.000 0.944    0.77    0.01 ** </span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></span></code></pre>
 <p><img src="A-data-prep_files/figure-html/model_check1-3.png" width="700"></p>
@@ -660,16 +661,14 @@ data.</p>
 <span><span class="co">#&gt; Basis dimension (k) checking results. Low p-value (k-index&lt;1) may</span></span>
 <span><span class="co">#&gt; indicate that k is too low, especially if edf is close to k'.</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;                         k'      edf k-index p-value  </span></span>
-<span><span class="co">#&gt; s(sx,sy)          3.75e+02 1.26e+02    0.87   0.165  </span></span>
-<span><span class="co">#&gt; s(sx,sy):Year2015 9.00e+00 6.23e+00    0.87   0.090 .</span></span>
-<span><span class="co">#&gt; s(sx,sy):Year2016 9.00e+00 1.29e-02    0.87   0.145  </span></span>
-<span><span class="co">#&gt; s(sx,sy):Year2017 9.00e+00 1.94e+00    0.87   0.155  </span></span>
-<span><span class="co">#&gt; s(sx,sy):Year2018 9.00e+00 8.12e+00    0.87   0.140  </span></span>
-<span><span class="co">#&gt; s(sx,sy):Year2019 9.00e+00 2.01e+00    0.87   0.085 .</span></span>
-<span><span class="co">#&gt; s(sx,sy):Year2021 9.00e+00 6.41e-03    0.87   0.115  </span></span>
-<span><span class="co">#&gt; ---</span></span>
-<span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></span></code></pre>
+<span><span class="co">#&gt;                         k'      edf k-index p-value</span></span>
+<span><span class="co">#&gt; s(sx,sy)          3.75e+02 1.26e+02    0.87    0.11</span></span>
+<span><span class="co">#&gt; s(sx,sy):Year2015 9.00e+00 6.23e+00    0.87    0.14</span></span>
+<span><span class="co">#&gt; s(sx,sy):Year2016 9.00e+00 1.29e-02    0.87    0.16</span></span>
+<span><span class="co">#&gt; s(sx,sy):Year2017 9.00e+00 1.94e+00    0.87    0.14</span></span>
+<span><span class="co">#&gt; s(sx,sy):Year2018 9.00e+00 8.12e+00    0.87    0.13</span></span>
+<span><span class="co">#&gt; s(sx,sy):Year2019 9.00e+00 2.01e+00    0.87    0.11</span></span>
+<span><span class="co">#&gt; s(sx,sy):Year2021 9.00e+00 6.41e-03    0.87    0.17</span></span></code></pre>
 <p><img src="A-data-prep_files/figure-html/model_check1-4.png" width="700"></p>
 <pre><code><span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Method: ML   Optimizer: outer newton</span></span>
@@ -702,10 +701,10 @@ data.</p>
 <span><span class="co">#&gt;                         k'      edf k-index p-value</span></span>
 <span><span class="co">#&gt; s(sx,sy)          3.75e+02 1.52e+02       1    0.99</span></span>
 <span><span class="co">#&gt; s(sx,sy):Year2015 9.00e+00 1.80e+00       1    0.99</span></span>
-<span><span class="co">#&gt; s(sx,sy):Year2016 9.00e+00 1.15e-03       1    0.99</span></span>
-<span><span class="co">#&gt; s(sx,sy):Year2017 9.00e+00 2.08e-03       1    0.99</span></span>
-<span><span class="co">#&gt; s(sx,sy):Year2018 9.00e+00 1.87e+00       1    1.00</span></span>
-<span><span class="co">#&gt; s(sx,sy):Year2019 9.00e+00 6.64e+00       1    0.99</span></span>
+<span><span class="co">#&gt; s(sx,sy):Year2016 9.00e+00 1.15e-03       1    1.00</span></span>
+<span><span class="co">#&gt; s(sx,sy):Year2017 9.00e+00 2.08e-03       1    0.98</span></span>
+<span><span class="co">#&gt; s(sx,sy):Year2018 9.00e+00 1.87e+00       1    0.99</span></span>
+<span><span class="co">#&gt; s(sx,sy):Year2019 9.00e+00 6.64e+00       1    0.98</span></span>
 <span><span class="co">#&gt; s(sx,sy):Year2021 9.00e+00 1.95e+00       1    0.99</span></span></code></pre>
 <p><img src="A-data-prep_files/figure-html/model_check1-6.png" width="700"></p>
 <pre><code><span><span class="co">#&gt; </span></span>
@@ -752,11 +751,11 @@ data.</p>
 <span><span class="co">#&gt; $`yellowfin sole fm_2_cov`</span></span>
 <span><span class="co">#&gt; $`yellowfin sole fm_2_cov`$mfrow</span></span>
 <span><span class="co">#&gt; [1] 2 2</span></span>
-<span>  <span class="co"># sink()</span></span></code></pre>
+<span><span class="co"># sink()</span></span></code></pre>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="co">## Model summaries</span></span>
-<span>  <span class="co"># sink(paste0(".", dir_out, "summaries.txt"))</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">models</span>,<span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">pModels</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co">## Model summaries</span></span>
+<span><span class="co"># sink(paste0(".", dir_out, "summaries.txt"))</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">models</span>,<span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">pModels</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; $`red king crab fm_1_s_t_st`</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Family: Tweedie(p=1.99) </span></span>
@@ -936,15 +935,15 @@ data.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; R-sq.(adj) =  0.152   Deviance explained = 35.1%</span></span>
 <span><span class="co">#&gt; -ML = 7295.9  Scale est. = 1.4146    n = 1497</span></span>
-<span>  <span class="co"># sink()</span></span>
+<span><span class="co"># sink()</span></span>
 <span></span>
-<span>  <span class="fu">surveyIndex</span><span class="fu">::</span><span class="fu"><a href="../reference/get_surveyidx_aic.html">get_surveyidx_aic</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">models</span><span class="op">)</span></span>
+<span><span class="fu">surveyIndex</span><span class="fu">::</span><span class="fu"><a href="../reference/get_surveyidx_aic.html">get_surveyidx_aic</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">models</span><span class="op">)</span></span>
 <span><span class="co">#&gt; numeric(0)</span></span></code></pre></div>
 <div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="va">temp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">models</span>, <span class="va">`[`</span>, <span class="st">"pModels"</span><span class="op">)</span></span>
-<span>  <span class="va">mods</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">temp</span>, <span class="va">`[`</span>, <span class="fl">1</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">temp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">models</span>, <span class="va">`[`</span>, <span class="st">"pModels"</span><span class="op">)</span></span>
+<span><span class="va">mods</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">temp</span>, <span class="va">`[`</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span>X <span class="op">=</span> <span class="va">mods</span>, FUN <span class="op">=</span> <span class="va">AIC</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span>X <span class="op">=</span> <span class="va">mods</span>, FUN <span class="op">=</span> <span class="va">AIC</span><span class="op">)</span></span>
 <span><span class="co">#&gt; $`red king crab fm_1_s_t_st.pModels`</span></span>
 <span><span class="co">#&gt; [1] 2296.156</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -967,40 +966,124 @@ data.</p>
 <h2 id="indicies-of-abundance">8. Indicies of Abundance<a class="anchor" aria-label="anchor" href="#indicies-of-abundance"></a>
 </h2>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="op">)</span></span>
+<code class="sourceCode R"><span></span>
+<span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="va">temp</span> <span class="op">&lt;-</span> <span class="va">models</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span></span>
-<span>  <span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind.html" class="external-link">bind_rows</a></span><span class="op">(</span><span class="va">dat</span>, </span>
-<span>                <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>idx <span class="op">=</span> <span class="va">temp</span><span class="op">$</span><span class="va">idx</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, </span>
-<span>                    Year <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">temp</span><span class="op">$</span><span class="va">idx</span><span class="op">)</span>, </span>
-<span>                    group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">dat0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>idx <span class="op">=</span> <span class="va">temp</span><span class="op">$</span><span class="va">idx</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, </span>
+<span>                     lo <span class="op">=</span> <span class="va">temp</span><span class="op">$</span><span class="va">lo</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, </span>
+<span>                     up <span class="op">=</span> <span class="va">temp</span><span class="op">$</span><span class="va">up</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>,</span>
+<span>                     Year <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">temp</span><span class="op">$</span><span class="va">idx</span><span class="op">)</span>, </span>
+<span>                     group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, </span>
+<span>                     formula <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"cpue_kgha ~ "</span>, </span>
+<span>                                      <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">temp</span><span class="op">$</span><span class="va">pModels</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">formula</span><span class="op">)</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind.html" class="external-link">bind_rows</a></span><span class="op">(</span><span class="va">dat</span>, <span class="va">dat0</span><span class="op">)</span> </span>
 <span><span class="op">}</span></span>
 <span></span>
-<span><span class="va">dat</span><span class="op">$</span><span class="va">facet_group</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span>X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/strsplit.html" class="external-link">strsplit</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">group</span>, split <span class="op">=</span> <span class="st">" "</span><span class="op">)</span>, </span>
-<span>                          <span class="va">`[`</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">dat</span><span class="op">$</span><span class="va">facet_group</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span>X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/strsplit.html" class="external-link">strsplit</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">group</span>, split <span class="op">=</span> <span class="st">" fm"</span><span class="op">)</span>, <span class="va">`[`</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># dat$model &lt;- paste0(sapply(X = strsplit(x = dat$group, split = " fm"), `[`, 2))</span></span>
 <span></span>
-<span><span class="va">dat</span><span class="op">$</span><span class="va">idx</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2020</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
+<span><span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2020</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"idx"</span>, <span class="st">"up"</span>, <span class="st">"lo"</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
 <span></span>
 <span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">dat</span>, </span>
-<span>            mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">Year</span>, </span>
-<span>                          y <span class="op">=</span> <span class="va">idx</span>, </span>
-<span>                          group <span class="op">=</span> <span class="va">group</span>, </span>
-<span>                          color <span class="op">=</span> <span class="va">group</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>                mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">Year</span>, </span>
+<span>                              y <span class="op">=</span> <span class="va">idx</span>, </span>
+<span>                              group <span class="op">=</span> <span class="va">formula</span>, </span>
+<span>                              color <span class="op">=</span> <span class="va">formula</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">geom_line</span><span class="op">(</span>size <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu">geom_point</span><span class="op">(</span>size <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_point</span><span class="op">(</span>size <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>  <span class="op">+</span> </span>
+<span>  <span class="fu">geom_ribbon</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>ymin <span class="op">=</span> <span class="va">lo</span>, ymax <span class="op">=</span> <span class="va">up</span>, fill <span class="op">=</span> <span class="va">formula</span><span class="op">)</span>, </span>
+<span>              alpha<span class="op">=</span><span class="fl">0.1</span>, </span>
+<span>              linetype<span class="op">=</span><span class="st">"dashed"</span>,</span>
+<span>              color<span class="op">=</span><span class="st">"grey"</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu">ggtitle</span><span class="op">(</span><span class="st">"Annual Index Model Results"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">facet_wrap</span><span class="op">(</span><span class="fu">vars</span><span class="op">(</span><span class="va">facet_group</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu">theme</span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="fu">theme</span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span>, </span>
+<span>        legend.direction <span class="op">=</span> <span class="st">"vertical"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="A-data-prep_files/figure-html/indicie_abund-1.png" width="700"></p>
 </div>
 <div class="section level2">
-<h2 id="predict-and-plot">8. Predict and plot<a class="anchor" aria-label="anchor" href="#predict-and-plot"></a>
+<h2 id="predict-and-plot">9. Predict and plot<a class="anchor" aria-label="anchor" href="#predict-and-plot"></a>
 </h2>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
-<span><span class="co"># predict.gam(object = models$`red king crab fm_2_cov`, </span></span>
-<span><span class="co">#             newdata = dat_catch_haul %&gt;% </span></span>
-<span><span class="co">#               dplyr::filter(Year == 2021) %&gt;%</span></span>
-<span><span class="co">#               dplyr::select(Year, sx, sy, GEAR_TEMPERATURE, BOTTOM_DEPTH))</span></span></code></pre></div>
+<span><span class="va">dat_pred</span> <span class="op">&lt;-</span> <span class="va">dat_catch_haul</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">Year</span>, <span class="va">sx</span>, <span class="va">sy</span>, <span class="va">Lon</span>, <span class="va">Lat</span>, <span class="va">GEAR_TEMPERATURE</span>, <span class="va">BOTTOM_DEPTH</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">temp</span> <span class="op">&lt;-</span> <span class="va">models</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span></span>
+<span>  <span class="va">dat0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>idx <span class="op">=</span> </span>
+<span>                 <span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/predict.gam.html" class="external-link">predict.gam</a></span><span class="op">(</span></span>
+<span>                   object <span class="op">=</span> <span class="va">temp</span><span class="op">$</span><span class="va">pModels</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>                   newdata <span class="op">=</span> <span class="va">dat_pred</span><span class="op">)</span>,  </span>
+<span>                     group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, </span>
+<span>                     formula <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"cpue_kgha ~ "</span>, </span>
+<span>                                      <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">temp</span><span class="op">$</span><span class="va">pModels</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">formula</span><span class="op">)</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<span>               <span class="op">)</span></span>
+<span>  <span class="va">dat00</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind.html" class="external-link">bind_cols</a></span><span class="op">(</span><span class="va">dat0</span>, <span class="va">dat_pred</span><span class="op">)</span> </span>
+<span>  <span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind.html" class="external-link">bind_rows</a></span><span class="op">(</span><span class="va">dat</span>, <span class="va">dat00</span><span class="op">)</span> </span>
+<span>  </span>
+<span><span class="co"># dat_r &lt;- raster::rasterFromXYZ(xyz = dat00[,c("lon", "lat", "idx")])</span></span>
+<span>    </span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">dat</span><span class="op">$</span><span class="va">facet_group</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span>X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/strsplit.html" class="external-link">strsplit</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">group</span>, split <span class="op">=</span> <span class="st">" fm"</span><span class="op">)</span>, <span class="va">`[`</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">facet_group</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">{</span></span>
+<span>  </span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">dat</span> <span class="op">%&gt;%</span> </span>
+<span>                  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">facet_group</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">facet_group</span><span class="op">)</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span>, </span>
+<span>                mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">Lon</span>, </span>
+<span>                              y <span class="op">=</span> <span class="va">Lat</span>, </span>
+<span>                              group <span class="op">=</span> <span class="va">group</span>, </span>
+<span>                              color <span class="op">=</span> <span class="va">idx</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_point</span><span class="op">(</span><span class="op">)</span>  <span class="op">+</span> </span>
+<span>  <span class="fu">ggtitle</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Annual Index Model Results for "</span>, <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">facet_group</span><span class="op">)</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">facet_grid</span><span class="op">(</span>cols <span class="op">=</span> <span class="fu">vars</span><span class="op">(</span><span class="va">group</span><span class="op">)</span>, </span>
+<span>             rows <span class="op">=</span> <span class="fu">vars</span><span class="op">(</span><span class="va">Year</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">theme_bw</span><span class="op">(</span><span class="op">)</span></span>
+<span>  </span>
+<span><span class="op">}</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="simulations">10. Simulations<a class="anchor" aria-label="anchor" href="#simulations"></a>
+</h2>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="va">sims</span> <span class="op">&lt;-</span> <span class="va">fittimes_sims</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">comb</span><span class="op">)</span><span class="op">)</span><span class="op">{</span></span>
+<span>  </span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Simulating "</span>,<span class="va">comb</span><span class="op">$</span><span class="va">SPECIES</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="st">"\n"</span>, <span class="va">comb</span><span class="op">$</span><span class="va">fm_name</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="st">": "</span>, <span class="va">comb</span><span class="op">$</span><span class="va">fm</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="va">temp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">comb</span><span class="op">$</span><span class="va">SPECIES</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="st">" "</span>, <span class="va">comb</span><span class="op">$</span><span class="va">fm_name</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="va">fittimes</span><span class="op">[[</span> <span class="va">temp</span> <span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span> <span class="op">(</span> <span class="va">sims</span><span class="op">[[</span> <span class="va">temp</span> <span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span></span>
+<span>                    <span class="fu">surveyIndex</span><span class="fu">::</span><span class="fu"><a href="../reference/get_surveyidx_sim.html">get_surveyidx_sim</a></span><span class="op">(</span></span>
+<span>                      model <span class="op">=</span> <span class="va">models</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span>, </span>
+<span>                      d <span class="op">=</span> <span class="va">ds</span><span class="op">[[</span> <span class="va">comb</span><span class="op">$</span><span class="va">SPECIES</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">]</span><span class="op">]</span><span class="op">)</span> <span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="co">#&gt; Simulating  red king crab </span></span>
+<span><span class="co">#&gt;  fm_1_s_t_st :  Year +    s(sx,sy,bs=c('ts'),k=376) +     s(sx,sy,bs=c('ts'),k=10,by=Year) </span></span>
+<span><span class="co">#&gt; Simulating  red king crab </span></span>
+<span><span class="co">#&gt;  fm_2_cov :  s(BOTTOM_DEPTH,bs='ts',k=10) +s(log(GEAR_TEMPERATURE+3),bs='ts',k=10) </span></span>
+<span><span class="co">#&gt; Simulating  walleye pollock </span></span>
+<span><span class="co">#&gt;  fm_1_s_t_st :  Year +    s(sx,sy,bs=c('ts'),k=376) +     s(sx,sy,bs=c('ts'),k=10,by=Year) </span></span>
+<span><span class="co">#&gt; Simulating  walleye pollock </span></span>
+<span><span class="co">#&gt;  fm_2_cov :  s(BOTTOM_DEPTH,bs='ts',k=10) +s(log(GEAR_TEMPERATURE+3),bs='ts',k=10) </span></span>
+<span><span class="co">#&gt; Simulating  yellowfin sole </span></span>
+<span><span class="co">#&gt;  fm_1_s_t_st :  Year +    s(sx,sy,bs=c('ts'),k=376) +     s(sx,sy,bs=c('ts'),k=10,by=Year) </span></span>
+<span><span class="co">#&gt; Simulating  yellowfin sole </span></span>
+<span><span class="co">#&gt;  fm_2_cov :  s(BOTTOM_DEPTH,bs='ts',k=10) +s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span> <span class="co"># Create a 2 x 2 plotting matrix</span></span>
+<span><span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">comb</span><span class="op">)</span><span class="op">)</span><span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sims</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">sim</span>, main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">sims</span><span class="op">)</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="st">" sims"</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sims</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">mu</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">sims</span><span class="op">)</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="st">" mu"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p><img src="A-data-prep_files/figure-html/sim_gam-1.png" width="700"><img src="A-data-prep_files/figure-html/sim_gam-2.png" width="700"><img src="A-data-prep_files/figure-html/sim_gam-3.png" width="700"></p>
 </div>
   </div>
 
@@ -1021,7 +1104,7 @@ data.</p>
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.9000.</p>
 </div>
 
       </footer>

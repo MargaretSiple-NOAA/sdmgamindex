@@ -35,13 +35,14 @@ library(here)
 library(usethis)
 library(pkgdown)
 
-# devtools::install_github("r-lib/pkgdown")
-# pkgdown::build_favicons()
-# devtools::build_vignettes()
-# usethis::use_pkgdown(config_file = "./docs/pkgdown.yml")
+# Run once to configure package to use pkgdown
+# usethis::use_pkgdown()
+# Run to build the website
+pkgdown::build_site()
 
-pkgdown::build_site(pkg = here::here())
-# usethis::use_github_action("pkgdown")
+
+# If you’re using GitHub, we also recommend setting up GitHub actions to automatically build and publish your site:
+# usethis::use_pkgdown_github_pages()
 
 # Save Package tar.gz
 version0 <- "0.1.0"
