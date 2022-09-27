@@ -392,11 +392,11 @@ ds
 fm <-  list(
   # Null model spatial and temporal with an additional year effect
   "fm_1_s_t_st" = "Year +
-    s(sx,sy,bs=c('ts'),k=376) + 
+    s(sx,sy,bs=c('ts'),k=376) +
     s(sx,sy,bs=c('ts'),k=10,by=Year)",
-  
+
   # Mdoel with simple covariates
-  "fm_2_cov" = 
+  "fm_2_cov" =
     "s(BOTTOM_DEPTH,bs='ts',k=10) +
 s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)"
 )
@@ -424,6 +424,7 @@ comb
 
 ```{r model_fit_load, echo = FALSE}
 load(system.file("VigA_model_fits.rdata", package = "surveyIndex") )
+# load("../output/VigA_surveyindex_models_model_fits.Rdata")
 ```
 
 ```{r model_fit, eval = FALSE}
@@ -455,6 +456,23 @@ save(models, fittimes, file = paste0("../inst/VigA_model_fits.Rdata"))
 ```
 
 
+
+``` {r model_aic}
+# temp <- sapply(models, `[`, "pModels")
+# mods <- sapply(temp, `[`, 1)
+# lapply(X = mods, FUN = AIC)
+
+# surveyIndex::get_surveyidx_aic(x = models)
+AIC(models$`red king crab fm_1_s_t_st`$pModels[[1]], 
+    models$`red king crab fm_2_cov`$pModels[[1]], 
+    models$`walleye pollock fm_1_s_t_st`$pModels[[1]], 
+    models$`walleye pollock fm_2_cov`$pModels[[1]], 
+    models$`yellowfin sole fm_1_s_t_st`$pModels[[1]], 
+    models$`yellowfin sole fm_2_cov`$pModels[[1]])
+
+```
+
+
 ```{r model_check1}
 ## Check basis dimensions splines (spatial resolution)
 # sink(paste0(".", dir_out, "gamcheck.txt"))
@@ -469,29 +487,30 @@ lapply(models,function(x) gam.check(x$pModels[[1]]))
 lapply(models,function(x) summary(x$pModels[[1]]))
 # sink()
 
-surveyIndex::get_surveyidx_aic(x = models)
-
-
-```
-
-
-``` {r mode_aic}
-temp <- sapply(models, `[`, "pModels")
-mods <- sapply(temp, `[`, 1)
-
-lapply(X = mods, FUN = AIC)
 ```
 
 ## 8. Indicies of Abundance
 
-```{r design_based_load, eval = FALSE, echo = FALSE}
-design_based <- read.csv(file = "../output/cpue_ebs_plusnw.csv") %>% 
-  dplyr::filter(#srvy == SRVY &
-    YEAR %in% YEARS &
-      COMMON_NAME %in% SPECIES)
-```
-
 ```{r indicie_abund}
+  
+dat_design <- dplyr::bind_rows(read.csv(file = system.file("YFS_10210_estimate_summary.csv", 
+                        package = "surveyIndex" )) %>% 
+                          dplyr::mutate(common_name = "yellowfin sole"),
+                 read.csv(file = system.file("WEP_21740_estimate_summary.csv", 
+                        package = "surveyIndex" ))  %>% 
+                          dplyr::mutate(common_name = "walleye pollock"), 
+                 read.csv(file = system.file("RKC_Table_for_SS3.csv", 
+                        package = "surveyIndex" )) %>% 
+  dplyr::rename(design_mt = Estimate_metric_tons, 
+                design_se = SD_mt) %>% 
+  dplyr::mutate(design_se = (design_se)^2, 
+                design_CV = NA, 
+                VAST_mt = NA,
+                VAST_se = NA, 
+                VAST_CV = NA, 
+                common_name = "red king crab") %>% 
+  dplyr::select(-Unit, -Fleet, -SD_log)) 
+
 
 dat <- data.frame()
 for (i in 1:length(models)){
@@ -500,15 +519,26 @@ for (i in 1:length(models)){
                      lo = temp$lo[,1], 
                      up = temp$up[,1],
                      Year = rownames(temp$idx), 
-                     group = names(models)[i], 
+                     group = names(models)[i],
                      formula = paste0("cpue_kgha ~ ", 
                                       as.character(temp$pModels[[1]]$formula)[[3]]))
   
   dat <- dplyr::bind_rows(dat, dat0) 
 }
 
-dat$facet_group <- paste0(sapply(X = strsplit(x = dat$group, split = " fm"), `[`, 1))
-# dat$model <- paste0(sapply(X = strsplit(x = dat$group, split = " fm"), `[`, 2))
+dat$common_name <- paste0(sapply(X = strsplit(x = dat$group, split = " fm"), `[`, 1))
+
+dat <- dplyr::bind_rows(dat %>% 
+                          dplyr::mutate(Year = as.numeric(Year)) %>% 
+                          dplyr::select(-group), 
+                        dat_design %>% 
+                          dplyr::select(design_mt, common_name, Year) %>%
+                          dplyr::rename(idx = design_mt) %>%
+                          dplyr::mutate(lo = NA, 
+                                        up = NA, 
+                                        formula = "design")) %>% 
+  dplyr::filter(Year %in% YEARS)
+  
 
 dat[dat$Year == 2020, c("idx", "up", "lo")] <- NA
 
@@ -524,7 +554,7 @@ ggplot2::ggplot(data = dat,
               linetype="dashed",
               color="grey") + 
   ggtitle("Annual Index Model Results") +
-  facet_wrap(vars(facet_group), scales = "free", ncol = 1) +
+  facet_wrap(vars(common_name), scales = "free", ncol = 1) +
   theme(legend.position = "bottom", 
         legend.direction = "vertical")
 
@@ -565,6 +595,7 @@ for (i in 1:length(unique(dat$facet_group))){
                               y = Lat, 
                               group = group, 
                               color = idx)) +
+    scale_color_viridis_c(option = "D") +
   geom_point()  + 
   ggtitle(paste0("Annual Index Model Results for ", unique(dat$facet_group)[i])) +
   facet_grid(cols = vars(group), 
