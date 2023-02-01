@@ -72,7 +72,6 @@ remotes::install_github("DTUAqua/DATRAS/DATRAS")
 remotes::install_github("emilymarkowitz-noaa/surveyIndex")
 ```
 
-
 ## Usage
 
 See examples in the [pkgdown site](https://EmilyMarkowitz-NOAA.github.io/surveyIndex/) and in the [?get_surveyidx() documentation](https://emilymarkowitz-noaa.github.io/surveyIndex/reference/get_surveyidx.html). 

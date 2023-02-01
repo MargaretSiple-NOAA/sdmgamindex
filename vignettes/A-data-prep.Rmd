@@ -2,7 +2,9 @@
 title: "Simple {surveyIndex} example"
 description: "Prepare survey data for get_surveyidx()"
 date: "`r format(Sys.Date(), format='%B %d %Y') `"
-output: rmarkdown::html_vignette
+output: 
+  rmarkdown::html_vignette: 
+    variant: gfm
 vignette: >
   %\VignetteIndexEntry{A-data-prep}
   %\VignetteEngine{knitr::rmarkdown}
@@ -321,7 +323,7 @@ head(dat_cov)
 
 ## 5. DATRAS structure
 
-### 5b. Catch Data
+### 5a. Catch Data
 
 Now, we need to fill in the data with the zeros!
 
@@ -373,7 +375,7 @@ head(allpd[1][[1]])
 
 ```
 
-### 5a. Covariate Data
+### 5b. Covariate Data
 
 ```{r cov_datras}
 
