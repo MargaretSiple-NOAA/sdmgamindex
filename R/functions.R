@@ -33,10 +33,10 @@
 #' @return A survey index (list)
 #' @examples
 #' \dontrun{
- library(DATRAS) # example data
- library(surveyIndex)
-library(tidyverse)
-load("data/ebs_example_datras.rda") #object: dat_wrangled. Source: FOSS; see https://emilymarkowitz-noaa.github.io/surveyIndex/articles/A-data-prep.html for how these data were wrangled in preparation for this example.
+#' library(DATRAS) # example data
+#' library(surveyIndex)
+#' library(tidyverse)
+#' load("data/ebs_example_datras.rda") #object: dat_wrangled. Source: FOSS; see https://emilymarkowitz-noaa.github.io/surveyIndex/articles/A-data-prep.html for how these data were wrangled in preparation for this example.
 # Megsie todo: add example here using EBS data!
 
 
