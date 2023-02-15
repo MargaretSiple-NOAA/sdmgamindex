@@ -201,6 +201,7 @@
 
  # HERE IS THE PART WHERE YOU FINALLY FIT THE MODEL
 #load("data/ebspollock_example_getsurveyidx.rda")
+ages <- 1
 xxx <- surveyIndex::get_surveyidx(
   x = ds[["walleye pollock"]], # this is a DATRASraw object
   ages = 1, # default
@@ -294,7 +295,7 @@ xxx <- surveyIndex::get_surveyidx(
        " not found in 'Nage' matrix"
      ))
    }
-   # Turn years into factors - we may be able to take this out
+   # Turn years into factors - we may be able to take this out.
    x[[1]]$Year <- as.factor(x[[1]]$Year)
    x[[2]]$Year <- as.factor(x[[2]]$Year)
 
@@ -414,7 +415,7 @@ xxx <- surveyIndex::get_surveyidx(
        f.0 <-
          stats::as.formula(paste("A1>", cutOff, " ~", modelZ[a]))
 
-
+      # Fit the GAM!
        print(system.time(m_pos <- DATRAS:::tryCatch.W.E(
          mgcv::gam(
            formula = f.pos,
@@ -429,7 +430,7 @@ xxx <- surveyIndex::get_surveyidx(
            na.action = stats::na.fail,
            ...
          )
-       )$value))
+       )$value)) #/end m_pos attempt and print statement
 
 
        if (class(m_pos)[2] == "error") {
