@@ -14,6 +14,7 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE, 
+  eval = FALSE, 
   comment = "#>"
 )
 ```
@@ -370,11 +371,20 @@ ds
 ```{r formulas}
 fm <-  list(
   # Null model spatial and temporal with an additional year effect
+    "fm_0_s" = "Year +
+    s(sx,sy,bs=c('ts'),k=376)",
+    
+      "fm_0_s" = "Year +
+    s(Year,bs=c('ts'),k=10)",
+    
+      "fm_0_st" = "Year +
+    s(sx,sy,bs=c('ts'),k=10,by=Year)",
+  
   "fm_1_s_t_st" = "Year +
     s(sx,sy,bs=c('ts'),k=376) +
     s(sx,sy,bs=c('ts'),k=10,by=Year)",
 
-  # Mdoel with simple covariates
+  # Model with simple covariates
   "fm_2_cov" =
     "s(BOTTOM_DEPTH,bs='ts',k=10) +
 s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)"
@@ -404,76 +414,229 @@ comb
 
 ```{r model_fit_load, echo = FALSE}
 load(system.file("VigA_simple_gam_model_fits.Rdata", package = "surveyIndex") )
-# load("../output/VigA_surveyindex_models_model_fits.Rdata")
 ```
 
 ```{r model_fit, eval = FALSE}
-
 models <- fittimes <- list()
 
 for(i in 1:nrow(comb)){
   cat("Fitting ",comb$SPECIES[i],"\n", comb$fm_name[i], ": ", comb$fm[i], "\n")
   
   temp <- paste0(comb$SPECIES[i], " ", comb$fm_name[i])
-  
-  fittimes[[ temp ]] <-
+
+    fittimes[[ temp ]] <-
     system.time ( models[[ temp ]] <-
-                    surveyIndex::get_surveyidx(
-                      x = ds[[ comb$SPECIES[i] ]],
-                      ages = 1,
-                      myids = NULL,
-                      predD = allpd,
-                      cutOff = 0,
-                      fam = "Tweedie",
-                      modelP = comb$fm[i],
-                      gamma = 1,
-                      control = list(trace = TRUE,
-                                     maxit = 20))  )
-  
-  
-  mgcv::gam(stats::as.formula(paste0("wCPUE ~ ", comb$fm[i])),
+                      mgcv::gam(stats::as.formula(paste0("wCPUE ~ ", comb$fm[i])),
       dat = dat_wrangled, 
       family = mgcv::tw, 
-      gamma = 1)
+      gamma = 1)  )
 }  
 
 save(models, fittimes, file = paste0("../inst/VigA_simple_gam_model_fits.Rdata"))
 ```
+```{r, eval = FALSE}
 
+# Lesson 8: Modling
+# Created by: Emily Markowitz
+# Contact: Emily.Markowitz@noaa.gov
+# Created: 2020-12-18
+# Modified: 2021-02-17
+
+
+# tasks -------------------------------------------------------------------
+
+# Be creative! 
+# Make a lm(), glm(), and gam() using either of these datasets to answer a 
+# question you have about the data. Be prepared to share your cool code with 
+# the class! 
+
+
+
+# 3. lm() models --------------- 
+
+# Quickly, I am going to show you all of the combinations using the purrr::map() again:
+
+lm_mods <- map(dat, ~lm(dat$wtcpue ~ .x, data = dat) %>% 
+                 broom::tidy())
+
+lm_mods 
+# The best model looks to be the one with longitude!
+
+# Another way of looking at this:
+
+# p-values
+dat %>% 
+  map(~lm(dat$wtcpue ~ .x, data = dat)) %>% 
+  map(summary) %>% 
+  map(c("coefficients")) %>% 
+  map_dbl(8)
+
+# r2
+dat %>% 
+  map(~lm(dat$wtcpue ~ .x, data = dat)) %>% 
+  map(summary) %>% 
+  map(c("r.squared")) %>%
+  unlist()
+
+# 4. glm() models --------------- 
+
+glm_fit1 <- glm(wtcpue ~ longitude, 
+                family = gaussian(link = "identity"), # same as an lm()
+                # family = "gaussian", # *same as line above
+                data = dat)
+
+glm_fit2 <- glm(wtcpue ~ longitude, 
+                family = Gamma(), 
+                data = dat)
+
+glm_fit3 <- glm(wtcpue ~ longitude + latitude, 
+                family = gaussian(link = "identity"), # same as an lm()
+                # family = "gaussian", # *same as line above
+                data = dat)
+
+glm_fit4 <- glm(wtcpue ~ longitude + latitude, 
+                family = Gamma(), 
+                data = dat)
+
+glm_fit5 <- glm(wtcpue ~ longitude + latitude + year, 
+                family = gaussian(link = "identity"), # same as an lm()
+                # family = "gaussian", # *same as line above
+                data = dat)
+
+glm_fit6 <- glm(wtcpue ~ longitude + latitude + year, 
+                family = Gamma(), 
+                data = dat)
+
+glm_fit7 <- glm(wtcpue ~ longitude + latitude + year + bot_temp, 
+                family = gaussian(link = "identity"), # same as an lm()
+                # family = "gaussian", # *same as line above
+                data = dat)
+
+glm_fit8 <- glm(wtcpue ~ longitude + latitude + year + bot_temp, 
+                family = Gamma(), 
+                data = dat)
+
+AIC(glm_fit1, glm_fit2, glm_fit3, glm_fit4, 
+    glm_fit5, glm_fit6, glm_fit7, glm_fit8)
+# Model 6 has the lowest AIC and is the most parsimonious!
+# bot_temp did not improve the model at all here, so why include it?
+# AIC is not the only metric to consider here, but I'll let you read up on that!
+# we can see that this model has room for improvement from looking at the plots: 
+plot(glm_fit6)
+
+# Now let's predict our outputs
+
+# make up x
+pred<-data.frame("longitude" = rnorm(n = 30, 
+                                     mean = mean(dat$longitude), 
+                                     sd = sd(dat$longitude)), 
+                 "latitude" = rnorm(n = 30, 
+                                    mean = mean(dat$latitude), 
+                                    sd = sd(dat$latitude)), 
+                 "year" = rep_len(x = c(2016, 2017, 2018), 
+                                  length.out = 10))
+# predict y with your equation
+pred$x<-predict(object = glm_fit6, 
+                newdata = pred, 
+                type = "response")
+pred
+
+# 5. gam() models --------------- 
+
+library(mgcv)
+
+# Create our gam models
+gam_fit1 <- gam(
+  wtcpue ~ s(longitude), 
+  data = dat
+)
+
+gam_fit2 <- gam(
+  wtcpue ~ s(longitude),
+  family = Gamma(link=log), 
+  data = dat
+)
+
+gam_fit3 <- gam(
+  wtcpue ~ s(longitude) + s(latitude),
+  data = dat
+)
+
+gam_fit4 <- gam(
+  wtcpue ~ s(longitude) + s(latitude),
+  family = Gamma(link=log), 
+  data = dat
+)
+
+gam_fit5 <- gam(
+  wtcpue ~ s(longitude) + s(latitude) + s(year, k = 2),
+  data = dat
+)
+
+gam_fit6 <- gam(
+  wtcpue ~ s(longitude) + s(latitude) + s(year, k = 2),
+  family = Gamma(link=log), 
+  data = dat
+)
+
+
+gam_fit7 <- gam(
+  wtcpue ~ s(longitude, latitude, year),
+  data = dat
+)
+
+gam_fit8 <- gam(
+  wtcpue ~ s(longitude, latitude, year), 
+  family = Gamma(link=log), 
+  data = dat
+)
+
+
+AIC(gam_fit1, gam_fit2, gam_fit3, gam_fit4, 
+    gam_fit5, gam_fit6, gam_fit7, gam_fit8)
+# Model 8 has the lowest AIC! 
+# by explicityly making a spatio-temporal term (as opposed to assessing 
+# each sepeately) we were able to obtain a better model
+# Again, AIC is not the only metric to consider here, but I'll let you read up on that!
+
+
+# crazy, just for giggles (aka an abridged model I am playing with in real life!)
+gam_fit9 <- gam(
+  wtcpue ~ year + # a linear variable
+    s(longitude, latitude, bs = c('ts'), k = 379) + # ts = tensor spline, k = knots, here the number of stations (?)
+    s(longitude, latitude,bs=c('ts'),k=50, by=year, id=1), # the above but with a by year term
+  family = Gamma(link=log), 
+  data = dat
+)
+
+# Will this more developed model be better than our gam_fit8?
+AIC(gam_fit8, gam_fit9)
+# Our new gam_fit9 is just that much better than our gam_fit8! 
+
+
+
+```
 
 
 ``` {r model_aic}
-# temp <- sapply(models, `[`, "pModels")
-# mods <- sapply(temp, `[`, 1)
-# lapply(X = mods, FUN = AIC)
-
-# surveyIndex::get_surveyidx_aic(x = models)
 AIC(models$`walleye pollock fm_1_s_t_st`$pModels[[1]], 
     models$`walleye pollock fm_2_cov`$pModels[[1]])
-
 ```
 
 
 ```{r model_check1}
-## Check basis dimensions splines (spatial resolution)
-# sink(paste0(".", dir_out, "gamcheck.txt"))
 par(mfrow = c(2,2))
 lapply(models,function(x) gam.check(x$pModels[[1]]))
-# sink()
+
 ```
 
 ```{r model_check2}
-## Model summaries
-# sink(paste0(".", dir_out, "summaries.txt"))
 lapply(models,function(x) summary(x$pModels[[1]]))
-# sink()
-
 ```
 
 ## 8. Indicies of Abundance
 
 ```{r indicie_abund}
-  
 dat_design <- dplyr::bind_rows(read.csv(file = system.file("YFS_10210_estimate_summary.csv", 
                         package = "surveyIndex" )) %>% 
                           dplyr::mutate(common_name = "yellowfin sole"),

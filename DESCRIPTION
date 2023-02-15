@@ -37,7 +37,7 @@ Depends:
 Imports:
     MASS,
     tweedie
-RoxygenNote: 7.2.2
+RoxygenNote: 7.2.3
 Suggests: 
     knitr,
     rmarkdown, 
@@ -45,3 +45,4 @@ Suggests:
     akgfmaps, 
     dplyr
 VignetteBuilder: knitr
+URL: https://emilymarkowitz-noaa.github.io/surveyIndex/

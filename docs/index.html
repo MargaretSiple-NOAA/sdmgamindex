@@ -4,14 +4,15 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="description" content='This is an implementation of the methods described in
+  Berg et al. (2014): "Evaluation of alternative age-based methods for estimating relative abundance from survey data in relation to assessment models", Fisheries Research 151(2014) 91-99.'>
 <title>Calculate survey indices of abundance from DATRAS exchange data • surveyIndex</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="bootstrap-toc.css">
-<script src="bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
+<script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="deps/bootstrap-5.2.2/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.2.2/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
-<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
-<script src="pkgdown.js"></script><meta property="og:title" content="Calculate survey indices of abundance from DATRAS exchange data">
+<!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Calculate survey indices of abundance from DATRAS exchange data">
 <meta property="og:description" content='This is an implementation of the methods described in
   Berg et al. (2014): "Evaluation of alternative age-based methods for estimating relative abundance from survey data in relation to assessment models", Fisheries Research 151(2014) 91-99.'>
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
@@ -19,63 +20,49 @@
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
 </head>
-<body data-spy="scroll" data-target="#toc">
+<body>
+    <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
     
 
-    <div class="container template-home">
-      <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
-  <div class="container">
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      <span class="navbar-brand">
-        <a class="navbar-link" href="index.html">surveyIndex</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
-      </span>
-    </div>
+    <nav class="navbar fixed-top navbar-light navbar-expand-lg bg-light"><div class="container">
+    
+    <a class="navbar-brand me-2" href="index.html">surveyIndex</a>
 
-    <div id="navbar" class="navbar-collapse collapse">
-      <ul class="nav navbar-nav">
-<li>
-  <a href="reference/index.html">Reference</a>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+
+    
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar" class="collapse navbar-collapse ms-3">
+      <ul class="navbar-nav me-auto">
+<li class="nav-item">
+  <a class="nav-link" href="reference/index.html">Reference</a>
 </li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-    Articles
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-<li>
-      <a href="articles/A-data-prep.html">Simple {surveyIndex} example</a>
-    </li>
-    <li>
-      <a href="articles/B-model-tuning.html">Nuances in model choices</a>
-    </li>
-    <li>
-      <a href="articles/C-model-comparisons.html">Compare {surveyIndex} to regular GAMs</a>
-    </li>
-  </ul>
+<li class="nav-item dropdown">
+  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
+  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="articles/A-gam-basics.html">Intro to GAMs</a>
+    <a class="dropdown-item" href="articles/A_gam_sdmTMB_example.html">Fitting a spatiotemporal model and deriving an abundance index</a>
+    <a class="dropdown-item" href="articles/B-model-tuning.html">Nuances in model choices</a>
+    <a class="dropdown-item" href="articles/C-model-comparisons.html">Compare {surveyIndex} to regular GAMs</a>
+    <a class="dropdown-item" href="articles/D-simple-case-study.html">Simple {surveyIndex} case study</a>
+  </div>
 </li>
       </ul>
-<ul class="nav navbar-nav navbar-right"></ul>
+<form class="form-inline my-2 my-lg-0" role="search">
+        <input type="search" class="form-control me-sm-2" aria-label="Toggle navigation" name="search-input" data-search-index="search.json" id="search-input" placeholder="Search for" autocomplete="off">
+</form>
+
+      <ul class="navbar-nav"></ul>
 </div>
-<!--/.nav-collapse -->
+
+    
   </div>
-<!--/.container -->
-</div>
-<!--/.navbar -->
-
-      
-
-      </header><div class="row">
-  <div class="contents col-md-9">
-
-<div class="section level2">
+</nav><div class="container template-home">
+<div class="row">
+  <main id="main" class="col-md-9"><div class="section level2">
 <h2 id="surveyindex">surveyIndex<a class="anchor" aria-label="anchor" href="#surveyindex"></a>
 </h2>
 <p>R package for calculating survey indices by age from DATRAS exchange data.</p>
@@ -109,51 +96,42 @@
 <div class="section level2">
 <h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
 </h2>
-<p>See examples in the <a href="https://EmilyMarkowitz-NOAA.github.io/surveyIndex/" class="external-link">pkgdown site</a> and in the <a href="https://emilymarkowitz-noaa.github.io/surveyIndex/reference/get_surveyidx.html" class="external-link">?get_surveyidx() documentation</a>.</p>
+<p>See examples in the <a href="https://EmilyMarkowitz-NOAA.github.io/surveyIndex/" class="external-link">pkgdown site</a> and in the <a href="https://emilymarkowitz-noaa.github.io/surveyIndex/reference/get_surveyidx.html">?get_surveyidx() documentation</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="metadata">Metadata<a class="anchor" aria-label="anchor" href="#metadata"></a>
 </h2>
 <p>This package was last produced using:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="do">## R version 4.2.1 (2022-06-23 ucrt)</span></span>
+<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="do">## R version 4.2.2 (2022-10-31 ucrt)</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="do">## Platform: x86_64-w64-mingw32/x64 (64-bit)</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="do">## Running under: Windows 10 x64 (build 19044)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="do">## Running under: Windows 10 x64 (build 19045)</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="do">## Matrix products: default</span></span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="do">## locale:</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="do">## [1] LC_COLLATE=English_United States.utf8  LC_CTYPE=English_United States.utf8    LC_MONETARY=English_United States.utf8</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="do">## [4] LC_NUMERIC=C                           LC_TIME=English_United States.utf8    </span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="do">## attached base packages:</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="do">## [1] parallel  stats     graphics  grDevices utils     datasets  methods   base     </span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="do">## other attached packages:</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="do">##  [1] surveyIndex_0.1.0  pkgdown_2.0.6.9000 knitr_1.40         badger_0.2.1       marmap_1.0.6       RANN_2.6.1        </span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="do">##  [7] maptools_1.1-4     sp_1.5-0           mapdata_2.3.0      maps_3.4.0         mgcv_1.8-40        nlme_3.1-157      </span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="do">## [13] DATRAS_1.01        RODBC_1.3-19       roxygen2_7.2.1     devtools_2.4.4     usethis_2.1.6      here_1.0.1        </span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="do">## loaded via a namespace (and not attached):</span></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="do">##   [1] colorspace_2.0-3    gitcreds_0.1.2      ellipsis_0.3.2      rprojroot_2.0.3     fs_1.5.2           </span></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="do">##   [6] rstudioapi_0.14     remotes_2.4.2       gh_1.3.1            bit64_4.0.5         fansi_1.0.3        </span></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="do">##  [11] xml2_1.3.3          codetools_0.2-18    splines_4.2.1       ncdf4_1.19          cachem_1.0.6       </span></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="do">##  [16] pkgload_1.3.0       jsonlite_1.8.0      icesDatras_1.4.0    shiny_1.7.2         httr_1.4.4         </span></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="do">##  [21] BiocManager_1.30.18 compiler_4.2.1      rvcheck_0.2.1       assertthat_0.2.1    Matrix_1.4-1       </span></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="do">##  [26] fastmap_1.1.0       cli_3.4.0           later_1.3.0         htmltools_0.5.3     prettyunits_1.1.1  </span></span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="do">##  [31] tools_4.2.1         gtable_0.3.1        glue_1.6.2          reshape2_1.4.4      dplyr_1.0.10       </span></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="do">##  [36] Rcpp_1.0.9          raster_3.5-29       vctrs_0.4.1         xfun_0.32           stringr_1.4.1      </span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="do">##  [41] ps_1.7.1            brio_1.1.3          testthat_3.1.4      mime_0.12           miniUI_0.1.1.1     </span></span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="do">##  [46] lifecycle_1.0.2     dlstats_0.1.5       sys_3.4             terra_1.6-17        MASS_7.3-57        </span></span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="do">##  [51] scales_1.2.1        promises_1.2.0.1    credentials_1.3.2   RColorBrewer_1.1-3  gert_1.8.0         </span></span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="do">##  [56] yaml_2.3.5          curl_4.3.2          memoise_2.0.1       ggplot2_3.3.6       yulab.utils_0.0.5  </span></span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="do">##  [61] stringi_1.7.8       RSQLite_2.2.17      desc_1.4.2          pkgbuild_1.3.1      shape_1.4.6        </span></span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="do">##  [66] rlang_1.0.5         pkgconfig_2.0.3     evaluate_0.16       lattice_0.20-45     purrr_0.3.4        </span></span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="do">##  [71] htmlwidgets_1.5.4   bit_4.0.4           processx_3.7.0      tidyselect_1.1.2    plyr_1.8.7         </span></span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="do">##  [76] magrittr_2.0.3      R6_2.5.1            generics_0.1.3      profvis_0.3.7       DBI_1.1.3          </span></span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="do">##  [81] pillar_1.8.1        foreign_0.8-82      withr_2.5.0         tibble_3.1.8        crayon_1.5.1       </span></span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="do">##  [86] utf8_1.2.2          rmarkdown_2.16      urlchecker_1.0.1    grid_4.2.1          blob_1.2.3         </span></span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="do">##  [91] callr_3.7.2         digest_0.6.29       xtable_1.8-4        adehabitatMA_0.3.14 httpuv_1.6.6       </span></span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="do">##  [96] openssl_2.0.2       munsell_0.5.0       tweedie_2.3.5       sessioninfo_1.2.2   askpass_1.1</span></span></code></pre></div>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="do">## [1] LC_COLLATE=English_United States.utf8  LC_CTYPE=English_United States.utf8    LC_MONETARY=English_United States.utf8 LC_NUMERIC=C                           LC_TIME=English_United States.utf8    </span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="do">## attached base packages:</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="do">## [1] parallel  stats     graphics  grDevices utils     datasets  methods   base     </span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="do">## other attached packages:</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="do">##  [1] knitr_1.42        badger_0.2.3      surveyIndex_0.1.0 RODBC_1.3-20      roxygen2_7.2.3    devtools_2.4.5    here_1.0.1        gstat_2.1-0       purrr_1.0.1       ggplot2_3.4.0     dplyr_1.0.10     </span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="do">## [12] visreg_2.7.0      gratia_0.8.1      sdmTMB_0.3.0      tweedie_2.3.5     MASS_7.3-58.2     marmap_1.0.9      RANN_2.6.1        maptools_1.1-6    sp_1.6-0          mapdata_2.3.1     maps_3.4.1       </span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="do">## [23] mgcv_1.8-41       nlme_3.1-161      DATRAS_1.01       usethis_2.1.6    </span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="do">## loaded via a namespace (and not attached):</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="do">##   [1] lwgeom_0.2-11       inlabru_2.7.0       plyr_1.8.8          igraph_1.3.5        splines_4.2.2       digest_0.6.31       yulab.utils_0.0.6   htmltools_0.5.4     fansi_1.0.4         magrittr_2.0.3     </span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="do">##  [11] memoise_2.0.1       gert_1.9.2          remotes_2.4.2       credentials_1.3.2   xts_0.12.2          askpass_1.1         pkgdown_2.0.7       prettyunits_1.1.1   colorspace_2.1-0    blob_1.2.3         </span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="do">##  [21] gitcreds_0.1.2      xfun_0.36           dlstats_0.1.6       callr_3.7.3         crayon_1.5.2        jsonlite_1.8.4      zoo_1.8-11          glue_1.6.2          stars_0.6-0         gtable_0.3.1       </span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="do">##  [31] pkgbuild_1.4.0      shape_1.4.6         abind_1.4-5         scales_1.2.1        DBI_1.1.3           ggeffects_1.1.5     miniUI_0.1.1.1      Rcpp_1.0.10         xtable_1.8-4        units_0.8-1        </span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="do">##  [41] foreign_0.8-84      bit_4.0.5           proxy_0.4-27        intervals_0.15.2    profvis_0.3.7       htmlwidgets_1.6.1   httr_1.4.4          RColorBrewer_1.1-3  FNN_1.1.3.1         ellipsis_0.3.2     </span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="do">##  [51] urlchecker_1.0.1    pkgconfig_2.0.3     utf8_1.2.2          tidyselect_1.2.0    rlang_1.0.6         reshape2_1.4.4      later_1.3.0         munsell_0.5.0       tools_4.2.2         cachem_1.0.6       </span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="do">##  [61] cli_3.6.0           generics_0.1.3      RSQLite_2.2.20      evaluate_0.20       stringr_1.5.0       fastmap_1.1.0       yaml_2.3.7          sys_3.4.1           processx_3.8.0      bit64_4.0.5        </span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="do">##  [71] fs_1.6.0            ncdf4_1.21          gh_1.3.1            whisker_0.4.1       mime_0.12           mvnfast_0.2.7       xml2_1.3.3          brio_1.1.3          compiler_4.2.2      rstudioapi_0.14    </span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="do">##  [81] curl_5.0.0          testthat_3.1.6      e1071_1.7-12        tibble_3.1.8        spacetime_1.2-8     stringi_1.7.12      gdistance_1.6       ps_1.7.2            desc_1.4.2          lattice_0.20-45    </span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="do">##  [91] Matrix_1.5-3        classInt_0.4-8      vctrs_0.5.2         pillar_1.8.1        lifecycle_1.0.3     BiocManager_1.30.19 raster_3.6-14       httpuv_1.6.8        patchwork_1.1.2     R6_2.5.1           </span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="do">## [101] promises_1.2.0.1    icesDatras_1.4.0    KernSmooth_2.23-20  sessioninfo_1.2.2   codetools_0.2-18    assertthat_0.2.1    pkgload_1.3.2       openssl_2.0.5       rprojroot_2.0.3     withr_2.5.0        </span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="do">## [111] adehabitatMA_0.3.15 terra_1.7-3         grid_4.2.2          tidyr_1.3.0         class_7.3-21        rvcheck_0.2.1       rmarkdown_2.20      sf_1.0-9            shiny_1.7.4</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="noaa-readme">NOAA README<a class="anchor" aria-label="anchor" href="#noaa-readme"></a>
@@ -168,10 +146,7 @@
 <p><a href="https://www.commerce.gov/" class="external-link">U.S. Department of Commerce</a> | <a href="https://www.noaa.gov" class="external-link">National Oceanographic and Atmospheric Administration</a> | <a href="https://www.fisheries.noaa.gov/" class="external-link">NOAA Fisheries</a></p>
 </div>
 
-  </div>
-
-  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
-    <div class="license">
+  </main><aside class="col-md-3"><div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
 <li>
@@ -199,25 +174,24 @@
 
 
 
-  </div>
+  </aside>
 </div>
 
 
-      <footer><div class="copyright">
+    <footer><div class="pkgdown-footer-left">
   <p></p>
 <p>Developed by Emily Markowitz, Margaret Siple, Casper Berg.</p>
 </div>
 
-<div class="pkgdown">
+<div class="pkgdown-footer-right">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
-      </footer>
+    </footer>
 </div>
 
   
-
 
   
 

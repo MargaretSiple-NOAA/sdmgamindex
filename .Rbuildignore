@@ -5,3 +5,6 @@
 ^pkgdown$
 ^output$
 
+^_pkgdown\.yml$
+^docs$
+^\.github$
