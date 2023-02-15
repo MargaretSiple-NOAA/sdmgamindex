@@ -23,14 +23,11 @@ knitr::opts_chunk$set(
 PKG <- c(
   "surveyIndex", # remotes::install_github("casperwberg/surveyIndex/surveyIndex")
   "DATRAS", # remotes::install_github("DTUAqua/DATRAS/DATRAS")
-  
-  # "rgdal", 
   "dplyr",
   "sf", 
   "gstat",
   "magrittr", 
   "raster", 
-  
   # RACE-GAP Specific R packages
   "akgfmaps", # devtools::install_github("sean-rohan-noaa/akgfmaps", build_vignettes = TRUE)
   "coldpool" # devtools::install_github("sean-rohan-noaa/coldpool")

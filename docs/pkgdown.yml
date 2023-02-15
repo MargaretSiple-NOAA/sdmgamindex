@@ -1,9 +1,14 @@
-pandoc: 2.17.1.1
-pkgdown: 2.0.6
+pandoc: 2.19.2
+pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
-  A-data-prep: A-data-prep.html
+  A-gam-basics: A-gam-basics.html
+  A_gam_sdmTMB_example: A_gam_sdmTMB_example.html
   B-model-tuning: B-model-tuning.html
   C-model-comparisons: C-model-comparisons.html
-last_built: 2022-12-05T23:53Z
+  D-simple-case-study: D-simple-case-study.html
+last_built: 2023-02-15T00:41Z
+urls:
+  reference: https://emilymarkowitz-noaa.github.io/surveyIndex/reference
+  article: https://emilymarkowitz-noaa.github.io/surveyIndex/articles
 

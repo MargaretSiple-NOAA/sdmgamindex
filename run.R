@@ -1,6 +1,6 @@
 
 
-########### Document and create Package ----------------------------------------
+# Document and create Package --------------------------------------------------
 .rs.restartR()
 
 # options(rmarkdown.html_vignette.check_title = FALSE)
@@ -17,16 +17,16 @@ install("surveyIndex")
 setwd(here::here())
 # devtools::check()
 
-########### Create Package Readme.md -------------------------------------------
+# Create Package Readme.md -----------------------------------------------------
 rmarkdown::render(paste0("./README.Rmd"),
                   output_dir = "./",
                   output_file = "README.md")
 
-########### Add stuff ------------------------------------------------------
+# Add stuff --------------------------------------------------------------------
 
 # usethis::use_vignette("C-model-comparisons")
 
-########### Create Documentation GitHub-Pages ----------------------------------
+# Create Documentation GitHub-Pages --------------------------------------------
 
 .rs.restartR()
 # devtools::install_github("rstudio/fontawesome", force = T)
