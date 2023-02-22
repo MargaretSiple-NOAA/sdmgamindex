@@ -7,16 +7,12 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
+  collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE, 
   comment = "#>", 
   eval = FALSE
 )
-```
-
-```{r setup}
-library(surveyIndex)
 ```
 
 <!-- --- -->
@@ -28,7 +24,7 @@ library(surveyIndex)
 <!--   eval: true -->
 <!-- --- -->
 
-> Adapted from [GitHub 2023-02-14](https://github.com/pbs-assess/sdmTMB-teaching/blob/490ee04157f19d1059c55a1318b894e8b8f460bb/uw-survey-2023/02-exercise.qmd#L356)
+> Adapted from [GitHub pbs-assess/sdmTMB-teaching 2023-02-14](https://github.com/pbs-assess/sdmTMB-teaching/blob/490ee04157f19d1059c55a1318b894e8b8f460bb/uw-survey-2023/02-exercise.qmd#L356)
 
 # Goals:
 
@@ -38,16 +34,24 @@ library(surveyIndex)
 -   Gain familiarity with fitting, comparing and interpreting different random field structures.
 -   Calculate an area-weighted biomass index and compare how model structure can impact an index.
 
-```{r, message=FALSE, warning=FALSE, echo = FALSE}
-# library(remotes)
+```{r install_inla, eval = FALSE, include = FALSE}
+# install.packages("INLA", repos = c(getOption("repos"), INLA = "https://inla.r-inla-download.org/R/stable"), dependencies = TRUE)
+library(remotes)
+remotes::install_github("pbs-assess/sdmTMB", dependencies = TRUE)
+```
+
+```{r}
 PKG <- c(
-  "sdmTMB", # remotes::install_github("casperwberg/surveyIndex/surveyIndex")
-  "mgcv", # remotes::install_github("DTUAqua/DATRAS/DATRAS")
+  "sdmTMB", # install.packages("sdmTMB", dependencies = TRUE)
+  "mgcv", 
   "gratia",
   "visreg", 
   "gstat",
   "dplyr", 
   "ggplot2", 
+  "INLA",
+  "prediction",
+  "inlabru", 
   "purrr")
 
 for (p in PKG) {
@@ -61,12 +65,19 @@ options(ggplot2.continuous.fill = "viridis")
 theme_set(theme_light())
 ```
 
+Check your system:
+
+```{r}
+sessionInfo()
+```
+
 # The data
 
 We will work with data representing North Pacific Spiny Dogfish in the West Coast Vancouver Island synoptic trawl survey.
 
-```{r}
-dat <- readRDS(here::here("uw-survey-2023/data/wcvi-dogfish.rds"))
+```{r, include = FALSE}
+# https://drive.google.com/drive/folders/14h9nrWR_eoSlmfFI0KXfotEIJHyVJzHQ
+dat <- readRDS(here::here("notforgit/uw-survey-2023/data/wcvi-dogfish.rds"))
 ```
 
 ```{r}
@@ -76,7 +87,9 @@ head(dat)
 The dataset contains sampling locations (`longitude` and `latitude`) and `year`. It also contains sampling `depth` in meters and sample density `density` (CPUE) in units of tonnes/km^2^.
 
 ```{r}
-ggplot(dat, aes(longitude, latitude, size = density)) + geom_point()
+ggplot(data = dat, 
+       mapping = aes(x = longitude, y = latitude, size = density)) + 
+  geom_point()
 ```
 
 # Adding UTMs
@@ -84,7 +97,7 @@ ggplot(dat, aes(longitude, latitude, size = density)) + geom_point()
 We can add UTM columns using `add_utm_columns()`:
 
 ```{r}
-add_utm_columns(dat, ll_names = c("longitude", "latitude"))
+sdmTMB::add_utm_columns(dat, ll_names = c("longitude", "latitude"))
 ```
 
 Note that this function guesses at an appropriate UTM projection for you and provides a URL to verify. To ensure future compatibility with prediction grids or other data, it is best to hard code the choice using the `utm_crs` argument. We will use `CRS = 3156` here to match our prediction grid:
@@ -96,15 +109,27 @@ dat <- add_utm_columns(dat, utm_crs = 3156, ll_names = c("longitude", "latitude"
 And check to make sure that looks right:
 
 ```{r}
-ggplot(dat, aes(X, Y, size = density)) + geom_point(shape = 21) + coord_fixed()
+ggplot(data = dat, 
+       mapping = aes(
+         x = X, 
+         y = Y, 
+         size = density)) + 
+  geom_point() +
+  coord_fixed()
 ```
 
 We can also plot the data by year:
 
 ```{r}
-ggplot(dat, aes(X, Y, size = density, colour = log(density + 1))) +
+ggplot(data = dat, 
+       mapping = aes(
+         x = X, 
+         y = Y, 
+         size = density, 
+         colour = log(density + 1))) +
   geom_point(alpha = 0.3) +
-  facet_wrap(~year) + coord_fixed()
+  facet_wrap(~year) + 
+  coord_fixed()
 ```
 
 We will create these new columns to use later:
@@ -119,13 +144,17 @@ dat$year_factor <- as.factor(dat$year)
 We start by constructing an SPDE mesh with INLA. This creates some matrices that are used internally when fitting the model. We will use the shortcut function `make_mesh()` and use a cutoff (minimum triangle length of 10 km). Note: this is the only parameter that can be changed in `make_mesh()` but more control over mesh arguments can be done with INLA (`inla.mesh.2d()`).
 
 ```{r}
-mesh <- make_mesh(dat, xy_cols = c("X", "Y"), cutoff = 10)
+mesh <- sdmTMB::make_mesh(dat, xy_cols = c("X", "Y"), cutoff = 10)
 plot(mesh)
 mesh$mesh$n # number of vertices or knots
 
 # ggplot alternative:
-ggplot() + inlabru::gg(mesh$mesh) + coord_fixed() +
-  geom_point(aes(X, Y), data = dat, alpha = 0.2, size = 0.5)
+ggplot() + 
+  inlabru::gg(mesh$mesh) + coord_fixed() +
+  geom_point(mapping = aes(X, Y), 
+             data = dat, 
+             alpha = 0.2, 
+             size = 0.5)
 ```
 
 ### Exercise:
@@ -137,7 +166,7 @@ ggplot() + inlabru::gg(mesh$mesh) + coord_fixed() +
 The most basic model we could fit would be a model with a single spatial random field, and no covariates. This is similar to what we were fitting yesterday. Using `silent = FALSE` lets us see what is happening, but it's awkward when running code in Rmd/Quarto chunks (with the default RStudio setting to 'Show output inline for all R Markdown document') so we will comment it out in most cases here. But it is a good idea to use it if models are running slowly or not converging to monitor progress.
 
 ```{r, results='hide', warning=FALSE}
-fit_spatial <- sdmTMB(
+fit_spatial <- sdmTMB::sdmTMB(
   density ~ 1, # intercept only
   data = dat,  
   family = tweedie(link = "log"),
@@ -147,18 +176,18 @@ fit_spatial <- sdmTMB(
 )
 ```
 
-```{r}
-sanity(fit_spatial)
+```{r, message = TRUE}
+sdmTMB::sanity(fit_spatial)
 ```
 
 Did it have trouble? If so, try an extra optimization run and see if that's sufficient:
 
-```{r}
-fit_spatial <- run_extra_optimization(fit_spatial)
-sanity(fit_spatial)
+```{r, message = TRUE}
+fit_spatial <- sdmTMB::run_extra_optimization(fit_spatial)
+sdmTMB::sanity(fit_spatial)
 ```
 
-```{r}
+```{r, message = TRUE}
 fit_spatial
 ```
 
@@ -173,7 +202,7 @@ The year factors give each year its own mean (this is generally the approach use
 The choice to use log depth helps the model fit because we have fewer samples from the deeper depths.
 
 ```{r, results='hide'}
-fit <- sdmTMB(
+fit <- sdmTMB::sdmTMB(
   density ~ 0 + year_factor + poly(log_depth, 2),
   data = dat,
   family = tweedie(link = "log"),
@@ -186,14 +215,14 @@ fit <- sdmTMB(
 ```
 
 Print the model:
-
-```{r}
+but th
+```{r, message = TRUE}
 fit
 ```
 
 Run a basic sanity check on the model:
 
-```{r}
+```{r, message = TRUE}
 sanity(fit)
 ```
 
