@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{get_surveyidx_sim}
 \alias{get_surveyidx_sim}
-\title{Simulate data from a surveyIndex model (experimental and subject to change)}
+\title{Simulate data from a sdmgamindex model (experimental and subject to change)}
 \usage{
 get_surveyidx_sim(model, d, sampleFit = FALSE, condSim = NULL)
 }

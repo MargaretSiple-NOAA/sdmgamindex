@@ -1,6 +1,6 @@
 ---
-title: "Simple {surveyIndex} case study"
-description: "Simple {surveyIndex} case study"
+title: "Simple {sdmgamindex} case study"
+description: "Simple {sdmgamindex} case study"
 date: "`r format(Sys.Date(), format='%B %d %Y') `"
 output: 
   rmarkdown::html_vignette: 
@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 ```{r setup, echo = FALSE}
 # library(remotes)
 PKG <- c(
-  "surveyIndex", # remotes::install_github("casperwberg/surveyIndex/surveyIndex")
+  "sdmgamindex", # remotes::install_github("casperwberg/sdmgamindex/sdmgamindex")
   "DATRAS", # remotes::install_github("DTUAqua/DATRAS/DATRAS")
   "dplyr",
   "sf", 
@@ -94,7 +94,7 @@ SRVY <- "EBS"
 Here, we use the public facing data from the [NOAA AFSC groundfish Bering sea bottom trawl survey](https://www.fisheries.noaa.gov/foss/f?p=215:29:5480997826449::NO:::). For more information about how these data were compiled, see [afsc-gap-products GitHub repo](https://github.com/afsc-gap-products/gap_public_data). 
 
 ```{r view_data}
-dat <- surveyIndex::noaa_afsc_public_foss %>% 
+dat <- sdmgamindex::noaa_afsc_public_foss %>% 
   dplyr::filter(srvy == SRVY &
                   year %in% YEARS &
                   common_name %in% SPECIES) %>%
@@ -109,7 +109,7 @@ dat <- surveyIndex::noaa_afsc_public_foss %>%
 head(dat)
 ```
 
-## 2. Prepare the data for surveyIndex::get_surveyidx():
+## 2. Prepare the data for sdmgamindex::get_surveyidx():
 
 ```{r data_wrangle}
 
@@ -117,7 +117,7 @@ head(dat)
 crs_proj <- "EPSG:3338" # NAD83 / Alaska Albers
 crs_latlon <- "+proj=longlat +datum=WGS84" # decimal degrees
 
-ll <- surveyIndex::convert_crs( 
+ll <- sdmgamindex::convert_crs( 
   x = dat$longitude_dd,
   y = dat$latitude_dd, 
   crs_in = crs_latlon, 
@@ -125,7 +125,7 @@ ll <- surveyIndex::convert_crs(
 
 YEARS <- sort(unique(dat$year))
 
-# The surveyIndex::get_surveyidx() expects some columns to be named in a specific way
+# The sdmgamindex::get_surveyidx() expects some columns to be named in a specific way
 dat_wrangled <- dat %>% 
   dplyr::rename(
     Year = year,
@@ -173,9 +173,9 @@ Since surveys are not done at the same *exact* location each year (it's the inte
 These are the same prediction grids AFSC uses for their 2021 [VAST model-based indices](https://github.com/James-Thorson-NOAA/VAST) (which is subject to change - do not use this without asking/checking that this is still current!). 
 
 ```{r prediction_grid}
-pred_grid <- surveyIndex::pred_grid_ebs
+pred_grid <- sdmgamindex::pred_grid_ebs
 
-ll <- surveyIndex::convert_crs( 
+ll <- sdmgamindex::convert_crs( 
   x = pred_grid$lon,
   y = pred_grid$lat, 
   crs_in = crs_latlon, 
@@ -218,7 +218,7 @@ Here we want to match covariate data to the prediction grid.
 
 ```{r dat_cov}
 
-dat_cov <- surveyIndex::pred_grid_ebs %>% 
+dat_cov <- sdmgamindex::pred_grid_ebs %>% 
   dplyr::select(-Shape_Area) %>% 
   dplyr::mutate( 
     sx = ((lon - mean(lon, na.rm = TRUE))/1000),
@@ -240,7 +240,7 @@ For this, we are going to create a raster of depth in the Bering sea from the su
 ```{r covar_depth_load, echo=FALSE}
 load(file = system.file(paste0("VigA_bottom_depth_raster_",
                                min(YEARS),"-",max(YEARS), ".rdata"), 
-                        package = "surveyIndex" ) )
+                        package = "sdmgamindex" ) )
 ```
 
 ```{r covar_depth, eval=FALSE}
@@ -364,7 +364,7 @@ head(dat_catch_haul)
 ```
 
 ```{r catch_haul_datras }
-allpd <- lapply(YEARS, FUN = surveyIndex::get_prediction_grid, x = dat_cov, 
+allpd <- lapply(YEARS, FUN = sdmgamindex::get_prediction_grid, x = dat_cov, 
                 vars = vars, varsbyyr = varsbyyr)
 names(allpd) <- as.character(YEARS)
 
@@ -378,7 +378,7 @@ head(allpd[1][[1]])
 
 ## split data by species, make into DATRASraw + Nage matrix
 ds <- split(dat_catch_haul,dat_catch_haul$COMMON_NAME)
-ds <- lapply(ds, surveyIndex::get_datrasraw)
+ds <- lapply(ds, sdmgamindex::get_datrasraw)
 ## OBS, response is added here in "Nage" matrix -- use wCPUE
 ds <- lapply(ds,function(x) { x[[2]]$Nage <- matrix(x$wCPUE,ncol=1); colnames(x[[2]]$Nage)<-1; x } )
 
@@ -422,8 +422,8 @@ comb
 ```
 
 ```{r model_fit_load, echo = FALSE}
-load(system.file("VigA_model_fits.rdata", package = "surveyIndex") )
-# load("../output/VigA_surveyindex_models_model_fits.Rdata")
+load(system.file("VigA_model_fits.rdata", package = "sdmgamindex") )
+# load("../output/VigA_sdmgamindex_models_model_fits.Rdata")
 ```
 
 ```{r model_fit, eval = FALSE}
@@ -437,7 +437,7 @@ for(i in 1:nrow(comb)){
   
   fittimes[[ temp ]] <-
     system.time ( models[[ temp ]] <-
-                    surveyIndex::get_surveyidx(
+                    sdmgamindex::get_surveyidx(
                       x = ds[[ comb$SPECIES[i] ]],
                       ages = 1,
                       myids = NULL,
@@ -461,7 +461,7 @@ save(models, fittimes, file = paste0("../inst/VigA_model_fits.Rdata"))
 # mods <- sapply(temp, `[`, 1)
 # lapply(X = mods, FUN = AIC)
 
-# surveyIndex::get_surveyidx_aic(x = models)
+# sdmgamindex::get_surveyidx_aic(x = models)
 AIC(models$`red king crab fm_1_s_t_st`$pModels[[1]], 
     models$`red king crab fm_2_cov`$pModels[[1]], 
     models$`walleye pollock fm_1_s_t_st`$pModels[[1]], 
@@ -493,13 +493,13 @@ lapply(models,function(x) summary(x$pModels[[1]]))
 ```{r indicie_abund}
   
 dat_design <- dplyr::bind_rows(read.csv(file = system.file("YFS_10210_estimate_summary.csv", 
-                        package = "surveyIndex" )) %>% 
+                        package = "sdmgamindex" )) %>% 
                           dplyr::mutate(common_name = "yellowfin sole"),
                  read.csv(file = system.file("WEP_21740_estimate_summary.csv", 
-                        package = "surveyIndex" ))  %>% 
+                        package = "sdmgamindex" ))  %>% 
                           dplyr::mutate(common_name = "walleye pollock"), 
                  read.csv(file = system.file("RKC_Table_for_SS3.csv", 
-                        package = "surveyIndex" )) %>% 
+                        package = "sdmgamindex" )) %>% 
   dplyr::rename(design_mt = Estimate_metric_tons, 
                 design_se = SD_mt) %>% 
   dplyr::mutate(design_se = (design_se)^2, 
@@ -606,7 +606,7 @@ for (i in 1:length(unique(dat$facet_group))){
 
 ```{r}
 
-surveyIndex::plot_surveyidx(
+sdmgamindex::plot_surveyidx(
   x = models, 
   dat = ds, 
   myids = NULL, 
@@ -627,7 +627,7 @@ surveyIndex::plot_surveyidx(
 #   
 #   fittimes[[ temp ]] <-
 #     system.time ( sims[[ temp ]] <-
-#                     surveyIndex::get_surveyidx_sim(
+#                     sdmgamindex::get_surveyidx_sim(
 #                       model = models[[i]], 
 #                       d = ds[[ comb$SPECIES[i] ]]) )
 # }
@@ -653,8 +653,8 @@ for(i in 1:nrow(comb)){
   ests[[ temp ]] <- list()
   
   ## simulate data
-  csim <- surveyIndex::get_surveyidx_sim(models[[i]], ds[[comb$SPECIES[i]]])
-  sims <-lapply(1:REPS,function(j) surveyIndex::get_surveyidx_sim(
+  csim <- sdmgamindex::get_surveyidx_sim(models[[i]], ds[[comb$SPECIES[i]]])
+  sims <-lapply(1:REPS,function(j) sdmgamindex::get_surveyidx_sim(
     model = models[[i]],
     d = ds[[comb$SPECIES[i]]], 
     sampleFit = FALSE,
@@ -667,7 +667,7 @@ for(i in 1:nrow(comb)){
     colnames(tmp$Nage)<-1
     
     ests[[SPECIES]][[i]]  <-
-      surveyIndex::get_surveyidx(
+      sdmgamindex::get_surveyidx(
         x = tmp,
         ages = 1,
         myids=NULL,
@@ -688,7 +688,7 @@ par(mfrow=c(2,2))
 for(i in 1:nrow(comb)){
 
 # for(SPECIES in specLevels){
-  surveyIndex::plot_simulation_list(
+  sdmgamindex::plot_simulation_list(
     x = ests[[temp]],
     base=models[[temp]],
     main=temp,

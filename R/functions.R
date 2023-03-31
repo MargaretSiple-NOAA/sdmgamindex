@@ -34,9 +34,9 @@
 #' @examples
 #' \dontrun{
 #' library(DATRAS) # example data
-#' library(surveyIndex)
+#' library(sdmgamindex)
 #' library(tidyverse)
-#' load("data/ebs_example_datras.rda") #object: dat_wrangled. Source: FOSS; see https://emilymarkowitz-noaa.github.io/surveyIndex/articles/A-data-prep.html for how these data were wrangled in preparation for this example.
+#' load("data/ebs_example_datras.rda") #object: dat_wrangled. Source: FOSS; see https://emilymarkowitz-noaa.github.io/sdmgamindex/articles/A-data-prep.html for how these data were wrangled in preparation for this example.
 # Megsie todo: add example here using EBS data!
 
 
@@ -599,8 +599,8 @@ get_surveyidx <- function(x,
 #' @param x survey index
 #' @param dat DATRASraw object
 #' @param parName name of the parameter, e.g. "Gear"
-#' @param cutOff see getSurveyIndex()
-#' @param nboot see getSurveyIndex()
+#' @param cutOff see getsdmgamindex()
+#' @param nboot see getsdmgamindex()
 #' @param pOnly only calculate for positive part of model, defaults to FALSE.
 #' @return list of estimates + ci bounds for each age group.
 #' @importFrom MASS mvrnorm
@@ -1198,7 +1198,7 @@ consistency_external <- function(tt, tt2, print_plot = FALSE) {
 #'
 #' Previously named simulate surveyIdx.simulate.
 #'
-#' @title Simulate data from a surveyIndex model (experimental and subject to change)
+#' @title Simulate data from a sdmgamindex model (experimental and subject to change)
 #' @param model object of class 'surveyIdx'
 #' @param d A dataset (DATRASraw object)
 #' @param sampleFit Use a random sample from the gaussian approximation to distribution of the estimated parameter vector. Default: FALSE.
@@ -1477,12 +1477,12 @@ plot_simulation_list <-
 
 # Randomized quantile residuals ------------------------------------------------
 
-#' Randomized quantile residuals for class 'surveyIndex'
+#' Randomized quantile residuals for class 'sdmgamindex'
 #'
 #' Previously named residuals.surveyIdx.
 #'
-#' @title Randomized quantile residuals for class 'surveyIndex'
-#' @param x An object of type 'surveyIndex' as created by 'get_surveyidx'
+#' @title Randomized quantile residuals for class 'sdmgamindex'
+#' @param x An object of type 'sdmgamindex' as created by 'get_surveyidx'
 #' @param a age group
 #' @return A vector of residuals, which should be iid standard normal distributed
 #' @export
@@ -1589,9 +1589,9 @@ qres_tweedie <- function (gam.obj) {
 
 
 
-#' Plot a surveyIndexGrid
+#' Plot a sdmgamindexGrid
 #'
-#' @param grid a surveyIndexGrid (as created by the "get_grid" function)
+#' @param grid a sdmgamindexGrid (as created by the "get_grid" function)
 #' @param pch Inherited from base::plot(). plotting ‘character’, i.e., symbol to use.
 #' @param gridCol Color of grid plot output.
 #'
@@ -1670,7 +1670,7 @@ export_surveyidx <- function(x,
 #' Visualize results from a survey index model fitted with get_surveyidx().
 #'
 #' @title Visualize results from a survey index model fitted with get_surveyidx().
-#' @param x Survey index as produced by getSurveyIndex()
+#' @param x Survey index as produced by getsdmgamindex()
 #' @param dat DATRASraw object
 #' @param alt.idx optional matrix with alternative index
 #' @param myids vector of haul ids that constitute the grid
@@ -1801,14 +1801,14 @@ plot_surveyidx <- function (x,
         tmp <- predD
       }
       if (is.null(year)) {
-        concT <- surveyIndex::concentration_transform(log(x$gPreds[[a]]))
+        concT <- sdmgamindex::concentration_transform(log(x$gPreds[[a]]))
         mapvals <- x$gPreds[[a]]
       } else {
         y <- which(as.numeric(as.character(names(x$gPreds2[[a]]))) == year)
         if (length(y) == 0) {
             stop(paste("Year", year, "age group", a, "not found."))
           }
-        concT <- surveyIndex::concentration_transform(log(x$gPreds2[[a]][[y]]))
+        concT <- sdmgamindex::concentration_transform(log(x$gPreds2[[a]][[y]]))
         mapvals <- x$gPreds2[[a]][[y]]
       }
 
@@ -1896,7 +1896,7 @@ plot_surveyidx <- function (x,
                                        year = as.character(levels(dat$Year)[cc])))
       }
 
-      ally$conc <- surveyIndex::concentration_transform(log(ally$val))
+      ally$conc <- sdmgamindex::concentration_transform(log(ally$val))
       if (is.null(cutp)) {
         ally$zFac <- cut(ally$conc, 0:length(colors) / length(colors))
       } else {
@@ -2175,21 +2175,21 @@ get_prediction_grid <- function(year,
 #' @title Create a grid of haul positions from a DATRASraw object.
 #' @param dd DATRASraw object
 #' @param nLon number of grid cells in the longitude direction.
-#' @return A surveyIndexGrid (a list of coordinates and haul.ids)
+#' @return A sdmgamindexGrid (a list of coordinates and haul.ids)
 #' @export
 get_grid <- function(dd,
                      nLon = 20) {
   mlon <- mean(dd$lon)
   mlat <- mean(dd$lat)
 
-  kmPerDegLon <- surveyIndex::calc_distance(
+  kmPerDegLon <- sdmgamindex::calc_distance(
     long1 = convert_deg_rad(mlon),
     lat1 = convert_deg_rad(mlat),
     long2 = convert_deg_rad(mlon + 1),
     lat2 = convert_deg_rad(mlat)
   )
 
-  kmPerDegLat <- surveyIndex::calc_distance(
+  kmPerDegLat <- sdmgamindex::calc_distance(
     long1 = convert_deg_rad(mlon),
     lat1 = convert_deg_rad(mlat),
     long2 = convert_deg_rad(mlon),
@@ -2232,7 +2232,7 @@ get_grid <- function(dd,
   }
 
   ret <- list(mylon, mylat, myids, lonbps, latbps)
-  class(ret) <- "surveyIndexGrid"
+  class(ret) <- "sdmgamindexGrid"
   return(ret)
 }
 
@@ -2249,9 +2249,9 @@ get_grid <- function(dd,
 #'
 #' @examples
 #' convert_crs(x = 170, y = 62)
-#' dat <- surveyIndex::noaa_afsc_public_foss[,c("longitude_dd", "latitude_dd")]
+#' dat <- sdmgamindex::noaa_afsc_public_foss[,c("longitude_dd", "latitude_dd")]
 #' head(dat)
-#' ll <- surveyIndex::convert_crs( # project data
+#' ll <- sdmgamindex::convert_crs( # project data
 #'    x = dat$longitude_dd,
 #'    y = dat$latitude_dd,
 #'    crs_in = "+proj=longlat +datum=WGS84",

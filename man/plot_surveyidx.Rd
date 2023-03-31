@@ -28,7 +28,7 @@ plot_surveyidx(
 )
 }
 \arguments{
-\item{x}{Survey index as produced by getSurveyIndex()}
+\item{x}{Survey index as produced by getsdmgamindex()}
 
 \item{dat}{DATRASraw object}
 

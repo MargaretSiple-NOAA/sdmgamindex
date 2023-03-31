@@ -2,12 +2,12 @@
 % Please edit documentation in R/functions.R
 \name{plot_surveyidx_grid}
 \alias{plot_surveyidx_grid}
-\title{Plot a surveyIndexGrid}
+\title{Plot a sdmgamindexGrid}
 \usage{
 plot_surveyidx_grid(grid, pch = 1, gridCol = "lightgrey")
 }
 \arguments{
-\item{grid}{a surveyIndexGrid (as created by the "get_grid" function)}
+\item{grid}{a sdmgamindexGrid (as created by the "get_grid" function)}
 
 \item{pch}{Inherited from base::plot(). plotting ‘character’, i.e., symbol to use.}
 
@@ -17,7 +17,7 @@ plot_surveyidx_grid(grid, pch = 1, gridCol = "lightgrey")
 nothing
 }
 \description{
-Plot a surveyIndexGrid
+Plot a sdmgamindexGrid
 }
 \examples{
 # TOLEDO

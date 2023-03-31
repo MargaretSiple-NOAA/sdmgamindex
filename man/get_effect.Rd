@@ -13,9 +13,9 @@ get_effect(x, dat, parName = "Gear", cutOff, nboot = 1000, pOnly = FALSE)
 
 \item{parName}{name of the parameter, e.g. "Gear"}
 
-\item{cutOff}{see getSurveyIndex()}
+\item{cutOff}{see getsdmgamindex()}
 
-\item{nboot}{see getSurveyIndex()}
+\item{nboot}{see getsdmgamindex()}
 
 \item{pOnly}{only calculate for positive part of model, defaults to FALSE.}
 }

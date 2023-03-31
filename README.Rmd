@@ -10,7 +10,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-## surveyIndex
+## sdmgamindex 
+
+(formally {surveyIndex})
 
 R package for calculating survey indices by age from DATRAS exchange data. 
 
@@ -29,13 +31,13 @@ for (p in PKG) {
 
 ```{r, echo = FALSE, results='asis', message=FALSE}
 cat(
-  # badge_devel("surveyIndex/gap_public_data", "blue"),
+  # badge_devel("sdmgamindex/gap_public_data", "blue"),
   # badge_lifecycle("maturing", "blue"),
-  badge_last_commit("EmilyMarkowitz-NOAA/surveyIndex")
+  badge_last_commit("EmilyMarkowitz-NOAA/sdmgamindex")
 )
 ```
 
-> Code is still in development at https://github.com/EmilyMarkowitz-NOAA/surveyIndex
+> Code is still in development at https://github.com/EmilyMarkowitz-NOAA/sdmgamindex
 
 *Code was originally developed by:*
 
@@ -68,13 +70,13 @@ To install you need the DATRAS package
 ```{r, eval = FALSE}
 library(remotes)
 remotes::install_github("DTUAqua/DATRAS/DATRAS")
-# remotes::install_github("casperwberg/surveyIndex/surveyIndex")
-remotes::install_github("emilymarkowitz-noaa/surveyIndex")
+# remotes::install_github("casperwberg/sdmgamindex/sdmgamindex")
+remotes::install_github("emilymarkowitz-noaa/sdmgamindex")
 ```
 
 ## Usage
 
-See examples in the [pkgdown site](https://EmilyMarkowitz-NOAA.github.io/surveyIndex/) and in the [?get_surveyidx() documentation](https://emilymarkowitz-noaa.github.io/surveyIndex/reference/get_surveyidx.html). 
+See examples in the [pkgdown site](https://EmilyMarkowitz-NOAA.github.io/sdmgamindex/) and in the [?get_surveyidx() documentation](https://emilymarkowitz-noaa.github.io/sdmgamindex/reference/get_surveyidx.html). 
 
 ## Metadata
 

@@ -1,5 +1,5 @@
 ---
-title: "Compare {surveyIndex} to regular GAMs"
+title: "Compare {sdmgamindex} to regular GAMs"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{C-model-comparisons}
@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 ```{r setup, echo = FALSE}
 # library(remotes)
 PKG <- c(
-  "surveyIndex", # remotes::install_github("casperwberg/surveyIndex/surveyIndex")
+  "sdmgamindex", # remotes::install_github("casperwberg/sdmgamindex/sdmgamindex")
   "DATRAS", # remotes::install_github("DTUAqua/DATRAS/DATRAS")
   
   # "rgdal", 
@@ -54,7 +54,7 @@ dir_out <- "../inst/regular_gam_approach"
 crs_latlon = "+proj=longlat +datum=WGS84"
 crs_proj = "EPSG:3338"
 
-dat <- surveyIndex::noaa_afsc_public_foss
+dat <- sdmgamindex::noaa_afsc_public_foss
 
 # Get cold pool data using cold pool data from the {coldpool} R package
 dat <- dat %>%
@@ -131,7 +131,7 @@ comb
 ```
 
 ```{r model_file_load, echo = FALSE}
-load(system.file("vigC_model_output.rdata", package = "surveyIndex" ) ) 
+load(system.file("vigC_model_output.rdata", package = "sdmgamindex" ) ) 
 ```
 
 ## 4. Assess the model
@@ -142,7 +142,7 @@ b <- lapply(X = models, FUN = AIC)
 bb <- sapply(models, `[`, 1)
 
 
-# surveyIndex::get_surveyidx_aic(models)
+# sdmgamindex::get_surveyidx_aic(models)
 
 
 b <- AIC(models$`yellowfin sole fm_1_s_t_st`, models$`yellowfin sole fm_2_cov`)# get(paste0("b", 1:9))

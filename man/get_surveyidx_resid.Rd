@@ -2,12 +2,12 @@
 % Please edit documentation in R/functions.R
 \name{get_surveyidx_resid}
 \alias{get_surveyidx_resid}
-\title{Randomized quantile residuals for class 'surveyIndex'}
+\title{Randomized quantile residuals for class 'sdmgamindex'}
 \usage{
 get_surveyidx_resid(x, a = 1)
 }
 \arguments{
-\item{x}{An object of type 'surveyIndex' as created by 'get_surveyidx'}
+\item{x}{An object of type 'sdmgamindex' as created by 'get_surveyidx'}
 
 \item{a}{age group}
 }
@@ -15,7 +15,7 @@ get_surveyidx_resid(x, a = 1)
 A vector of residuals, which should be iid standard normal distributed
 }
 \description{
-Randomized quantile residuals for class 'surveyIndex'
+Randomized quantile residuals for class 'sdmgamindex'
 }
 \details{
 Previously named residuals.surveyIdx.

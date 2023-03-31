@@ -12,7 +12,7 @@ library(roxygen2)
 library(RODBC)
 devtools::document()
 setwd("..")
-install("surveyIndex")
+install("sdmgamindex")
 3
 setwd(here::here())
 # devtools::check()
@@ -46,10 +46,10 @@ pkgdown::build_site()
 
 # Save Package tar.gz
 version0 <- "0.1.0"
-file.remove(paste0(dirname(here::here()), "/surveyIndex_",version0,".tar.gz"))
-file.remove(paste0((here::here()), "/surveyIndex_",version0,".tar.gz"))
+file.remove(paste0(dirname(here::here()), "/sdmgamindex_",version0,".tar.gz"))
+file.remove(paste0((here::here()), "/sdmgamindex_",version0,".tar.gz"))
 devtools::build()
-file.copy(from = paste0(dirname(here::here()), "/surveyIndex_",version0,".tar.gz"),
-          to = paste0(here::here(), "/surveyIndex_",version0,".tar.gz"),
+file.copy(from = paste0(dirname(here::here()), "/sdmgamindex_",version0,".tar.gz"),
+          to = paste0(here::here(), "/sdmgamindex_",version0,".tar.gz"),
           overwrite = TRUE)
 
