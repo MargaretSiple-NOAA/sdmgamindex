@@ -1,4 +1,4 @@
-Package: surveyIndex
+Package: sdmgamindex
 Type: Package
 Title: Calculate survey indices of abundance from DATRAS exchange data
 Version: 0.1.0
