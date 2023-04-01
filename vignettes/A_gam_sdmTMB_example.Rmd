@@ -26,7 +26,7 @@ knitr::opts_chunk$set(
 
 > Adapted from [GitHub pbs-assess/sdmTMB-teaching 2023-02-14](https://github.com/pbs-assess/sdmTMB-teaching/blob/490ee04157f19d1059c55a1318b894e8b8f460bb/uw-survey-2023/02-exercise.qmd#L356)
 
-# Goals:
+# Goals of the original exercise:
 
 -   Practice fitting a basic spatiotemporal model.
 -   Understand how to inspect the model output.
@@ -34,10 +34,15 @@ knitr::opts_chunk$set(
 -   Gain familiarity with fitting, comparing and interpreting different random field structures.
 -   Calculate an area-weighted biomass index and compare how model structure can impact an index.
 
+# Our goals for this vignette:
+
+- Fit a GAM and obtain an area-weighted biomass index
+- Fit a basic spatiotemporal model (a GLMM!) using sdmTMB and compare GAM to GLMM 
+
 ```{r install_inla, eval = FALSE, include = FALSE}
 # install.packages("INLA", repos = c(getOption("repos"), INLA = "https://inla.r-inla-download.org/R/stable"), dependencies = TRUE)
-library(remotes)
-remotes::install_github("pbs-assess/sdmTMB", dependencies = TRUE)
+#library(remotes)
+#remotes::install_github("pbs-assess/sdmTMB", dependencies = TRUE)
 ```
 
 ```{r}
@@ -78,19 +83,162 @@ We will work with data representing North Pacific Spiny Dogfish in the West Coas
 ```{r, include = FALSE}
 # https://drive.google.com/drive/folders/14h9nrWR_eoSlmfFI0KXfotEIJHyVJzHQ
 dat <- readRDS(here::here("notforgit/uw-survey-2023/data/wcvi-dogfish.rds"))
-```
-
-```{r}
 head(dat)
 ```
 
-The dataset contains sampling locations (`longitude` and `latitude`) and `year`. It also contains sampling `depth` in meters and sample density `density` (CPUE) in units of tonnes/km^2^.
+The dataset contains sampling locations (`longitude` and `latitude`) and `year`. It also contains sampling `depth` in meters and sample CPUE `density` in units of tonnes/km^2^.
 
 ```{r}
 ggplot(data = dat, 
        mapping = aes(x = longitude, y = latitude, size = density)) + 
   geom_point()
 ```
+
+# Fit a few GAMs and estimate an abundance index
+
+Include a covariate (depth)
+
+Analogous to nonspatial model (spatial = "off", spatiotemporal = "off")
+
+```{r}
+fit_gam <- gam(
+  formula = density ~ s(depth) + as.factor(year),
+  family = tw(link = "log"),
+  data = dat
+)
+# Summarize the fit
+summary(fit_gam)
+```
+
+Plot partial effects of covariates
+
+```{r}
+plot(fit_gam, shade = TRUE, residuals = TRUE)
+```
+
+Get diagnostics and perform model checking
+
+```{r}
+gam.check(fit_gam)
+```
+
+Review console output to help verify convergence, and whether there were an adequate number of basis functions (k).
+
+Examine the four diagnostic plots. Each of these gives a different way of looking at your model residuals. On the top-left is a Q-Q plot, which compares the model residuals to the expected/assumed distribution family. A well-fit model's residuals will be close to the 1-1 line, otherwise there may be under- or over-dispersion present. On bottom left is a histogram of residuals. We want this to have a shape similar to the distribution family we specified. On top-right is a plot of residual values as a function of the linear predictor. These should be evenly distributed around zero in a well-fitted model. Finally, on the bottom-right is plot of response against fitted values. A well-fitted model would show values near the 1-1 line.
+
+# Predict to full survey area (new data)
+
+Load a prediction grid for the full survey area:
+```{r}
+wcvi_grid <- readRDS(here::here("notforgit/uw-survey-2023/data/wcvi-grid.rds"))
+head(wcvi_grid)
+wcvi_grid$log_depth <- log(wcvi_grid$depth)
+
+# Add year to the grid using purrr (yay)
+grid <- purrr::map_dfr(unique(dat$year), ~ tibble(wcvi_grid, year = .x))
+grid$year_factor <- as.factor(grid$year)
+head(grid)
+```
+
+Fit the GAM.
+```{r}
+pred_gam <- predict(fit_gam, type = "response", newdata = grid)
+pred_gam_df <- cbind(grid, pred_gam)
+```
+
+Plot predictions over survey area
+
+```{r}
+ggplot(pred_gam_df, aes(X, Y, fill = pred_gam)) + geom_raster() +
+  scale_fill_viridis_c() + facet_wrap(~year) + coord_fixed() +
+  labs(fill = "Log Biomass density\n(kg/km^2)")
+```
+
+# Calculate biomass index from GAM via simulation
+
+```{r}
+sims <- gratia::fitted_samples(fit_gam, n=10, newdata=grid, 
+                               scale="response", seed=9)
+sims$year <- grid$year[sims$row]
+sims$biomass <- sims$fitted * 4 # expand from density to biomass, given area
+
+level <- 0.95 # specify probability for confidence interval
+
+# Get sum of simulated biomass (density*area) across grid cells, with CI
+lwr_fn <- function(x) {as.numeric(quantile(x, probs = (1 - level) / 2))}
+upr_fn <- function(x) {as.numeric(quantile(x, probs = 1 - (1 - level) / 2))}
+
+sims_sum <-  sims %>% 
+  group_by(year,draw) %>% 
+  summarise_at("biomass", list(biomass = sum)) %>%
+  group_by(year) %>%
+  summarise_at("biomass", list(est = median, # could use mean
+                           lwr = lwr_fn,
+                           upr = upr_fn))
+```
+
+Note that this approach uses a Gaussian approximation to the posterior, which is all that is implemented currently in the gratia package. However, a better estimate of uncertainty could be derived from sampling from the actual posterior distribution. However, this is beyond the scope of today's lesson.
+
+Plot the biomass index
+
+```{r}
+ggplot(sims_sum, aes(year, est)) + geom_line() +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.4) +
+  xlab('Year') + ylab('Biomass estimate (kg)')
+```
+
+# Fit a GAM analogous to a spatial model in sdmTMB
+
+Include a 2-D smooth over space
+
+```{r}
+fit_gam_s <- gam(
+  formula = density ~ s(depth) + as.factor(year) + 
+    s(X,Y), #<<
+  family = tw(link = "log"),
+  data = dat
+)
+```
+
+Visualize smooths, where the first plot shows the 1-D smooth on depth and 
+the second plot shows the 2-D (or bivariate) spatial smooth
+
+```{r}
+plot(fit_gam_s)
+```
+
+or
+
+```{r}
+plot(fit_gam_s, scheme = 1)
+```
+
+or
+
+```{r}
+plot(fit_gam_s, scheme = 2)
+```
+
+Note that you may have to play around with these types of visualizations because 2-D smooths can be tough to visualize. Also see the vis.gam package for more options.
+
+# Fit a GAM analogous to a spatiotemporal model in sdmTMB
+
+Include a 2-D smooth over space for each year
+
+```{r}
+fit_gam_st <- gam(
+  formula = density ~ s(depth) + as.factor(year) +
+    s(X,Y, by = year), #<<
+  family = tw(link = "log"),
+  data = dat)
+```
+
+### Exercise:
+
+1.  Try fitting similar models and estimating indices from your own data. Do a lot of data visualization and consider different distribution families (e.g. Gaussian).
+
+---
+
 
 # Adding UTMs
 
@@ -215,7 +363,7 @@ fit <- sdmTMB::sdmTMB(
 ```
 
 Print the model:
-but th
+
 ```{r, message = TRUE}
 fit
 ```
