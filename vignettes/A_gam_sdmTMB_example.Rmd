@@ -82,8 +82,8 @@ We will work with data representing North Pacific Spiny Dogfish in the West Coas
 
 ```{r, include = FALSE}
 # https://drive.google.com/drive/folders/14h9nrWR_eoSlmfFI0KXfotEIJHyVJzHQ
-dat <- readRDS(here::here("notforgit/uw-survey-2023/data/wcvi-dogfish.rds"))
-head(dat)
+#dat <- readRDS(here::here("notforgit/uw-survey-2023/data/wcvi-dogfish.rds"))
+#head(dat)
 
 dat <- readRDS(here::here("data/ebs_yfs_example.RDS"))
 
@@ -96,7 +96,7 @@ The dataset contains sampling locations (`longitude` and `latitude`) and `year`.
 
 ```{r}
 ggplot(data = dat, 
-       mapping = aes(x = longitude_dd, y = latitude_dd, size = cpue_kgkm2,color = bottom_temperature_c)) + 
+       mapping = aes(x = longitude_dd, y = latitude_dd, size = cpue_kgkm2, color = bottom_temperature_c)) + 
   geom_point(alpha = 0.3)
 ```
 
@@ -107,9 +107,10 @@ ggplot(data = dat,
 ## Add UTM columns
 ```{r}
 dat <- add_utm_columns(dat, 
-                       utm_crs = 3156, 
-                       ll_names = c("longitude", "latitude"))
-ggplot(dat, aes(X, Y, size = density)) + 
+                       ll_crs = 4326,
+                       ll_names = c("longitude_dd", "latitude_dd"))
+
+ggplot(dat2, aes(X, Y, size = cpue_kgkm2)) + 
   geom_point(shape = 21) + 
   coord_fixed()
 ```
@@ -119,33 +120,11 @@ Include a 2-D smooth over space.
 
 ```{r}
 fit_gam_s <- gam(
-  formula = density ~ s(depth) + as.factor(year) + 
+  formula = cpue_kgkm2 ~ s(depth_m) + as.factor(year) + 
     s(X,Y), #<<
   family = tw(link = "log"),
-  data = dat
+  data = dat2
 )
-```
-
-
-# Other ways to visualize smooths
-
-Visualize smooths, where the first plot shows the 1-D smooth on depth and 
-the second plot shows the 2-D (or bivariate) spatial smooth
-
-```{r}
-plot(fit_gam_s)
-```
-
-or
-
-```{r}
-plot(fit_gam_s, scheme = 1)
-```
-
-or
-
-```{r}
-plot(fit_gam_s, scheme = 2)
 ```
 
 
@@ -155,10 +134,10 @@ Include a 2-D smooth over space for each year
 
 ```{r}
 fit_gam_st <- gam(
-  formula = density ~ s(depth) + as.factor(year) +
+  formula = cpue_kgkm2 ~ s(depth_m) + as.factor(year) +
     s(X,Y, by = year), 
   family = tw(link = "log"),
-  data = dat)
+  data = dat2)
 
 
 ```
