@@ -96,7 +96,7 @@ The dataset contains sampling locations (`longitude` and `latitude`) and `year`.
 
 ```{r}
 ggplot(data = dat, 
-       mapping = aes(x = longitude_dd, y = latitude_dd, size = cpue_kgkm2, color = bottom_temperature_c)) + 
+       mapping = aes(x = longitude_dd, y = latitude_dd, size = count, color = bottom_temperature_c)) + 
   geom_point(alpha = 0.3)
 ```
 
@@ -104,26 +104,30 @@ ggplot(data = dat,
 
 # Fit a GAM to spatial data (analogous to spatial-only model in sdmTMB)
 
-## Add UTM columns
+## Add UTM columns, log depth, and year as factor
 ```{r}
 dat <- add_utm_columns(dat, 
                        ll_crs = 4326,
                        ll_names = c("longitude_dd", "latitude_dd"))
 
-ggplot(dat2, aes(X, Y, size = cpue_kgkm2)) + 
+dat$log_depth <- log(dat$depth_m)
+dat$year_factor <- as.factor(dat$year)
+
+ggplot(dat, aes(X, Y, size = cpue_kgkm2)) + 
   geom_point(shape = 21) + 
   coord_fixed()
 ```
 
 
-Include a 2-D smooth over space. 
+Include a 2-D smooth over space. The `as.factor(year)` part is a common component of SDMs that are being used to generate indices.
 
 ```{r}
 fit_gam_s <- gam(
-  formula = cpue_kgkm2 ~ s(depth_m) + as.factor(year) + 
+  formula = count ~ s(depth_m) + as.factor(year) + 
     s(X,Y), #<<
   family = tw(link = "log"),
-  data = dat2
+  #offset = "area_swept_ha",
+  data = dat
 )
 ```
 
@@ -134,22 +138,55 @@ Include a 2-D smooth over space for each year
 
 ```{r}
 fit_gam_st <- gam(
-  formula = cpue_kgkm2 ~ s(depth_m) + as.factor(year) +
+  formula = count ~ s(depth_m) + as.factor(year) +
     s(X,Y, by = year), 
   family = tw(link = "log"),
-  data = dat2)
-
+ # offset = "area_swept_ha",
+  data = dat)
 
 ```
 
 
-We will create these new columns to use later:
+Get diagnostics and perform model checking
 
 ```{r}
-dat$log_depth <- log(dat$depth)
-dat$year_factor <- as.factor(dat$year)
+gam.check(fit_gam_st)
 ```
 
+Review console output to help verify convergence, and whether there were an adequate number of basis functions (k).
+
+Examine the four diagnostic plots. Each of these gives a different way of looking at your model residuals. On the top-left is a Q-Q plot, which compares the model residuals to the expected/assumed distribution family. A well-fit model's residuals will be close to the 1-1 line, otherwise there may be under- or over-dispersion present. On bottom left is a histogram of residuals. We want this to have a shape similar to the distribution family we specified. On top-right is a plot of residual values as a function of the linear predictor. These should be evenly distributed around zero in a well-fitted model. Finally, on the bottom-right is plot of response against fitted values. A well-fitted model would show values near the 1-1 line.
+
+# Predict to survey area (new data)
+
+## Load the grid
+Extrapolation grid for YFS in the EBS. 
+
+```{r}
+load(here::here("data/pred_grid_ebs.rda"))
+```
+
+When you have spatiotemporal data, you need a grid for each year. There is a nice tidy little chunk of `{purrr}` code that will do that for you!
+
+```{r}
+grid <- purrr::map_dfr(unique(dat$year), ~ tibble(pred_grid_ebs, year = .x))
+```
+
+
+## Predict CPUE across the grid
+
+```{r}
+pred_gam <- predict(fit_gam, type = "response", newdata = grid)
+pred_gam_df <- cbind(grid, pred_gam)
+```
+
+Plot predictions over survey area
+
+```{r}
+ggplot(pred_gam_df, aes(X, Y, fill = pred_gam)) + geom_raster() +
+  scale_fill_viridis_c() + facet_wrap(~year) + coord_fixed() +
+  labs(fill = "Log Biomass density\n(kg/km^2)")
+```
 
 # Index standardization
 
@@ -182,56 +219,6 @@ bind_rows(index, index_c) %>%
   ylab("Biomass estimate (tonnes)")
 ```
 
-# Fit a few GAMs and estimate an abundance index
-
-Include a covariate (depth)
-
-Analogous to nonspatial model (spatial = "off", spatiotemporal = "off")
-
-```{r}
-fit_gam <- gam(
-  formula = density ~ s(depth) + as.factor(year),
-  family = tw(link = "log"),
-  data = dat
-)
-```
-
-Get model summary
-
-```{r}
-summary(fit_gam)
-```
-
-Plot partial effects of covariates
-
-```{r}
-plot(fit_gam, shade = TRUE, residuals = TRUE)
-```
-
-Get diagnostics and perform model checking
-
-```{r}
-gam.check(fit_gam)
-```
-
-Review console output to help verify convergence, and whether there were an adequate number of basis functions (k).
-
-Examine the four diagnostic plots. Each of these gives a different way of looking at your model residuals. On the top-left is a Q-Q plot, which compares the model residuals to the expected/assumed distribution family. A well-fit model's residuals will be close to the 1-1 line, otherwise there may be under- or over-dispersion present. On bottom left is a histogram of residuals. We want this to have a shape similar to the distribution family we specified. On top-right is a plot of residual values as a function of the linear predictor. These should be evenly distributed around zero in a well-fitted model. Finally, on the bottom-right is plot of response against fitted values. A well-fitted model would show values near the 1-1 line.
-
-# Predict to survey area (new data)
-
-```{r}
-pred_gam <- predict(fit_gam, type = "response", newdata = grid)
-pred_gam_df <- cbind(grid, pred_gam)
-```
-
-Plot predictions over survey area
-
-```{r}
-ggplot(pred_gam_df, aes(X, Y, fill = pred_gam)) + geom_raster() +
-  scale_fill_viridis_c() + facet_wrap(~year) + coord_fixed() +
-  labs(fill = "Log Biomass density\n(kg/km^2)")
-```
 
 # Calculate biomass index from GAM via simulation
 
@@ -258,7 +245,7 @@ sims_sum <-  sims %>%
 
 Note that this approach uses a Gaussian approximation to the posterior, which is all that is implemented currently in the gratia package. However, a better estimate of uncertainty could be derived from sampling from the actual posterior distribution. However, this is beyond the scope of today's lesson.
 
-Plot the biomass index
+Plot the biomass index:
 
 ```{r}
 ggplot(sims_sum, aes(year, est)) + geom_line() +
