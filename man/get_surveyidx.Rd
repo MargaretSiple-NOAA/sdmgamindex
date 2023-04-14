@@ -82,3 +82,12 @@ This is based on the methods described in
 Berg et al. (2014): "Evaluation of alternative age-based methods for estimating relative abundance from survey data in relation to assessment models",
 Fisheries Research 151(2014) 91-99.
 }
+\examples{
+\dontrun{
+library(DATRAS) # example data
+library(sdmgamindex)
+library(tidyverse)
+load("data/ebs_example_datras.rda") #object: dat_wrangled. Source: FOSS; see https://emilymarkowitz-noaa.github.io/sdmgamindex/articles/A-data-prep.html for how these data were wrangled in preparation for this example.
+# Megsie todo: add example here using EBS data!
+}
+}

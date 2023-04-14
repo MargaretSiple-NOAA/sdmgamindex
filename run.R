@@ -35,9 +35,12 @@ library(here)
 library(usethis)
 library(pkgdown)
 
+# use_logo(here::here("notforgit","logo.png"))
+
 # Run once to configure package to use pkgdown
 # usethis::use_pkgdown()
 # Run to build the website
+options(rmarkdown.html_vignette.check_title = FALSE)
 pkgdown::build_site()
 
 

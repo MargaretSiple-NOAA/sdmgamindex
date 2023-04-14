@@ -37,9 +37,8 @@
 #' library(sdmgamindex)
 #' library(tidyverse)
 #' load("data/ebs_example_datras.rda") #object: dat_wrangled. Source: FOSS; see https://emilymarkowitz-noaa.github.io/sdmgamindex/articles/A-data-prep.html for how these data were wrangled in preparation for this example.
-# Megsie todo: add example here using EBS data!
-
-
+#' # Megsie todo: add example here using EBS data!
+#' }
 #' @importFrom MASS mvrnorm
 #' @export
 get_surveyidx <- function(x,
@@ -2079,7 +2078,6 @@ plot_surveyidx <- function (x,
 #'
 #' @param x Data.frame. Zero filled catch data.
 #'
-#' @return
 #' @export
 #'
 #' @examples

@@ -7,12 +7,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="description" content="sdmgamindex">
 <title>Compare {sdmgamindex} to regular GAMs • sdmgamindex</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png">
+<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.2.2/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.2.2/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Compare {sdmgamindex} to regular GAMs">
 <meta property="og:description" content="sdmgamindex">
+<meta property="og:image" content="https://emilymarkowitz-noaa.github.io/sdmgamindex/logo.png">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -65,7 +72,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="" class="logo" alt=""><h1>Compare {sdmgamindex} to regular GAMs</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Compare {sdmgamindex} to regular GAMs</h1>
             
       
       
@@ -98,13 +105,13 @@
 <span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu">sdmgamindex</span><span class="fu">::</span><span class="va"><a href="../reference/noaa_afsc_public_foss.html">noaa_afsc_public_foss</a></span></span>
 <span></span>
 <span><span class="co"># Get cold pool data using cold pool data from the {coldpool} R package</span></span>
-<span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="va">dat</span> <span class="op">%&gt;%</span></span>
+<span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="va">dat</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>sx <span class="op">=</span> <span class="op">(</span><span class="op">(</span><span class="va">longitude_dd</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">longitude_dd</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fl">1000</span><span class="op">)</span>,</span>
-<span>                sy <span class="op">=</span> <span class="op">(</span><span class="op">(</span><span class="va">latitude_dd</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">latitude_dd</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fl">1000</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
-<span>  <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">na.omit</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
+<span>                sy <span class="op">=</span> <span class="op">(</span><span class="op">(</span><span class="va">latitude_dd</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">latitude_dd</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fl">1000</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
+<span>  <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">na.omit</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">common_name</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">SPECIES</span> <span class="op">&amp;</span></span>
 <span>                  <span class="va">year</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">YEARS</span> <span class="op">&amp;</span></span>
-<span>                  <span class="va">srvy</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">SRVY</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
+<span>                  <span class="va">srvy</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">SRVY</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>GEAR_TEMPERATURE <span class="op">=</span> <span class="va">bottom_temperature_c</span>, </span>
 <span>                BOTTOM_DEPTH <span class="op">=</span> <span class="va">depth_m</span>, </span>
 <span>                Year <span class="op">=</span> <span class="va">year</span><span class="op">)</span></span>
@@ -150,7 +157,7 @@
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">comb</span> <span class="op">&lt;-</span> <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/expand.html" class="external-link">crossing</a></span><span class="op">(</span></span>
 <span>    <span class="st">"SPECIES"</span> <span class="op">=</span> <span class="va">SPECIES</span>, </span>
-<span>    <span class="st">"fm_name"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">" "</span>, replacement <span class="op">=</span> <span class="st">"_"</span>, x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fm</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
+<span>    <span class="st">"fm_name"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">" "</span>, replacement <span class="op">=</span> <span class="st">"_"</span>, x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fm</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
 <span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span></span>
 <span>      x <span class="op">=</span> <span class="va">.</span>, </span>
 <span>      y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="st">"fm"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">"\n"</span>, replacement <span class="op">=</span> <span class="st">""</span>, </span>
@@ -177,7 +184,7 @@
 <span></span>
 <span>    <span class="va">temp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">comb</span><span class="op">$</span><span class="va">SPECIES</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="st">" "</span>, <span class="va">comb</span><span class="op">$</span><span class="va">fm_name</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span></span>
 <span></span>
-<span>    <span class="va">dat0</span> <span class="op">&lt;-</span> <span class="va">dat</span> <span class="op">%&gt;%</span> </span>
+<span>    <span class="va">dat0</span> <span class="op">&lt;-</span> <span class="va">dat</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
 <span>      <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">common_name</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">comb</span><span class="op">$</span><span class="va">SPECIES</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span></span>
 <span>    </span>
 <span>    <span class="va">fittimes</span><span class="op">[[</span> <span class="va">temp</span> <span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span></span>
@@ -231,18 +238,18 @@
 <span><span class="co">#&gt; indicate that k is too low, especially if edf is close to k'.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                   k'    edf k-index p-value</span></span>
-<span><span class="co">#&gt; s(sx,sy)      375.00  95.70    0.94    0.58</span></span>
-<span><span class="co">#&gt; s(sx,sy):Year  10.00   3.08    0.94    0.59</span></span>
+<span><span class="co">#&gt; s(sx,sy)      375.00  95.70    0.94    0.53</span></span>
+<span><span class="co">#&gt; s(sx,sy):Year  10.00   3.08    0.94    0.64</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/vis.gam.html" class="external-link">vis.gam</a></span><span class="op">(</span><span class="va">bb</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">cc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/predict.gam.html" class="external-link">predict.gam</a></span><span class="op">(</span>object <span class="op">=</span> <span class="va">bb</span>, newdata <span class="op">=</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">dat0</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span> <span class="op">%&gt;%</span> </span>
+<span><span class="va">dat0</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>pred <span class="op">=</span> <span class="va">cc</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">figure</span> <span class="op">&lt;-</span> <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu">geom_point</span><span class="op">(</span>data <span class="op">=</span> <span class="va">dat0</span>, </span>
-<span>             mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span> <span class="va">longitude_dd</span>, y <span class="op">=</span> <span class="va">latitude_dd</span>, color <span class="op">=</span> <span class="va">pred</span><span class="op">)</span><span class="op">)</span></span></code></pre>
+<span><span class="va">figure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">dat0</span>, </span>
+<span>             mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span> <span class="va">longitude_dd</span>, y <span class="op">=</span> <span class="va">latitude_dd</span>, color <span class="op">=</span> <span class="va">pred</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <p><img src="C-model-comparisons_files/figure-html/model_plots_1-2.png" width="700"></p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bb</span> <span class="op">&lt;-</span> <span class="va">models</span><span class="op">$</span><span class="va">`yellowfin sole fm_2_cov`</span></span>
@@ -269,12 +276,12 @@
 <span></span>
 <span><span class="va">cc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/predict.gam.html" class="external-link">predict.gam</a></span><span class="op">(</span>object <span class="op">=</span> <span class="va">bb</span>, newdata <span class="op">=</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">dat0</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span> <span class="op">%&gt;%</span> </span>
+<span><span class="va">dat0</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>pred <span class="op">=</span> <span class="va">cc</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">figure</span> <span class="op">&lt;-</span> <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu">geom_point</span><span class="op">(</span>data <span class="op">=</span> <span class="va">dat0</span>, </span>
-<span>             mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span> <span class="va">longitude_dd</span>, y <span class="op">=</span> <span class="va">latitude_dd</span>, color <span class="op">=</span> <span class="va">pred</span><span class="op">)</span><span class="op">)</span></span></code></pre>
+<span><span class="va">figure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">dat0</span>, </span>
+<span>             mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span> <span class="va">longitude_dd</span>, y <span class="op">=</span> <span class="va">latitude_dd</span>, color <span class="op">=</span> <span class="va">pred</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 <p><img src="C-model-comparisons_files/figure-html/model_plots_2-2.png" width="700"></p>
 </div>
 </div>

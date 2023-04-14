@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-## sdmgamindex 
+# sdmgamindex <a href="https://emilymarkowitz-noaa.github.io/sdmgamindex/"><img src="man/figures/logo.png" align="right" height="133" /></a> 
 
 (formally {surveyIndex})
 

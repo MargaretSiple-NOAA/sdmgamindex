@@ -6,7 +6,7 @@ output:
   rmarkdown::html_vignette: 
     variant: gfm
 vignette: >
-  %\VignetteIndexEntry{A-data-prep}
+  %\VignetteIndexEntry{D-simple-case-study}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
