@@ -123,7 +123,7 @@ First, fit a GAM without any covariates: just year as a factor and a spatial smo
 start.time <- Sys.time()
 fit_gam <- gam(
   formula = count ~ as.factor(year) + 
-    s(longitude_dd, latitude_dd), 
+    s(X, Y), 
   family = tw(link = "log"),
   #offset = "area_swept_ha", # only for when modeling cpue
   data = dat
@@ -183,22 +183,28 @@ Extrapolation grid for the EBS.
 
 ```{r}
 load(here::here("data/pred_grid_ebs.rda")) # object: pred_grid_ebs
+
+st_as_sf(pred_grid_ebs, coords=c("lon","lat"),crs="EPSG:4326") |>
+  sf::st_transform(crs = "")
+
+#wcvi_grid <- readRDS(here::here("data/wcvi-grid.rds"))
+
 ```
 
 When you have spatiotemporal data, you need a grid for each year. There is a nice tidy little chunk of `{purrr}` code that will do that for you!
 
 ```{r}
-grid <- purrr::map_dfr(unique(dat$year), ~ tibble(pred_grid_ebs, year = .x))
+grid <- purrr::map_dfr(unique(dat$year), ~ tibble(wcvi_grid, year = .x))
 ```
 
 
 ## Predict CPUE across the grid
 
 ```{r}
-grid2 <- grid
-grid2 <- grid |> rename(longitude_dd = "lon", latitude_dd = "lat")
-pred_gam <- predict(fit_gam, type = "response", newdata = grid2)
-pred_gam_df <- cbind(grid2, pred_gam)
+#grid2 <- grid
+#grid2 <- grid |> rename(longitude_dd = "lon", latitude_dd = "lat")
+pred_gam <- predict(fit_gam, type = "response", newdata = grid)
+pred_gam_df <- cbind(grid, pred_gam) #Careful! This takes a long time.
 ```
 
 Plot predictions over survey area. Note: I Keep getting geom_raster errors in this part; not sure what's happening.
@@ -206,10 +212,10 @@ Plot predictions over survey area. Note: I Keep getting geom_raster errors in th
 ```{r}
 pred_gam_df %>%
   filter(year==1999) |>
-ggplot(aes(longitude_dd, latitude_dd, fill = pred_gam)) + 
+ggplot(aes(X, Y, fill=pred_gam)) + 
   geom_tile() + # Sean uses geom_tile or geom_stars if it's a stars object
   scale_fill_viridis_c() + 
-  facet_wrap(~year) + 
+  #facet_wrap(~year) + 
   coord_fixed() +
   labs(fill = "Log Biomass density\n(kg/km^2)")
 ```
