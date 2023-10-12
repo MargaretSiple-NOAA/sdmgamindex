@@ -113,22 +113,38 @@ dat <- add_utm_columns(dat,
 dat$log_depth <- log(dat$depth_m)
 dat$year_factor <- as.factor(dat$year)
 
-ggplot(dat, aes(X, Y, size = cpue_kgkm2)) + 
-  geom_point(shape = 21) + 
-  coord_fixed()
+# ggplot(dat, aes(X, Y, size = cpue_kgkm2)) + 
+#   geom_point(shape = 21) + 
+#   coord_fixed()
 ```
 
+First, fit a GAM without any covariates: just year as a factor and a spatial smoother $s(X,Y)$.
+```{r}
+start.time <- Sys.time()
+fit_gam <- gam(
+  formula = count ~ as.factor(year) + 
+    s(longitude_dd, latitude_dd), 
+  family = tw(link = "log"),
+  #offset = "area_swept_ha", # only for when modeling cpue
+  data = dat
+)
+
+cat("The GAM took ", Sys.time() - start.time, " seconds to run")
+```
 
 Include a 2-D smooth over space. The `as.factor(year)` part is a common component of SDMs that are being used to generate indices.
 
 ```{r}
+start.time <- Sys.time()
 fit_gam_s <- gam(
   formula = count ~ s(depth_m) + as.factor(year) + 
-    s(X,Y), #<<
+    s(X,Y), 
   family = tw(link = "log"),
-  #offset = "area_swept_ha",
+  #offset = "area_swept_ha", # only for when modeling cpue
   data = dat
 )
+
+cat("The GAM took ", Sys.time() - start.time, " seconds to run")
 ```
 
 
@@ -137,6 +153,8 @@ fit_gam_s <- gam(
 Include a 2-D smooth over space for each year
 
 ```{r}
+start.time <- Sys.time()
+
 fit_gam_st <- gam(
   formula = count ~ s(depth_m) + as.factor(year) +
     s(X,Y, by = year), 
@@ -144,6 +162,7 @@ fit_gam_st <- gam(
  # offset = "area_swept_ha",
   data = dat)
 
+cat("The GAM took ", Sys.time() - start.time, " seconds to run")
 ```
 
 
@@ -160,10 +179,10 @@ Examine the four diagnostic plots. Each of these gives a different way of lookin
 # Predict to survey area (new data)
 
 ## Load the grid
-Extrapolation grid for YFS in the EBS. 
+Extrapolation grid for the EBS. 
 
 ```{r}
-load(here::here("data/pred_grid_ebs.rda"))
+load(here::here("data/pred_grid_ebs.rda")) # object: pred_grid_ebs
 ```
 
 When you have spatiotemporal data, you need a grid for each year. There is a nice tidy little chunk of `{purrr}` code that will do that for you!
@@ -176,15 +195,22 @@ grid <- purrr::map_dfr(unique(dat$year), ~ tibble(pred_grid_ebs, year = .x))
 ## Predict CPUE across the grid
 
 ```{r}
-pred_gam <- predict(fit_gam, type = "response", newdata = grid)
-pred_gam_df <- cbind(grid, pred_gam)
+grid2 <- grid
+grid2 <- grid |> rename(longitude_dd = "lon", latitude_dd = "lat")
+pred_gam <- predict(fit_gam, type = "response", newdata = grid2)
+pred_gam_df <- cbind(grid2, pred_gam)
 ```
 
-Plot predictions over survey area
+Plot predictions over survey area. Note: I Keep getting geom_raster errors in this part; not sure what's happening.
 
 ```{r}
-ggplot(pred_gam_df, aes(X, Y, fill = pred_gam)) + geom_raster() +
-  scale_fill_viridis_c() + facet_wrap(~year) + coord_fixed() +
+pred_gam_df %>%
+  filter(year==1999) |>
+ggplot(aes(longitude_dd, latitude_dd, fill = pred_gam)) + 
+  geom_tile() + # Sean uses geom_tile or geom_stars if it's a stars object
+  scale_fill_viridis_c() + 
+  facet_wrap(~year) + 
+  coord_fixed() +
   labs(fill = "Log Biomass density\n(kg/km^2)")
 ```
 
