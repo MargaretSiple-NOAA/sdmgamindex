@@ -1,8 +1,9 @@
 ---
 title: "Nuances in model choices"
+date: "`r format(Sys.Date(), format='%B %d %Y') `"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{B-model-tuning}
+  %\VignetteIndexEntry{Nuances in model choices}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

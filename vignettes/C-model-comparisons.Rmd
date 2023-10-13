@@ -1,10 +1,12 @@
 ---
 title: "Compare {sdmgamindex} to regular GAMs"
+date: "`r format(Sys.Date(), format='%B %d %Y') `"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{C-model-comparisons}
+  %\VignetteIndexEntry{Compare {sdmgamindex} to regular GAMs}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+fig_width: 6 
 ---
 
 ```{r, include = FALSE}
@@ -14,15 +16,13 @@ knitr::opts_chunk$set(
 )
 ```
 
-# GAMs; the old fashioned way
+# GAMs: the old fashioned way
 
 ```{r setup, echo = FALSE}
-# library(remotes)
 PKG <- c(
-  "sdmgamindex", # remotes::install_github("casperwberg/sdmgamindex/sdmgamindex")
+  "remotes",
+  "sdmgamindex", 
   "DATRAS", # remotes::install_github("DTUAqua/DATRAS/DATRAS")
-  
-  # "rgdal", 
   "ggplot2", 
   "dplyr",
   "sf", 
@@ -44,12 +44,12 @@ SPECIES <- c(# must match common name column
   "walleye pollock",
   "yellowfin sole",
   "red king crab"
-  )
+)
 YEARS <- 2015:2021
 SRVY <- "EBS"
 method <- "ML"
 knotsP <- 376
-dir_out <- "../inst/regular_gam_approach"
+# dir_out <- here::here("inst","regular_gam_approach")
 
 crs_latlon = "+proj=longlat +datum=WGS84"
 crs_proj = "EPSG:3338"
@@ -79,10 +79,10 @@ fm <-  list(
   "fm_1_s_t_st" = "Year +
     s(sx,sy,bs=c('ts'),k=376) + 
     s(sx,sy,bs=c('ts'),k=10,by=Year)",
-
+  
   # Mdoel with simple covariates
   "fm_2_cov" = 
-"s(BOTTOM_DEPTH,bs='ts',k=10) +
+    "s(BOTTOM_DEPTH,bs='ts',k=10) +
 s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)"
 )
 ```
@@ -92,42 +92,42 @@ s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)"
 Here are all of the models we want to try fitting:
 
 ```{r model_combos}
-  comb <- tidyr::crossing(
-    "SPECIES" = SPECIES, 
-    "fm_name" = gsub(pattern = " ", replacement = "_", x = names(fm))) %>% 
-    dplyr::left_join(
-      x = ., 
-      y = data.frame("fm" = gsub(pattern = "\n", replacement = "", 
-                                 x = unlist(fm), fixed = TRUE), 
-                     "fm_name" = gsub(pattern = " ", replacement = "_", 
-                                      x = names(fm))), 
-                     by = "fm_name")
+comb <- tidyr::crossing(
+  "SPECIES" = SPECIES, 
+  "fm_name" = gsub(pattern = " ", replacement = "_", x = names(fm))) %>% 
+  dplyr::left_join(
+    x = ., 
+    y = data.frame("fm" = gsub(pattern = "\n", replacement = "", 
+                               x = unlist(fm), fixed = TRUE), 
+                   "fm_name" = gsub(pattern = " ", replacement = "_", 
+                                    x = names(fm))), 
+    by = "fm_name")
 
 comb
 ```
 
 
 ```{r models, eval=FALSE}
-  models <- fittimes <- list()
+models <- fittimes <- list()
 
-  for(i in 1:nrow(comb)){
-    cat("Fitting ",comb$SPECIES[i],"\n", comb$fm_name[i], ": ", comb$fm[i], "\n")
+for(i in 1:nrow(comb)){
+  cat("Fitting ",comb$SPECIES[i],"\n", comb$fm_name[i], ": ", comb$fm[i], "\n")
+  
+  temp <- paste0(comb$SPECIES[i], " ", comb$fm_name[i])
+  
+  dat0 <- dat %>% 
+    dplyr::filter(common_name %in% comb$SPECIES[i])
+  
+  fittimes[[ temp ]] <-
+    system.time ( models[[ temp ]] <-
+                    gam(formula = as.formula(paste0("cpue_kgha ~ ", comb$fm[i])), 
+                        data = dat0, 
+                        family = tw, 
+                        gamma = 1.4)  )
+  
+}
 
-    temp <- paste0(comb$SPECIES[i], " ", comb$fm_name[i])
-
-    dat0 <- dat %>% 
-      dplyr::filter(common_name %in% comb$SPECIES[i])
-    
-    fittimes[[ temp ]] <-
-      system.time ( models[[ temp ]] <-
-                     gam(formula = as.formula(paste0("cpue_kgha ~ ", comb$fm[i])), 
-                         data = dat0, 
-                         family = tw, 
-                         gamma = 1.4)  )
-
-  }
-
-  save(models, fittimes, file = paste0("../inst/vigC_model_output.rdata"))
+save(models, fittimes, file = paste0("../inst/vigC_model_output.rdata"))
 ```
 
 ```{r model_file_load, echo = FALSE}
@@ -144,7 +144,6 @@ bb <- sapply(models, `[`, 1)
 
 # sdmgamindex::get_surveyidx_aic(models)
 
-
 b <- AIC(models$`yellowfin sole fm_1_s_t_st`, models$`yellowfin sole fm_2_cov`)# get(paste0("b", 1:9))
 
 b
@@ -155,30 +154,13 @@ b
 # bb
 ```
 
-```{r model_plots_1}
+```{r model_plots_1a}
 bb <- models$`yellowfin sole fm_1_s_t_st`
-par(mfrow = c(2,3))
-gam.check(bb)
+# gam.check(bb)
 vis.gam(bb)
-
-cc <- predict.gam(object = bb, newdata = dat[dat$Year == 2021,])
-
-dat0 <- dat[dat$Year == 2021,] %>% 
-  dplyr::mutate(pred = cc)
-
-figure <- ggplot() +
-  geom_point(data = dat0, 
-             mapping = aes(x= longitude_dd, y = latitude_dd, color = pred))
-
 ```
 
-
-```{r model_plots_2}
-bb <- models$`yellowfin sole fm_2_cov`
-par(mfrow = c(2,3))
-gam.check(bb)
-vis.gam(bb)
-
+```{r model_plots_1b}
 cc <- predict.gam(object = bb, newdata = dat[dat$Year == 2021,])
 
 dat0 <- dat[dat$Year == 2021,] %>% 
@@ -187,7 +169,25 @@ dat0 <- dat[dat$Year == 2021,] %>%
 figure <- ggplot() +
   geom_point(data = dat0, 
              mapping = aes(x= longitude_dd, y = latitude_dd, color = pred))
+figure
+```
 
+```{r model_plots_2a}
+bb <- models$`yellowfin sole fm_2_cov`
+# gam.check(bb)
+vis.gam(bb)
+```
+
+```{r model_plots_2b}
+cc <- predict.gam(object = bb, newdata = dat[dat$Year == 2021,])
+
+dat0 <- dat[dat$Year == 2021,] %>% 
+  dplyr::mutate(pred = cc)
+
+figure <- ggplot() +
+  geom_point(data = dat0, 
+             mapping = aes(x= longitude_dd, y = latitude_dd, color = pred))
+figure
 ```
 
 

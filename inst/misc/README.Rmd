@@ -2,17 +2,21 @@
 output: 
   md_document: 
     variant: gfm
+csl: "https://raw.githubusercontent.com/citation-style-language/styles/master/apa-no-ampersand.csl"
+bibliography: "https://raw.githubusercontent.com/afsc-gap-products/citations/main/cite/bibliography.bib"
+link-citations: true
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+link_repo <- "https://github.com/EmilyMarkowitz-NOAA/sdmgamindex/"
 ```
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# sdmgamindex <a href="https://emilymarkowitz-noaa.github.io/sdmgamindex/"><img src="man/figures/logo.png" align="right" height="133" /></a> 
+# [sdmgamindex](link_repo) <img src="https://avatars.githubusercontent.com/u/91760178?s=96&amp;v=4" alt="Logo." align="right" width="139" height="139"/>
 
-(formally {surveyIndex})
+This repository was previously forked from `casperwberg/surveyIndex` and previously named `emilymarkowitz-noaa/surveyIndex`. 
 
 R package for calculating survey indices by age from DATRAS exchange data. 
 
@@ -37,23 +41,13 @@ cat(
 )
 ```
 
-> Code is still in development at https://github.com/EmilyMarkowitz-NOAA/sdmgamindex
+> This code is always in development. Find code used for various reports in the code [releases](`r paste0(link_repo, "/releases")`).
 
-*Code was originally developed by:*
+### Code has been modified and adapted by:
 
-**Casper W. Berg** (@casperwberg)
+**Emily Markowitz** (Emily.Markowitz AT noaa.gov; [\@EmilyMarkowitz-NOAA](https://github.com/EmilyMarkowitz-NOAA))
 
-National Institute of Aquatic Resources, 
-
-Technical University of Denmark
-
-[**Berg et al. (2014): "Evaluation of alternative age-based methods for estimating relative abundance from survey data in relation to assessment models", Fisheries Research 151(2014) 91-99.**](https://doi.org/10.1016/j.fishres.2013.10.005)
-
-*And then modified and adapted for the AFSC by:*
-
-**Emily Markowitz** (@EmilyMarkowitz-noaa; Emily.Markowitz AT noaa.gov)
-
-**Margaret Siple** (@MargaretSiple-noaa; Margaret.Siple AT noaa.gov)
+**Margaret Siple** (Margaret.Siple AT noaa.gov; [\@MargaretSiple-noaa](https://github.com/MargaretSiple-noaa))
 
 Alaska Fisheries Science Center
 
@@ -62,6 +56,16 @@ National Marine Fisheries Service
 National Oceanic and Atmospheric Administration
 
 Seattle, WA 98195
+
+### Code was originally developed by:
+
+**Casper W. Berg** (@casperwberg) @Berg2014
+
+National Institute of Aquatic Resources, 
+
+Technical University of Denmark
+
+Repository: `remotes::install_github("casperwberg/surveyIndex/surveyIndex")`
 
 ## Installation
 

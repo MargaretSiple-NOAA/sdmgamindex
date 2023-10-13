@@ -1,27 +1,24 @@
 ---
 title: "Simple {sdmgamindex} case study"
-description: "Simple {sdmgamindex} case study"
 date: "`r format(Sys.Date(), format='%B %d %Y') `"
-output: 
-  rmarkdown::html_vignette: 
-    variant: gfm
+output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{D-simple-case-study}
+  %\VignetteIndexEntry{Simple {sdmgamindex} case study}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE, 
-  comment = "#>"
+  collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE#, 
+  # comment = "#>"
 )
 ```
 
 ```{r setup, echo = FALSE}
 # library(remotes)
 PKG <- c(
-  "sdmgamindex", # remotes::install_github("casperwberg/sdmgamindex/sdmgamindex")
+  "sdmgamindex", 
   "DATRAS", # remotes::install_github("DTUAqua/DATRAS/DATRAS")
   "dplyr",
   "sf", 

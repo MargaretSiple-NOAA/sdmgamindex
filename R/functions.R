@@ -2266,10 +2266,10 @@ convert_crs <- function(x,
                         sp::coordinates(xy) <- c("X", "Y")
                         sp::proj4string(xy) <- sp::CRS(crs_in)
                         res <- sp::spTransform(xy, sp::CRS(crs_out))
+                        names(xy) <- c("ID", "X", "Y")
+                        
                         return(as.data.frame(res))
                         }
-
-
 
 #' Convert decimal degrees to radians
 #' Previously called deg2rad.
