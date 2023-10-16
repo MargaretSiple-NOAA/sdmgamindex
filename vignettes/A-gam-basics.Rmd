@@ -2,11 +2,9 @@
 title: "Intro to GAMs"
 description: "How simple gams work and how they compare with surveyidx GAMs"
 date: "`r format(Sys.Date(), format='%B %d %Y') `"
-output: 
-  rmarkdown::html_vignette: 
-    variant: gfm
+output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{A-data-prep}
+  %\VignetteIndexEntry{Intro to GAMs}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

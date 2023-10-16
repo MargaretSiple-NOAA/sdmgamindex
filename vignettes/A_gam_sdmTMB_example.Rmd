@@ -1,8 +1,9 @@
 ---
 title: "Fitting a spatiotemporal model and deriving an abundance index"
+date: "`r format(Sys.Date(), format='%B %d %Y') `"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{A_gam_sdmTMB_example}
+  %\VignetteIndexEntry{Fitting a spatiotemporal model and deriving an abundance index}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -14,15 +15,6 @@ knitr::opts_chunk$set(
   eval = FALSE
 )
 ```
-
-<!-- --- -->
-<!-- title: "Fitting a spatiotemporal model and deriving an abundance index" -->
-<!-- format: html -->
-<!-- editor: visual -->
-<!-- execute:  -->
-<!--   echo: true -->
-<!--   eval: true -->
-<!-- --- -->
 
 > Adapted from Lewis Barnett's sdmTMB tutorial for the Fisheries Survey Course at UW: [GitHub pbs-assess/sdmTMB-teaching 2023-02-14](https://github.com/pbs-assess/sdmTMB-teaching/blob/490ee04157f19d1059c55a1318b894e8b8f460bb/uw-survey-2023/02-exercise.qmd#L356)
 

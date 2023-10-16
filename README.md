@@ -1,35 +1,26 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# sdmgamindex <a href="https://emilymarkowitz-noaa.github.io/sdmgamindex/"><img src="man/figures/logo.png" align="right" height="133" /></a>
+# [sdmgamindex](link_repo) <img src="https://avatars.githubusercontent.com/u/91760178?s=96&amp;v=4" alt="Logo." align="right" width="139" height="139"/>
 
-(formally {surveyIndex})
+This repository was previously forked from `casperwberg/surveyIndex` and
+previously named `emilymarkowitz-noaa/surveyIndex`.
 
 R package for calculating survey indices by age from DATRAS exchange
 data.
 
 [![](https://img.shields.io/github/last-commit/EmilyMarkowitz-NOAA/sdmgamindex.svg)](https://github.com/EmilyMarkowitz-NOAA/sdmgamindex/commits/main)
 
-> Code is still in development at
-> <https://github.com/EmilyMarkowitz-NOAA/sdmgamindex>
+> This code is always in development. Find code used for various reports
+> in the code
+> [releases](https://github.com/EmilyMarkowitz-NOAA/sdmgamindex//releases).
 
-*Code was originally developed by:*
+### Code has been modified and adapted by:
 
-**Casper W. Berg** (@casperwberg)
+**Emily Markowitz** (Emily.Markowitz AT noaa.gov;
+[@EmilyMarkowitz-NOAA](https://github.com/EmilyMarkowitz-NOAA))
 
-National Institute of Aquatic Resources,
-
-Technical University of Denmark
-
-[**Berg et al. (2014): “Evaluation of alternative age-based methods for
-estimating relative abundance from survey data in relation to assessment
-models”, Fisheries Research 151(2014)
-91-99.**](https://doi.org/10.1016/j.fishres.2013.10.005)
-
-*And then modified and adapted for the AFSC by:*
-
-**Emily Markowitz** (@EmilyMarkowitz-noaa; Emily.Markowitz AT noaa.gov)
-
-**Margaret Siple** (@MargaretSiple-noaa; Margaret.Siple AT noaa.gov)
+**Margaret Siple** (Margaret.Siple AT noaa.gov;
+[@MargaretSiple-noaa](https://github.com/MargaretSiple-noaa))
 
 Alaska Fisheries Science Center
 
@@ -38,6 +29,15 @@ National Marine Fisheries Service
 National Oceanic and Atmospheric Administration
 
 Seattle, WA 98195
+
+### Code was originally developed by:
+
+**Casper W. Berg** (([**casperwberg?**](#ref-casperwberg))) Berg et al.
+([2014](#ref-Berg2014))
+
+National Institute of Aquatic Resources,
+
+Technical University of Denmark
 
 ## Installation
 
@@ -61,65 +61,44 @@ documentation](https://emilymarkowitz-noaa.github.io/sdmgamindex/reference/get_s
 
 This package was last produced using:
 
-    ## R version 4.2.3 (2023-03-15 ucrt)
+    ## R version 4.3.1 (2023-06-16 ucrt)
     ## Platform: x86_64-w64-mingw32/x64 (64-bit)
     ## Running under: Windows 10 x64 (build 19045)
     ## 
     ## Matrix products: default
     ## 
+    ## 
     ## locale:
-    ## [1] LC_COLLATE=English_United States.utf8 
-    ## [2] LC_CTYPE=English_United States.utf8   
-    ## [3] LC_MONETARY=English_United States.utf8
-    ## [4] LC_NUMERIC=C                          
+    ## [1] LC_COLLATE=English_United States.utf8  LC_CTYPE=English_United States.utf8   
+    ## [3] LC_MONETARY=English_United States.utf8 LC_NUMERIC=C                          
     ## [5] LC_TIME=English_United States.utf8    
     ## 
+    ## time zone: America/Los_Angeles
+    ## tzcode source: internal
+    ## 
     ## attached base packages:
-    ## [1] parallel  stats     graphics  grDevices utils     datasets  methods  
-    ## [8] base     
+    ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ##  [1] knitr_1.42        badger_0.2.3      sdmgamindex_0.1.0 tweedie_2.3.5    
-    ##  [5] MASS_7.3-58.3     marmap_1.0.10     RANN_2.6.1        maptools_1.1-6   
-    ##  [9] sp_1.6-0          mapdata_2.3.1     maps_3.4.1        mgcv_1.8-42      
-    ## [13] nlme_3.1-162      DATRAS_1.01       RODBC_1.3-20      roxygen2_7.2.3   
-    ## [17] devtools_2.4.5    usethis_2.1.6     here_1.0.1       
+    ## [1] knitr_1.44   badger_0.2.3
     ## 
     ## loaded via a namespace (and not attached):
-    ##   [1] colorspace_2.1-0    gitcreds_0.1.2      ellipsis_0.3.2     
-    ##   [4] rprojroot_2.0.3     fs_1.6.1            rstudioapi_0.14    
-    ##   [7] remotes_2.4.2       gh_1.4.0            bit64_4.0.5        
-    ##  [10] fansi_1.0.4         xml2_1.3.3          codetools_0.2-19   
-    ##  [13] splines_4.2.3       ncdf4_1.21          cachem_1.0.7       
-    ##  [16] pkgload_1.3.2       jsonlite_1.8.4      icesDatras_1.4.0   
-    ##  [19] shiny_1.7.4         BiocManager_1.30.20 compiler_4.2.3     
-    ##  [22] rvcheck_0.2.1       Matrix_1.5-3        fastmap_1.1.1      
-    ##  [25] cli_3.6.1           later_1.3.0         htmltools_0.5.5    
-    ##  [28] prettyunits_1.1.1   tools_4.2.3         igraph_1.4.1       
-    ##  [31] gtable_0.3.3        glue_1.6.2          reshape2_1.4.4     
-    ##  [34] dplyr_1.1.1         rappdirs_0.3.3      Rcpp_1.0.10        
-    ##  [37] pkgdown_2.0.7       raster_3.6-20       vctrs_0.6.1        
-    ##  [40] xfun_0.38           stringr_1.5.0       ps_1.7.3           
-    ##  [43] brio_1.1.3          testthat_3.1.7      mime_0.12          
-    ##  [46] miniUI_0.1.1.1      lifecycle_1.0.3     sys_3.4.1          
-    ##  [49] dlstats_0.1.6       terra_1.7-18        scales_1.2.1       
-    ##  [52] credentials_1.3.2   promises_1.2.0.1    httr2_0.2.2        
-    ##  [55] RColorBrewer_1.1-3  gert_1.9.2          yaml_2.3.7         
-    ##  [58] curl_5.0.0          memoise_2.0.1       ggplot2_3.4.1      
-    ##  [61] yulab.utils_0.0.6   stringi_1.7.12      RSQLite_2.3.0      
-    ##  [64] desc_1.4.2          pkgbuild_1.4.0      shape_1.4.6        
-    ##  [67] rlang_1.1.0         pkgconfig_2.0.3     evaluate_0.20      
-    ##  [70] lattice_0.21-8      purrr_1.0.1         htmlwidgets_1.6.2  
-    ##  [73] bit_4.0.5           processx_3.8.0      tidyselect_1.2.0   
-    ##  [76] plyr_1.8.8          magrittr_2.0.3      R6_2.5.1           
-    ##  [79] generics_0.1.3      profvis_0.3.7       DBI_1.1.3          
-    ##  [82] pillar_1.9.0        foreign_0.8-84      withr_2.5.0        
-    ##  [85] tibble_3.2.1        crayon_1.5.2        utf8_1.2.3         
-    ##  [88] rmarkdown_2.20      urlchecker_1.0.1    grid_4.2.3         
-    ##  [91] blob_1.2.4          callr_3.7.3         digest_0.6.31      
-    ##  [94] xtable_1.8-4        gdistance_1.6       adehabitatMA_0.3.16
-    ##  [97] httpuv_1.6.9        openssl_2.0.6       munsell_0.5.0      
-    ## [100] sessioninfo_1.2.2   askpass_1.1
+    ##  [1] gtable_0.3.4        httr2_0.2.3         xfun_0.40           ggplot2_3.4.3       htmlwidgets_1.6.2  
+    ##  [6] devtools_2.4.5      remotes_2.4.2.1     gh_1.4.0            processx_3.8.2      callr_3.7.3        
+    ## [11] yulab.utils_0.1.0   vctrs_0.6.3         tools_4.3.1         ps_1.7.5            generics_0.1.3     
+    ## [16] curl_5.0.2          tibble_3.2.1        fansi_1.0.4         pkgconfig_2.0.3     RColorBrewer_1.1-3 
+    ## [21] lifecycle_1.0.3     compiler_4.3.1      stringr_1.5.0       credentials_2.0.1   dlstats_0.1.7      
+    ## [26] munsell_0.5.0       httpuv_1.6.11       sys_3.4.2           htmltools_0.5.6     usethis_2.2.2      
+    ## [31] yaml_2.3.7          later_1.3.1         pkgdown_2.0.7.9000  pillar_1.9.0        crayon_1.5.2       
+    ## [36] urlchecker_1.0.1    ellipsis_0.3.2      openssl_2.1.0       cachem_1.0.8        sessioninfo_1.2.2  
+    ## [41] mime_0.12           tidyselect_1.2.0    digest_0.6.33       stringi_1.7.12      dplyr_1.1.3        
+    ## [46] purrr_1.0.2         rprojroot_2.0.3     fastmap_1.1.1       grid_4.3.1          here_1.0.1         
+    ## [51] colorspace_2.1-0    cli_3.6.1           magrittr_2.0.3      pkgbuild_1.4.2      utf8_1.2.3         
+    ## [56] rappdirs_0.3.3      prettyunits_1.2.0   scales_1.2.1        promises_1.2.1      rmarkdown_2.25     
+    ## [61] gitcreds_0.1.2      rvcheck_0.2.1       askpass_1.2.0       memoise_2.0.1       shiny_1.7.5        
+    ## [66] evaluate_0.22       miniUI_0.1.1.1      profvis_0.3.8       rlang_1.1.1         gert_2.0.0         
+    ## [71] Rcpp_1.0.11         xtable_1.8-4        glue_1.6.2          BiocManager_1.30.22 pkgload_1.3.3      
+    ## [76] rstudioapi_0.15.0   jsonlite_1.8.7      R6_2.5.1            fs_1.6.3
 
 ## NOAA README
 
@@ -153,3 +132,17 @@ works of the Software outside of the United States.
 [U.S. Department of Commerce](https://www.commerce.gov/) \| [National
 Oceanographic and Atmospheric Administration](https://www.noaa.gov) \|
 [NOAA Fisheries](https://www.fisheries.noaa.gov/)
+
+<div id="refs" class="references csl-bib-body hanging-indent"
+line-spacing="2">
+
+<div id="ref-Berg2014" class="csl-entry">
+
+Berg, C. W., Nielsen, A., and Kristensen, K. (2014). Evaluation of
+alternative age-based methods for estimating relative abundance from
+survey data in relation to assessment models. *Fish. Res.*, *151*,
+91–99. <https://doi.org/10.1016/j.fishres.2013.10.005>
+
+</div>
+
+</div>

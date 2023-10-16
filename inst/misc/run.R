@@ -18,7 +18,7 @@ setwd(here::here())
 # devtools::check()
 
 # Create Package Readme.md -----------------------------------------------------
-rmarkdown::render(paste0("./README.Rmd"),
+rmarkdown::render(here::here("inst", "misc", "README.Rmd"),
                   output_dir = "./",
                   output_file = "README.md")
 
