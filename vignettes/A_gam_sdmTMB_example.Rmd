@@ -113,9 +113,11 @@ dat <- add_utm_columns(dat,
 dat$log_depth <- log(dat$depth_m)
 dat$year_factor <- as.factor(dat$year)
 
-# ggplot(dat, aes(X, Y, size = cpue_kgkm2)) + 
-#   geom_point(shape = 21) + 
-#   coord_fixed()
+dat[,c("X","Y")]
+
+ggplot(dat, aes(X, Y, size = cpue_kgkm2)) +
+  geom_point(shape = 21) +
+  coord_fixed()
 ```
 
 First, fit a GAM without any covariates: just year as a factor and a spatial smoother $s(X,Y)$.
@@ -182,10 +184,21 @@ Examine the four diagnostic plots. Each of these gives a different way of lookin
 Extrapolation grid for the EBS. 
 
 ```{r}
-load(here::here("data/pred_grid_ebs.rda")) # object: pred_grid_ebs
+#load(here::here("data/pred_grid_ebs.rda")) # object: pred_grid_ebs
+# try this new grid
+#pred_grid_ebs <- read.csv(here::here("data/ebs_2022_epsg3338.csv"),header = TRUE)
 
-st_as_sf(pred_grid_ebs, coords=c("lon","lat"),crs="EPSG:4326") |>
-  sf::st_transform(crs = "")
+get_crs(dat = pred_grid_ebs,ll_names =c("lon","lat"))
+
+grid <- add_utm_columns(pred_grid_ebs, 
+                       #ll_crs = 32603, 
+                       ll_names = c("lon", "lat"))
+range(grid$X)
+
+# Bunch of annoying stuff here, still doesn't work
+#crs_utm <- 32603  # # Zone 3 UTM CRS - grabbed from prey habitat project
+# grid <- sf::st_as_sf(pred_grid_ebs, coords=c("lon","lat"),crs="EPSG:4326") |>
+#   sf::st_transform(crs = crs_utm) 
 
 #wcvi_grid <- readRDS(here::here("data/wcvi-grid.rds"))
 
@@ -194,15 +207,13 @@ st_as_sf(pred_grid_ebs, coords=c("lon","lat"),crs="EPSG:4326") |>
 When you have spatiotemporal data, you need a grid for each year. There is a nice tidy little chunk of `{purrr}` code that will do that for you!
 
 ```{r}
-grid <- purrr::map_dfr(unique(dat$year), ~ tibble(wcvi_grid, year = .x))
+grid <- purrr::map_dfr(unique(dat$year), ~ tibble(grid, year = .x))
 ```
 
 
 ## Predict CPUE across the grid
 
 ```{r}
-#grid2 <- grid
-#grid2 <- grid |> rename(longitude_dd = "lon", latitude_dd = "lat")
 pred_gam <- predict(fit_gam, type = "response", newdata = grid)
 pred_gam_df <- cbind(grid, pred_gam) #Careful! This takes a long time.
 ```
@@ -212,8 +223,8 @@ Plot predictions over survey area. Note: I Keep getting geom_raster errors in th
 ```{r}
 pred_gam_df %>%
   filter(year==1999) |>
-ggplot(aes(X, Y, fill=pred_gam)) + 
-  geom_tile() + # Sean uses geom_tile or geom_stars if it's a stars object
+ggplot(aes(X, Y, color=pred_gam)) + 
+  geom_point() + # Sean uses geom_tile or geom_stars if it's a stars object
   scale_fill_viridis_c() + 
   #facet_wrap(~year) + 
   coord_fixed() +
