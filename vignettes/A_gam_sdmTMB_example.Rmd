@@ -74,21 +74,21 @@ We will work with data representing North Pacific Spiny Dogfish in the West Coas
 
 ```{r, include = FALSE}
 # https://drive.google.com/drive/folders/14h9nrWR_eoSlmfFI0KXfotEIJHyVJzHQ
-#dat <- readRDS(here::here("notforgit/uw-survey-2023/data/wcvi-dogfish.rds"))
-#head(dat)
+#dat2 <- readRDS(here::here("data/wcvi-dogfish.rds"))
+#head(dat2)
 
-dat <- readRDS(here::here("data/ebs_yfs_example.RDS"))
-
+# If the ebs_yfs_example.rds file isn't available:
 #load(here::here("data/noaa_afsc_public_foss.rda"))
-#yfs <- noaa_afsc_public_foss %>% filter(srvy=="EBS" & species_code == 10210 )
+#yfs <- noaa_afsc_public_foss |> dplyr::filter(srvy=="EBS" & species_code == 10210 )
 #saveRDS(object = yfs,file = here::here("data/ebs_yfs_example.RDS"))
+dat <- readRDS(here::here("data/ebs_yfs_example.RDS"))
 ```
 
 The dataset contains sampling locations (`longitude` and `latitude`) and `year`. It also contains sampling `depth` in meters and sample CPUE `density` in units of tonnes/km^2^.
 
 ```{r}
 ggplot(data = dat, 
-       mapping = aes(x = longitude_dd, y = latitude_dd, size = count, color = bottom_temperature_c)) + 
+       mapping = aes(x = longitude_dd, y = latitude_dd, size = cpue_kgha, color = bottom_temperature_c)) + 
   geom_point(alpha = 0.3)
 ```
 
@@ -106,6 +106,8 @@ dat$log_depth <- log(dat$depth_m)
 dat$year_factor <- as.factor(dat$year)
 
 dat[,c("X","Y")]
+range(dat$X)
+range(dat$Y)
 
 ggplot(dat, aes(X, Y, size = cpue_kgkm2)) +
   geom_point(shape = 21) +
@@ -116,10 +118,9 @@ First, fit a GAM without any covariates: just year as a factor and a spatial smo
 ```{r}
 start.time <- Sys.time()
 fit_gam <- gam(
-  formula = count ~ as.factor(year) + 
-    s(X, Y), 
-  family = tw(link = "log"),
-  #offset = "area_swept_ha", # only for when modeling cpue
+  formula = cpue_kgha ~ as.factor(year) + # for fitting biomass, use gamma distribution and log link
+    s(X, Y), #+ offset(log(area_swept_ha)), 
+  family = Gamma(link = "log"),
   data = dat
 )
 
@@ -153,7 +154,7 @@ fit_gam_st <- gam(
   formula = count ~ s(depth_m) + as.factor(year) +
     s(X,Y, by = year), 
   family = tw(link = "log"),
- # offset = "area_swept_ha",
+ # offset = "area_swept_ha", #another way to add offset? I guess?
   data = dat)
 
 cat("The GAM took ", Sys.time() - start.time, " seconds to run")
@@ -176,8 +177,8 @@ Examine the four diagnostic plots. Each of these gives a different way of lookin
 Extrapolation grid for the EBS. 
 
 ```{r}
-#load(here::here("data/pred_grid_ebs.rda")) # object: pred_grid_ebs
-# try this new grid
+# This is another form of the same grid:
+load(here::here("data/pred_grid_ebs.rda")) # object: pred_grid_ebs
 #pred_grid_ebs <- read.csv(here::here("data/ebs_2022_epsg3338.csv"),header = TRUE)
 
 get_crs(dat = pred_grid_ebs,ll_names =c("lon","lat"))
@@ -187,13 +188,8 @@ grid <- add_utm_columns(pred_grid_ebs,
                        ll_names = c("lon", "lat"))
 range(grid$X)
 
-# Bunch of annoying stuff here, still doesn't work
-#crs_utm <- 32603  # # Zone 3 UTM CRS - grabbed from prey habitat project
-# grid <- sf::st_as_sf(pred_grid_ebs, coords=c("lon","lat"),crs="EPSG:4326") |>
-#   sf::st_transform(crs = crs_utm) 
-
+# Grid from example
 #wcvi_grid <- readRDS(here::here("data/wcvi-grid.rds"))
-
 ```
 
 When you have spatiotemporal data, you need a grid for each year. There is a nice tidy little chunk of `{purrr}` code that will do that for you!
@@ -206,21 +202,64 @@ grid <- purrr::map_dfr(unique(dat$year), ~ tibble(grid, year = .x))
 ## Predict CPUE across the grid
 
 ```{r}
-pred_gam <- predict(fit_gam, type = "response", newdata = grid)
-pred_gam_df <- cbind(grid, pred_gam) #Careful! This takes a long time.
+pred_gam <- predict(fit_gam, type = "response", newdata = grid) #This takes a long time.
+pred_gam_df <- cbind(grid, pred_gam)
+pred_gam_df$Shape_Area_ha <- pred_gam_df$Shape_Area*0.0001 # original Shape_area is in m^2
+pred_gam_df$predicted_tot_grid <- pred_gam_df$Shape_Area_ha*pred_gam_df$pred_gam
+
+sum(pred_gam_df$predicted_tot_grid)/1000
+
 ```
 
-Plot predictions over survey area. Note: I Keep getting geom_raster errors in this part; not sure what's happening.
+Plot predictions over survey area. Note: Because the EBS grid is irregularly spaced, you have to use `geom_point()` here instead of `geom_tile()` or `geom_raster()`. 
 
 ```{r}
-pred_gam_df %>%
-  filter(year==1999) |>
+pred_gam_df |>
+  filter(year==1999) |> # single year 
 ggplot(aes(X, Y, color=pred_gam)) + 
-  geom_point() + # Sean uses geom_tile or geom_stars if it's a stars object
+  geom_point(size = 0.1) + 
   scale_fill_viridis_c() + 
   #facet_wrap(~year) + 
   coord_fixed() +
-  labs(fill = "Log Biomass density\n(kg/km^2)")
+  labs(color = "Log Biomass density\n(kg/km^2)") +
+  theme_light() +
+  theme(legend.position = "bottom")
+```
+
+# Calculate biomass index from GAM via simulation
+
+Generally, model-based indices of abundance use the area of each grid cell and the prediction for that area to calculate a total index across the survey area. The simplest way to do this is to sum the predicted biomasses across the full grid like so:
+
+```{r}
+gam_idx_mt <- pred_gam_df |> 
+  dplyr::group_by(year) |> 
+  summarize(total_wt_mt = sum(predicted_tot_grid)/1000)
+
+```
+
+## Get uncertainties by sampling from posteriors
+
+[`{gratia}`](https://gavinsimpson.github.io/gratia/) is an R package for evaluating and displaying GAM fits. This script uses the `fitted_samples()` function, which draws fitted values from the posterior of a model using a Gaussian approximation. 
+
+```{r}
+sims <- gratia::fitted_samples(fit_gam, n=10, newdata=grid, 
+                               scale="response", seed=9)
+sims$year <- grid$year[sims$row]
+sims$biomass <- sims$fitted * 4 # expand from density to biomass, given area
+
+level <- 0.95 # specify probability for confidence interval
+
+# Get sum of simulated biomass (density*area) across grid cells, with CI
+lwr_fn <- function(x) {as.numeric(quantile(x, probs = (1 - level) / 2))}
+upr_fn <- function(x) {as.numeric(quantile(x, probs = 1 - (1 - level) / 2))}
+
+sims_sum <-  sims %>% 
+  group_by(year,draw) %>% 
+  summarise_at("biomass", list(biomass = sum)) %>%
+  group_by(year) %>%
+  summarise_at("biomass", list(est = median, # could use mean
+                           lwr = lwr_fn,
+                           upr = upr_fn))
 ```
 
 # Index standardization
