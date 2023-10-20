@@ -1,5 +1,5 @@
 ---
-title: "Fitting a spatiotemporal model and deriving an abundance index"
+title: "Fitting a spatiotemporal model with a GAM and deriving an abundance index"
 date: "`r format(Sys.Date(), format='%B %d %Y') `"
 output: rmarkdown::html_vignette
 vignette: >
@@ -70,18 +70,17 @@ sessionInfo()
 
 # The data
 
-We will work with data representing North Pacific Spiny Dogfish in the West Coast Vancouver Island synoptic trawl survey.
+We will work with CPUE data from yellowfin sole in the Eastern Bering Sea summer bottom trawl survey. This data is publicly available through FOSS.
 
 ```{r, include = FALSE}
-# https://drive.google.com/drive/folders/14h9nrWR_eoSlmfFI0KXfotEIJHyVJzHQ
-#dat2 <- readRDS(here::here("data/wcvi-dogfish.rds"))
-#head(dat2)
+# Load EBS yellowfin sole CPUE table for example:
+dat <- readRDS(here::here("data/ebs_yfs_example.RDS"))
 
 # If the ebs_yfs_example.rds file isn't available:
 #load(here::here("data/noaa_afsc_public_foss.rda"))
 #yfs <- noaa_afsc_public_foss |> dplyr::filter(srvy=="EBS" & species_code == 10210 )
 #saveRDS(object = yfs,file = here::here("data/ebs_yfs_example.RDS"))
-dat <- readRDS(here::here("data/ebs_yfs_example.RDS"))
+
 ```
 
 The dataset contains sampling locations (`longitude` and `latitude`) and `year`. It also contains sampling `depth` in meters and sample CPUE `density` in units of tonnes/km^2^.
@@ -113,51 +112,72 @@ ggplot(dat, aes(X, Y, size = cpue_kgkm2)) +
   geom_point(shape = 21) +
   coord_fixed()
 ```
+## Temporal effect plus spatial smoother, no covariates
 
-First, fit a GAM without any covariates: just year as a factor and a spatial smoother $s(X,Y)$.
+First, fit a GAM without any covariates: just year as a factor and a spatial smoother $s(X,Y)$. The `as.factor(year)` part is a common component of SDMs that are being used to generate indices.
+
 ```{r}
 start.time <- Sys.time()
 fit_gam <- gam(
-  formula = cpue_kgha ~ as.factor(year) + # for fitting biomass, use gamma distribution and log link
-    s(X, Y), #+ offset(log(area_swept_ha)), 
-  family = Gamma(link = "log"),
+  formula = cpue_kgha ~ as.factor(year) +
+    s(X, Y, k = 50),
+  family = tw(link = "log"),
   data = dat
 )
 
-cat("The GAM took ", Sys.time() - start.time, " seconds to run")
+cat(
+  "The GAM took ",
+  difftime(Sys.time(), start.time, units = "mins"),
+  " mins to run"
+)
+```
+Get diagnostics and perform model checking:
+
+```{r}
+gam.check(fit_gam)
 ```
 
-Include a 2-D smooth over space. The `as.factor(year)` part is a common component of SDMs that are being used to generate indices.
+
+
+Include a 2-D smooth over space, and depth as a covariate.
 
 ```{r}
 start.time <- Sys.time()
 fit_gam_s <- gam(
-  formula = count ~ s(depth_m) + as.factor(year) + 
+  formula = cpue_kgha ~ s(depth_m) + as.factor(year) + 
     s(X,Y), 
   family = tw(link = "log"),
-  #offset = "area_swept_ha", # only for when modeling cpue
   data = dat
 )
 
-cat("The GAM took ", Sys.time() - start.time, " seconds to run")
+cat("The GAM took ", 
+    difftime(Sys.time(),start.time, units = "mins"), 
+    "mins to run")
+
+gam.check(fit_gam_s)
 ```
 
 
 # Fit a GAM analogous to a spatiotemporal model in sdmTMB
 
-Include a 2-D smooth over space for each year
+**NOTE**: This takes a long time to fit. Include a 2-D smooth over space for each year. In this case, there a different 2-D smooth for each year. This will take much longer to fit than the other two. 
 
 ```{r}
 start.time <- Sys.time()
 
 fit_gam_st <- gam(
-  formula = count ~ s(depth_m) + as.factor(year) +
-    s(X,Y, by = year), 
+  formula = count ~ as.factor(year) +
+    s(X, Y, by = as.factor(year)),
   family = tw(link = "log"),
- # offset = "area_swept_ha", #another way to add offset? I guess?
-  data = dat)
+  data = dat
+)
 
-cat("The GAM took ", Sys.time() - start.time, " seconds to run")
+cat(
+  "The GAM took ",
+  difftime(Sys.time(), start.time, units = "mins"),
+  "mins to run"
+)
+
 ```
 
 
@@ -171,7 +191,7 @@ Review console output to help verify convergence, and whether there were an adeq
 
 Examine the four diagnostic plots. Each of these gives a different way of looking at your model residuals. On the top-left is a Q-Q plot, which compares the model residuals to the expected/assumed distribution family. A well-fit model's residuals will be close to the 1-1 line, otherwise there may be under- or over-dispersion present. On bottom left is a histogram of residuals. We want this to have a shape similar to the distribution family we specified. On top-right is a plot of residual values as a function of the linear predictor. These should be evenly distributed around zero in a well-fitted model. Finally, on the bottom-right is plot of response against fitted values. A well-fitted model would show values near the 1-1 line.
 
-# Predict to survey area (new data)
+# Predict to full survey area with new data
 
 ## Load the grid
 Extrapolation grid for the EBS. 
@@ -201,13 +221,13 @@ grid <- purrr::map_dfr(unique(dat$year), ~ tibble(grid, year = .x))
 
 ## Predict CPUE across the grid
 
+To get predicted 
+
 ```{r}
 pred_gam <- predict(fit_gam, type = "response", newdata = grid) #This takes a long time.
 pred_gam_df <- cbind(grid, pred_gam)
 pred_gam_df$Shape_Area_ha <- pred_gam_df$Shape_Area*0.0001 # original Shape_area is in m^2
 pred_gam_df$predicted_tot_grid <- pred_gam_df$Shape_Area_ha*pred_gam_df$pred_gam
-
-sum(pred_gam_df$predicted_tot_grid)/1000
 
 ```
 
@@ -221,7 +241,7 @@ ggplot(aes(X, Y, color=pred_gam)) +
   scale_fill_viridis_c() + 
   #facet_wrap(~year) + 
   coord_fixed() +
-  labs(color = "Log Biomass density\n(kg/km^2)") +
+  labs(color = expression(CPUE (kg/km^2))) +
   theme_light() +
   theme(legend.position = "bottom")
 ```
@@ -235,17 +255,19 @@ gam_idx_mt <- pred_gam_df |>
   dplyr::group_by(year) |> 
   summarize(total_wt_mt = sum(predicted_tot_grid)/1000)
 
+head(gam_idx_mt)
 ```
 
-## Get uncertainties by sampling from posteriors
+## Get uncertainties for GAM-based index by sampling from posteriors
 
 [`{gratia}`](https://gavinsimpson.github.io/gratia/) is an R package for evaluating and displaying GAM fits. This script uses the `fitted_samples()` function, which draws fitted values from the posterior of a model using a Gaussian approximation. 
 
 ```{r}
-sims <- gratia::fitted_samples(fit_gam, n=10, newdata=grid, 
+sims <- gratia::fitted_samples(fit_gam, n=10, data=grid, 
                                scale="response", seed=9)
 sims$year <- grid$year[sims$row]
-sims$biomass <- sims$fitted * 4 # expand from density to biomass, given area
+sims$area <- rep(pred_gam_df$Shape_Area_ha, times = 10) # matching the # of draws
+sims$biomass <- sims$fitted * sims$area # expand from density to biomass, given area
 
 level <- 0.95 # specify probability for confidence interval
 
@@ -262,7 +284,7 @@ sims_sum <-  sims %>%
                            upr = upr_fn))
 ```
 
-# Index standardization
+# Index standardization using `sdmTMB`
 
 To calculate an index from any of these models, we need to run the `predict.sdmTMB()` function with the argument `return_tmb_object = TRUE`. We can then run the `get_index()` function to extract the total biomass calculations and standard errors.
 
