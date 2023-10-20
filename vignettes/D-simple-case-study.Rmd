@@ -41,7 +41,7 @@ for (p in PKG) {
 
 For this example, let's say we want to assess: 
 
-```{r info-table, eval = FALSE, echo=FALSE}
+```{r info-table, eval = TRUE, echo=FALSE}
 img_url <- paste0("https://raw.githubusercontent.com/afsc-gap-products/gap_bs_data_report/main/img/", 
                   c("yellowfin-sole", "walleye-pollock", "red-king-crab"), ".png")
 img_loc <- here::here("vignettes", paste0(c("yellowfin-sole", "walleye-pollock", "red-king-crab"), ".png")) 
@@ -104,10 +104,10 @@ dat <- sdmgamindex::noaa_afsc_public_foss %>%
                   common_name %in% SPECIES) %>%
   dplyr::mutate(hauljoin = paste0(stratum, "_", station, "_", date_time)) %>%
   dplyr::select(
-    year, date_time, latitude_dd, longitude_dd, # spatiotemproal data
-    cpue_kgha, common_name, # catch data
+    year, date_time, latitude_dd_start, longitude_dd_start, # spatiotemproal data
+    cpue_kgkm2, common_name, # catch data
     bottom_temperature_c, depth_m, # possible covariate data
-    srvy, area_swept_ha, duration_hr, vessel_id, hauljoin # haul/effort data)
+    srvy, area_swept_km2, duration_hr, vessel_id, hauljoin # haul/effort data)
   )
 
 head(dat)
@@ -122,8 +122,8 @@ crs_proj <- "EPSG:3338" # NAD83 / Alaska Albers
 crs_latlon <- "+proj=longlat +datum=WGS84" # decimal degrees
 
 ll <- sdmgamindex::convert_crs( 
-  x = dat$longitude_dd,
-  y = dat$latitude_dd, 
+  x = dat$longitude_dd_start,
+  y = dat$latitude_dd_start, 
   crs_in = crs_latlon, 
   crs_out = crs_proj) 
 
@@ -133,21 +133,21 @@ YEARS <- sort(unique(dat$year))
 dat_wrangled <- dat %>% 
   dplyr::rename(
     Year = year,
-    wCPUE = cpue_kgha, 
+    wCPUE = cpue_kgkm2, 
     COMMON_NAME = common_name,
     GEAR_TEMPERATURE = bottom_temperature_c, 
     BOTTOM_DEPTH = depth_m,
     HaulDur = duration_hr,
-    EFFORT = area_swept_ha,
+    EFFORT = area_swept_km2,
     Ship = vessel_id) %>%
   dplyr::mutate( 
     # create some other vars
-    Lon = longitude_dd, 
-    Lat = latitude_dd, 
+    Lon = longitude_dd_start, 
+    Lat = latitude_dd_start, 
     lon = ll$X,
     lat = ll$Y,
-    sx = ((longitude_dd - mean(longitude_dd, na.rm = TRUE))/1000),
-    sy = ((latitude_dd - mean(latitude_dd, na.rm = TRUE))/1000), 
+    sx = ((longitude_dd_start - mean(longitude_dd_start, na.rm = TRUE))/1000),
+    sy = ((latitude_dd_start - mean(latitude_dd_start, na.rm = TRUE))/1000), 
     ctime = as.numeric(as.character(Year)),
     date_time = as.Date(x = date_time, format = "%m/%d/%Y %H:%M:%S"), 
     hour = as.numeric(format(date_time,"%H")),

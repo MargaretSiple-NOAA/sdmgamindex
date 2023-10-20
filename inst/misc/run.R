@@ -1,5 +1,4 @@
 
-
 # Load new FOSS data -----------------------------------------------------------
 
 # This has a specific username and password because I DONT want people to have access to this!
@@ -129,66 +128,6 @@ ncol(noaa_afsc_public_foss)," variables.
 write.table(str0, 
             file = here::here("R","noaa_afsc_public_foss.R"), 
             sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
-
-
-## Station centroid data -------------------------------------------------------
-
-library(akgfmaps)
-
-sel_region <- c("ai", "goa", "ebs", "nbs")
-stn_col <- c("ID", "ID", "STATIONID", "STATIONID")
-
-station_coords <- data.frame()
-
-for(ii in 1:length(sel_region)) {
-  map_layers <- akgfmaps::get_base_layers(select.region = sel_region[ii], set.crs = "EPSG:4326")
-  
-  station_center <- map_layers$survey.grid |>
-    sf::st_make_valid() |>
-    sf::st_centroid()
-  
-  station_center <- data.frame(station = station_center[[stn_col[ii]]]) |>
-    dplyr::bind_cols(sf::st_coordinates(station_center)) |>
-    dplyr::rename(longitude_dd = X, latitude_dd = Y) |>
-    dplyr::mutate(srvy = toupper(sel_region[ii]))
-  
-  station_coords <- station_coords |>
-    dplyr::bind_rows(station_center)
-}
-
-station_coords <- station_coords %>%
-  dplyr::filter(!is.na(srvy)) %>%
-  dplyr::filter(!is.na(station)) %>%
-  dplyr::filter(!is.na(longitude_dd)) %>%
-  dplyr::filter(!is.na(latitude_dd))
-
-save(station_coords, file = "./data/station_coords.rda")
-
-column <- gap_products_metadata_column0 %>%
-  dplyr::filter(metadata_colname %in% toupper(names(station_coords))) %>%
-  dplyr::mutate(metadata_colname = tolower(metadata_colname)) %>%
-  dplyr::distinct()
-
-table <- "Station centroid coordinates for each station for all surveys, as defined by the {akgfmaps} package. "
-
-str0 <- paste0("#' @title Station centroid locations for each station from akgfmaps
-#' @description ",table,"
-#' @usage data('station_coords')
-#' @author Sean Rohan (sean.rohan AT noaa.gov)
-#' @format A data frame with ",nrow(station_coords)," observations on the following ",ncol(station_coords)," variables.
-#' \\describe{
-",
-               paste0(paste0("#'   \\item{\\code{",column$metadata_colname,"}}{", column$metadata_colname_long, ". ", column$metadata_colname_desc,"}"), collapse = "\n"),
-               "#'   }
-#' @source https://github.com/afsc-gap-products/akgfmaps
-#' @keywords station survey data
-#' @examples
-#' data(station_coords)
-#' @details DETAILS
-'station_coords'")
-
-write.table(str0, file = "./R/station_coords.R", sep = "\t",
-            row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 # Document and create Package --------------------------------------------------
 .rs.restartR()
