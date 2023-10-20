@@ -41,40 +41,47 @@ for (p in PKG) {
 
 For this example, let's say we want to assess: 
 
-:::: {style="display: flex;"}
-::: {style="width:500px;"}
-![](https://github.com/EmilyMarkowitz-NOAA/gap_bs_data_report/blob/main/img/yellowfin_sole.png?raw=true){width=60%}
-:::
-::: {}
-**Yellowfin Sole** is a commonly caught "golden child" species has been realitively easy to model and assess because of it's high abundance, large distribution over the survey area, and consistent availability to the survey. 
-:::
-::::
+```{r info-table, eval = FALSE, echo=FALSE}
+img_url <- paste0("https://raw.githubusercontent.com/afsc-gap-products/gap_bs_data_report/main/img/", 
+                  c("yellowfin-sole", "walleye-pollock", "red-king-crab"), ".png")
+img_loc <- here::here("vignettes", paste0(c("yellowfin-sole", "walleye-pollock", "red-king-crab"), ".png")) 
+for (i in 1:length(img_loc)) {download.file(url = img_url[i], destfile = img_loc[i], mode="wb")}
 
-<!-- break -->
+table_raw <- data.frame(img = img_loc, 
+                  Species = c("Yellowfin Sole", "Walleye pollock", "Red King Crab"), 
+                  Description = 
+                    c("Commonly caught species has been realitively easy to model and assess because of it's high abundance, large distribution over the survey area, and consistent availability to the survey.", 
+                  "Common to the survey, but their distribution and availability to the survey are driven by density-dependence and temperature and the cold pool extent. Including covariates in model fits could help uncover structure that could help us better understand this specie's abundance.", 
+                  "Has patchier and less understood availability to the survey. "))
 
-:::: {style="display: flex;"}
-::: {style="width:500px;"}
-![](https://github.com/EmilyMarkowitz-NOAA/gap_bs_data_report/blob/main/img/walleye_pollock.png?raw=true){width=75%}
-:::
-::: {}
-**Walleye pollock** are also common to the survey, but their distribution and availability to the survey are driven by density-dependence and temperature and the cold pool extent. Including covariates in model fits could help uncover structure that could help us better understand this specie's abundance. 
-:::
-::::
+library(flextable)
 
-<!-- break -->
+table_print <- table_raw %>% 
+  flextable::flextable(
+    col_keys = c("img", "dummy")) %>%
+  flextable::compose(j = "dummy", part = "body",
+                     value = as_paragraph(
+                       as_chunk(paste0(Species, "\n"),
+                                props = fp_text_default(bold = TRUE, font.size = 12)), 
+                       as_chunk(Description,
+                                props = fp_text_default(font.size = 10)))) %>%  
+  flextable::colformat_image(j = "img", 
+                             height = 2, 
+                             width = 2) %>% 
+  flextable::delete_part(x = ., part = "header") %>% 
+  flextable::border_remove(x = .) %>% 
+  flextable::autofit()
 
-:::: {style="display: flex;"}
-::: {style="width:500px;"}
-![](https://github.com/EmilyMarkowitz-NOAA/gap_bs_data_report/blob/main/img/red_king_crab.png?raw=true){width=35%}
-:::
-::: {}
-**Red King Crab** is a "problem child" will have patchier and less understood availability to the survey. 
-:::
-::::
+table_print
+```
 
-<!-- break -->
+```{r survey-figure, echo=FALSE, fig.cap=readLines("https://raw.githubusercontent.com/afsc-gap-products/survey-live-temperature-map/main/examples/current_grid_bs.txt"), out.width = '100%'}
 
-![Survey grid for the eastern and northern Bering sea bottom trawl surveys. ](https://raw.githubusercontent.com/afsc-gap-products/survey-live-temperature-map/main/test/_grid_bs.png){width=60%}
+img_url <- "https://raw.githubusercontent.com/afsc-gap-products/survey-live-temperature-map/main/examples/current_grid_bs.png"
+img_loc <- here::here("vignettes", "current_grid_bs.png")
+download.file(url = img_url, destfile = img_loc, mode="wb")
+knitr::include_graphics(img_loc)
+```
 
 In this example, we will use data from NOAA Fisheries' eastern Bering sea (EBS) bottom trawl survey. The Resource Assessment and Conservation Engineering (RACE) Division Groundfish Assessment Program (GAP) of the Alaska Fisheries Science Center (AFSC) conducts fisheries-independent bottom trawl surveys to assess the populations of demersal fish and crab stocks of Alaska. Data presented here are presence-only (non-zero) observations from those surveys and therefore CANNOT be aggregated. 
 
@@ -266,9 +273,8 @@ extrap_data <- stars::st_extract(x = extrap_data0,
 
 # to make future runs of this faster:
 save(extrap_data0, extrap_data, 
-     file = paste0("../inst/VigA_bottom_depth_raster_",
-                   min(YEARS),"-",max(YEARS), ".rdata"))
-
+     file = here::here("inst",
+                       paste0("VigA_bottom_depth_raster_", min(YEARS),"-",max(YEARS), ".rdata")))
 ```
 
 ```{r covar_depth_show}
@@ -288,31 +294,24 @@ Here, bottom temperature, and thereby the cold pool extent, have been show to dr
 
 For this we are going to lean on our in-house prepared validated and pre-prepared [{coldpool} R package](https://github.com/afsc-gap-products/coldpool) (S. Rohan, L. Barnett, and N. Charriere). This data interpolates over the whole area of the survey so there are no missing data. 
 
-```{r covar_bt}
+```{r covar_bt_test}
+plot(terra::unwrap(coldpool::ebs_bottom_temperature)) # Just so we can see what we are looking at: 
+```
 
-plot(coldpool::ebs_bottom_temperature[[1]]) # Just so we can see what we are looking at: 
+```{r covar_bt_test, tab.cap = "Adding bottom temperature covariate data. "}
+tmp <- which(names(terra::unwrap(coldpool::ebs_bottom_temperature)) %in% YEARS)
 
-tmp <- c()
-for (i in 1:length(YEARS)) {
-  tmp <- c(tmp, 
-           grep(pattern = YEARS[i], x = names(coldpool::ebs_bottom_temperature)))
-}
+dat_temperature <- terra::unwrap(coldpool::ebs_bottom_temperature)[[tmp]] %>% 
+    terra::extract(y = dat_cov[,c("lon", "lat")] %>% 
+                     sf::sf_project(from = "+proj=longlat",
+               to = "EPSG:3338")) %>% 
+  data.frame()
+names(dat_temperature) <- paste0("GEAR_TEMPERATURE", YEARS)
 
-extrap_data0 <- coldpool::ebs_bottom_temperature[[tmp]] %>% 
-  as(., Class = "SpatialPointsDataFrame") %>%
-  sf::st_as_sf() %>%
-  sf::st_transform(crs = crs_latlon)  %>%
-  stars::st_rasterize() %>% 
-  stars::st_extract(x = .,
-                    at = as.matrix(dat_cov[,c("lon", "lat")]))
-
-names(extrap_data0) <- paste0("GEAR_TEMPERATURE", YEARS)
-
-dat_cov <- dplyr::bind_cols(dat_cov, extrap_data0) %>% 
+dat_cov <- dplyr::bind_cols(dat_cov, dat_temperature) %>% 
   na.omit()
 
 head(dat_cov)
-
 ```
 
 ## 5. DATRAS structure
@@ -324,7 +323,6 @@ Now, we need to fill in the data with the zeros!
 ```{r catch_haul_fill_0}
 
 # Identify vars that will be used --------------------------------------------
-
 varsbyyr <- unique( # c("GEAR_TEMPERATURE", "cpi")
   gsub(pattern = "[0-9]+", 
        replacement = "", 
@@ -366,13 +364,11 @@ allpd <- lapply(YEARS, FUN = sdmgamindex::get_prediction_grid, x = dat_cov,
 names(allpd) <- as.character(YEARS)
 
 head(allpd[1][[1]])
-
 ```
 
 ### 5b. Covariate Data
 
 ```{r cov_datras}
-
 ## split data by species, make into DATRASraw + Nage matrix
 ds <- split(dat_catch_haul,dat_catch_haul$COMMON_NAME)
 ds <- lapply(ds, sdmgamindex::get_datrasraw)
@@ -419,7 +415,7 @@ comb
 ```
 
 ```{r model_fit_load, echo = FALSE}
-load(system.file("VigA_model_fits.rdata", package = "sdmgamindex") )
+load(system.file("VigA_model_fits.Rdata", package = "sdmgamindex") )
 # load("../output/VigA_sdmgamindex_models_model_fits.Rdata")
 ```
 
@@ -448,7 +444,7 @@ for(i in 1:nrow(comb)){
   
 }
 
-save(models, fittimes, file = paste0("../inst/VigA_model_fits.Rdata"))
+save(models, fittimes, file = here::here("inst","VigA_model_fits.Rdata"))
 ```
 
 
