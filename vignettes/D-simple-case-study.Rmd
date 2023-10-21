@@ -2,8 +2,6 @@
 title: "Simple {sdmgamindex} case study"
 date: "`r format(Sys.Date(), format='%B %d %Y') `"
 output: rmarkdown::html_vignette
-csl: "https://raw.githubusercontent.com/citation-style-language/styles/master/apa-no-ampersand.csl"
-bibliography: "https://raw.githubusercontent.com/afsc-gap-products/citations/main/cite/bibliography.bib"
 vignette: >
   %\VignetteIndexEntry{Simple {sdmgamindex} case study}
   %\VignetteEngine{knitr::rmarkdown}
@@ -11,6 +9,8 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+# csl: "https://raw.githubusercontent.com/citation-style-language/styles/master/apa-no-ampersand.csl"
+# bibliography: "https://raw.githubusercontent.com/afsc-gap-products/citations/main/cite/bibliography.bib"
 knitr::opts_chunk$set(
   collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE#, 
   # comment = "#>"
@@ -33,8 +33,8 @@ PKG <- c(
   "magrittr",
   
   # RACE-GAP Specific R packages
-  "akgfmaps", # devtools::install_github("sean-rohan-noaa/akgfmaps", build_vignettes = TRUE)
-  "coldpool" # devtools::install_github("sean-rohan-noaa/coldpool")
+  "akgfmaps", # devtools::install_github("afsc-gap-products/akgfmaps", build_vignettes = TRUE)
+  "coldpool" # devtools::install_github("afsc-gap-products/coldpool")
 )
 
 for (p in PKG) {
@@ -592,9 +592,9 @@ ggplot2::ggplot(data = dat,
   ggplot2::ggtitle("Annual Index Model Results") +
   ggplot2::scale_y_continuous(name = "Index", labels = scales::comma) +
   ggplot2::facet_wrap(vars(common_name), scales = "free", ncol = 1) +
+  ggplot2::theme_bw() +
   ggplot2::theme(legend.position = "bottom", 
-                 legend.direction = "vertical") +
-  ggplot2::theme_bw()
+                 legend.direction = "vertical")
 ```
 
 ## 9. Predict and plot

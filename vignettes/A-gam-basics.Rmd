@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 ```{r setup, echo = FALSE}
 # library(remotes)
 PKG <- c(
-  "sdmgamindex", # remotes::install_github("casperwberg/sdmgamindex/sdmgamindex")
+  "sdmgamindex", 
   "DATRAS", # remotes::install_github("DTUAqua/DATRAS/DATRAS")
   "flextable",
   "dplyr",
@@ -31,8 +31,8 @@ PKG <- c(
   "dplyr", 
   "magrittr",
   # RACE-GAP Specific R packages
-  "akgfmaps", # devtools::install_github("sean-rohan-noaa/akgfmaps", build_vignettes = TRUE)
-  "coldpool" # devtools::install_github("sean-rohan-noaa/coldpool")
+  "akgfmaps", # devtools::install_github("afsc-gap-products/akgfmaps", build_vignettes = TRUE)
+  "coldpool" # devtools::install_github("afsc-gap-products/coldpool")
 )
 
 for (p in PKG) {
