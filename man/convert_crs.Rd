@@ -23,11 +23,11 @@ Change CRS of coordinates
 }
 \examples{
 convert_crs(x = 170, y = 62)
-dat <- sdmgamindex::noaa_afsc_public_foss[,c("longitude_dd", "latitude_dd")]
+dat <- sdmgamindex::noaa_afsc_public_foss[,c("longitude_dd_start", "latitude_dd_start")]
 head(dat)
 ll <- sdmgamindex::convert_crs( # project data
-   x = dat$longitude_dd,
-   y = dat$latitude_dd,
+   x = dat$longitude_dd_start,
+   y = dat$latitude_dd_start,
    crs_in = "+proj=longlat +datum=WGS84",
    crs_out = "EPSG:3338")
 head(ll)

@@ -22,14 +22,14 @@ knitr::opts_chunk$set(
 PKG <- c(
   "sdmgamindex", # remotes::install_github("casperwberg/sdmgamindex/sdmgamindex")
   "DATRAS", # remotes::install_github("DTUAqua/DATRAS/DATRAS")
-  
-  # "rgdal", 
+  "flextable",
   "dplyr",
   "sf", 
   "gstat",
   "magrittr", 
   "raster", 
-  
+  "dplyr", 
+  "magrittr",
   # RACE-GAP Specific R packages
   "akgfmaps", # devtools::install_github("sean-rohan-noaa/akgfmaps", build_vignettes = TRUE)
   "coldpool" # devtools::install_github("sean-rohan-noaa/coldpool")
@@ -46,17 +46,46 @@ for (p in PKG) {
 
 For this example, let's say we want to assess: 
 
-:::: {style="display: flex;"}
-::: {style="width:500px;"}
-![](https://github.com/EmilyMarkowitz-NOAA/gap_bs_data_report/blob/main/img/walleye_pollock.png?raw=true){width=75%}
-:::
-::: {}
-**Walleye pollock** are also common to the survey, but their distribution and availability to the survey are driven by density-dependence and temperature and the cold pool extent. Including covariates in model fits could help uncover structure that could help us better understand this specie's abundance. 
-:::
-::::
+```{r info-table, eval = FALSE, echo = FALSE}
+img_url <- paste0("https://raw.githubusercontent.com/afsc-gap-products/gap_bs_data_report/main/img/", 
+                  c("yellowfin-sole", "walleye-pollock", "red-king-crab"), ".png")
+img_loc <- here::here("vignettes", paste0(c("yellowfin-sole", "walleye-pollock", "red-king-crab"), ".png")) 
+for (i in 1:length(img_loc)) {download.file(url = img_url[i], destfile = img_loc[i], mode="wb")}
 
+table_raw <- data.frame(img = img_loc, 
+                        Species = c("Yellowfin Sole", "Walleye pollock", "Red King Crab"), 
+                        Description = 
+                          c("Commonly caught species has been realitively easy to model and assess because of it's high abundance, large distribution over the survey area, and consistent availability to the survey.", 
+                            "Common to the survey, but their distribution and availability to the survey are driven by density-dependence and temperature and the cold pool extent. Including covariates in model fits could help uncover structure that could help us better understand this specie's abundance.", 
+                            "Has patchier and less understood availability to the survey. ")) %>% 
+  dplyr::filter(Species == "Walleye pollock")
 
-![Survey grid for the eastern and northern Bering sea bottom trawl surveys. ](https://raw.githubusercontent.com/afsc-gap-products/survey-live-temperature-map/main/test/_grid_bs.png){width=60%}
+table_print <- table_raw %>% 
+  flextable::flextable(
+    col_keys = c("img", "dummy")) %>%
+  flextable::compose(j = "dummy", part = "body",
+                     value = as_paragraph(
+                       as_chunk(paste0(Species, "\n"),
+                                props = fp_text_default(bold = TRUE, font.size = 12)), 
+                       as_chunk(Description,
+                                props = fp_text_default(font.size = 10)))) %>%  
+  flextable::colformat_image(j = "img", 
+                             height = 2, 
+                             width = 2) %>% 
+  flextable::delete_part(x = ., part = "header") %>% 
+  flextable::border_remove(x = .) %>% 
+  flextable::autofit()
+
+table_print
+```
+
+```{r survey-figure, echo=FALSE, fig.cap=readLines("https://raw.githubusercontent.com/afsc-gap-products/survey-live-temperature-map/main/examples/current_grid_bs.txt"), out.width = '100%'}
+
+img_url <- "https://raw.githubusercontent.com/afsc-gap-products/survey-live-temperature-map/main/examples/current_grid_bs.png"
+img_loc <- here::here("vignettes", "current_grid_bs.png")
+download.file(url = img_url, destfile = img_loc, mode="wb")
+knitr::include_graphics(img_loc)
+```
 
 In this example, we will use data from NOAA Fisheries' eastern Bering sea (EBS) bottom trawl survey. The Resource Assessment and Conservation Engineering (RACE) Division Groundfish Assessment Program (GAP) of the Alaska Fisheries Science Center (AFSC) conducts fisheries-independent bottom trawl surveys to assess the populations of demersal fish and crab stocks of Alaska. Data presented here are presence-only (non-zero) observations from those surveys and therefore CANNOT be aggregated. 
 

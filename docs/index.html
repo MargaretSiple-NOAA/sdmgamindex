@@ -35,7 +35,7 @@
     
     <a class="navbar-brand me-2" href="index.html">sdmgamindex</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,7 +51,7 @@
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
     <a class="dropdown-item" href="articles/A-gam-basics.html">Intro to GAMs</a>
-    <a class="dropdown-item" href="articles/A_gam_sdmTMB_example.html">Fitting a spatiotemporal model and deriving an abundance index</a>
+    <a class="dropdown-item" href="articles/A_gam_sdmTMB_example.html">Fitting a spatiotemporal model with a GAM and deriving an abundance index</a>
     <a class="dropdown-item" href="articles/B-model-tuning.html">Nuances in model choices</a>
     <a class="dropdown-item" href="articles/C-model-comparisons.html">Compare {sdmgamindex} to regular GAMs</a>
     <a class="dropdown-item" href="articles/D-simple-case-study.html">Simple {sdmgamindex} case study</a>
@@ -71,28 +71,35 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header">
-<img src="logo.png" class="logo" alt=""><h1 id="sdmgamindex-">sdmgamindex 
-<a class="anchor" aria-label="anchor" href="#sdmgamindex-"></a>
+<img src="logo.png" class="logo" alt=""><h1 id="sdmgamindex-">
+<a href="link_repo">sdmgamindex</a> <img src="https://avatars.githubusercontent.com/u/91760178?s=96&amp;v=4" alt="Logo." align="right" width="139" height="139"><a class="anchor" aria-label="anchor" href="#sdmgamindex-"></a>
 </h1>
 </div>
-<p>(formally {surveyIndex})</p>
+<p>This repository was previously forked from <code>casperwberg/surveyIndex</code> and previously named <code>emilymarkowitz-noaa/surveyIndex</code>.</p>
 <p>R package for calculating survey indices by age from DATRAS exchange data.</p>
 <p><a href="https://github.com/EmilyMarkowitz-NOAA/sdmgamindex/commits/main" class="external-link"><img src="https://img.shields.io/github/last-commit/EmilyMarkowitz-NOAA/sdmgamindex.svg"></a></p>
 <blockquote>
-<p>Code is still in development at <a href="https://github.com/EmilyMarkowitz-NOAA/sdmgamindex" class="external-link uri">https://github.com/EmilyMarkowitz-NOAA/sdmgamindex</a></p>
+<p>This code is always in development. Find code used for various reports in the code <a href="https://github.com/EmilyMarkowitz-NOAA/sdmgamindex//releases" class="external-link">releases</a>.</p>
 </blockquote>
-<p><em>Code was originally developed by:</em></p>
-<p><strong>Casper W. Berg</strong> (@casperwberg)</p>
-<p>National Institute of Aquatic Resources,</p>
-<p>Technical University of Denmark</p>
-<p><a href="https://doi.org/10.1016/j.fishres.2013.10.005" class="external-link"><strong>Berg et al. (2014): “Evaluation of alternative age-based methods for estimating relative abundance from survey data in relation to assessment models”, Fisheries Research 151(2014) 91-99.</strong></a></p>
-<p><em>And then modified and adapted for the AFSC by:</em></p>
-<p><strong>Emily Markowitz</strong> (@EmilyMarkowitz-noaa; Emily.Markowitz AT noaa.gov)</p>
-<p><strong>Margaret Siple</strong> (@MargaretSiple-noaa; Margaret.Siple AT noaa.gov)</p>
+<div class="section level3">
+<h3 id="code-has-been-modified-and-adapted-by">Code has been modified and adapted by:<a class="anchor" aria-label="anchor" href="#code-has-been-modified-and-adapted-by"></a>
+</h3>
+<p><strong>Emily Markowitz</strong> (Emily.Markowitz AT noaa.gov; <a href="https://github.com/EmilyMarkowitz-NOAA" class="external-link">@EmilyMarkowitz-NOAA</a>)</p>
+<p><strong>Margaret Siple</strong> (Margaret.Siple AT noaa.gov; <a href="https://github.com/MargaretSiple-noaa" class="external-link">@MargaretSiple-noaa</a>)</p>
 <p>Alaska Fisheries Science Center</p>
 <p>National Marine Fisheries Service</p>
 <p>National Oceanic and Atmospheric Administration</p>
 <p>Seattle, WA 98195</p>
+</div>
+<div class="section level3">
+<h3 id="code-was-originally-developed-by">Code was originally developed by:<a class="anchor" aria-label="anchor" href="#code-was-originally-developed-by"></a>
+</h3>
+<p><strong>Casper W. Berg</strong> (<a href="https://orbit.dtu.dk/en/persons/casper-willestofte-berg" class="external-link uri">https://orbit.dtu.dk/en/persons/casper-willestofte-berg</a>; <a href="https://github.com/casperwberg" class="external-link">@casperwberg</a>)</p>
+<p>National Institute of Aquatic Resources,</p>
+<p>Technical University of Denmark</p>
+<p><em>Based on the work published in:</em> Berg et al. (<a href="#ref-Berg2014">2014</a>)</p>
+<p>Repository: <code>remotes::install_github("casperwberg/surveyIndex/surveyIndex")</code></p>
+</div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -112,65 +119,64 @@
 <h2 id="metadata">Metadata<a class="anchor" aria-label="anchor" href="#metadata"></a>
 </h2>
 <p>This package was last produced using:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="do">## R version 4.2.3 (2023-03-15 ucrt)</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="do">## Platform: x86_64-w64-mingw32/x64 (64-bit)</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="do">## Running under: Windows 10 x64 (build 19045)</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="do">## Matrix products: default</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="do">## locale:</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="do">## [1] LC_COLLATE=English_United States.utf8 </span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="do">## [2] LC_CTYPE=English_United States.utf8   </span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="do">## [3] LC_MONETARY=English_United States.utf8</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="do">## [4] LC_NUMERIC=C                          </span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="do">## [5] LC_TIME=English_United States.utf8    </span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="do">## attached base packages:</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="do">## [1] parallel  stats     graphics  grDevices utils     datasets  methods  </span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="do">## [8] base     </span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="do">## other attached packages:</span></span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="do">##  [1] knitr_1.42        badger_0.2.3      sdmgamindex_0.1.0 tweedie_2.3.5    </span></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="do">##  [5] MASS_7.3-58.3     marmap_1.0.10     RANN_2.6.1        maptools_1.1-6   </span></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="do">##  [9] sp_1.6-0          mapdata_2.3.1     maps_3.4.1        mgcv_1.8-42      </span></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="do">## [13] nlme_3.1-162      DATRAS_1.01       RODBC_1.3-20      roxygen2_7.2.3   </span></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="do">## [17] devtools_2.4.5    usethis_2.1.6     here_1.0.1       </span></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="do">## loaded via a namespace (and not attached):</span></span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="do">##   [1] colorspace_2.1-0    gitcreds_0.1.2      ellipsis_0.3.2     </span></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="do">##   [4] rprojroot_2.0.3     fs_1.6.1            rstudioapi_0.14    </span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="do">##   [7] remotes_2.4.2       gh_1.4.0            bit64_4.0.5        </span></span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="do">##  [10] fansi_1.0.4         xml2_1.3.3          codetools_0.2-19   </span></span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="do">##  [13] splines_4.2.3       ncdf4_1.21          cachem_1.0.7       </span></span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="do">##  [16] pkgload_1.3.2       jsonlite_1.8.4      icesDatras_1.4.0   </span></span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="do">##  [19] shiny_1.7.4         BiocManager_1.30.20 compiler_4.2.3     </span></span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="do">##  [22] rvcheck_0.2.1       Matrix_1.5-3        fastmap_1.1.1      </span></span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="do">##  [25] cli_3.6.1           later_1.3.0         htmltools_0.5.5    </span></span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="do">##  [28] prettyunits_1.1.1   tools_4.2.3         igraph_1.4.1       </span></span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="do">##  [31] gtable_0.3.3        glue_1.6.2          reshape2_1.4.4     </span></span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="do">##  [34] dplyr_1.1.1         rappdirs_0.3.3      Rcpp_1.0.10        </span></span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="do">##  [37] pkgdown_2.0.7       raster_3.6-20       vctrs_0.6.1        </span></span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="do">##  [40] xfun_0.38           stringr_1.5.0       ps_1.7.3           </span></span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="do">##  [43] brio_1.1.3          testthat_3.1.7      mime_0.12          </span></span>
-<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="do">##  [46] miniUI_0.1.1.1      lifecycle_1.0.3     sys_3.4.1          </span></span>
-<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="do">##  [49] dlstats_0.1.6       terra_1.7-18        scales_1.2.1       </span></span>
-<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a><span class="do">##  [52] credentials_1.3.2   promises_1.2.0.1    httr2_0.2.2        </span></span>
-<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="do">##  [55] RColorBrewer_1.1-3  gert_1.9.2          yaml_2.3.7         </span></span>
-<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="do">##  [58] curl_5.0.0          memoise_2.0.1       ggplot2_3.4.1      </span></span>
-<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="do">##  [61] yulab.utils_0.0.6   stringi_1.7.12      RSQLite_2.3.0      </span></span>
-<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="do">##  [64] desc_1.4.2          pkgbuild_1.4.0      shape_1.4.6        </span></span>
-<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a><span class="do">##  [67] rlang_1.1.0         pkgconfig_2.0.3     evaluate_0.20      </span></span>
-<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="do">##  [70] lattice_0.21-8      purrr_1.0.1         htmlwidgets_1.6.2  </span></span>
-<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a><span class="do">##  [73] bit_4.0.5           processx_3.8.0      tidyselect_1.2.0   </span></span>
-<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a><span class="do">##  [76] plyr_1.8.8          magrittr_2.0.3      R6_2.5.1           </span></span>
-<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a><span class="do">##  [79] generics_0.1.3      profvis_0.3.7       DBI_1.1.3          </span></span>
-<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a><span class="do">##  [82] pillar_1.9.0        foreign_0.8-84      withr_2.5.0        </span></span>
-<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a><span class="do">##  [85] tibble_3.2.1        crayon_1.5.2        utf8_1.2.3         </span></span>
-<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a><span class="do">##  [88] rmarkdown_2.20      urlchecker_1.0.1    grid_4.2.3         </span></span>
-<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a><span class="do">##  [91] blob_1.2.4          callr_3.7.3         digest_0.6.31      </span></span>
-<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a><span class="do">##  [94] xtable_1.8-4        gdistance_1.6       adehabitatMA_0.3.16</span></span>
-<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a><span class="do">##  [97] httpuv_1.6.9        openssl_2.0.6       munsell_0.5.0      </span></span>
-<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a><span class="do">## [100] sessioninfo_1.2.2   askpass_1.1</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="do">## R version 4.3.1 (2023-06-16 ucrt)</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="do">## Platform: x86_64-w64-mingw32/x64 (64-bit)</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="do">## Running under: Windows 10 x64 (build 19045)</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="do">## Matrix products: default</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="do">## locale:</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="do">## [1] LC_COLLATE=English_United States.utf8  LC_CTYPE=English_United States.utf8   </span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="do">## [3] LC_MONETARY=English_United States.utf8 LC_NUMERIC=C                          </span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="do">## [5] LC_TIME=English_United States.utf8    </span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="do">## time zone: America/Los_Angeles</span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="do">## tzcode source: internal</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="do">## attached base packages:</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="do">## [1] parallel  stats     graphics  grDevices utils     datasets  methods   base     </span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="do">## other attached packages:</span></span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a><span class="do">##  [1] knitr_1.44        badger_0.2.3      pkgdown_2.0.7     sdmgamindex_0.1.1 tweedie_2.3.5    </span></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="do">##  [6] MASS_7.3-60       RANN_2.6.1        marmap_1.0.10     maptools_1.1-8    sp_2.1-0         </span></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="do">## [11] mapdata_2.3.1     maps_3.4.1        mgcv_1.9-0        nlme_3.1-163      DATRAS_1.01      </span></span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a><span class="do">## [16] RODBC_1.3-21      roxygen2_7.2.3    devtools_2.4.5    usethis_2.2.2     here_1.0.1       </span></span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a><span class="do">## loaded via a namespace (and not attached):</span></span>
+<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a><span class="do">##   [1] RColorBrewer_1.1-3      sys_3.4.2               dlstats_0.1.7           rstudioapi_0.15.0      </span></span>
+<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a><span class="do">##   [5] jsonlite_1.8.7          shape_1.4.6             magrittr_2.0.3          rmarkdown_2.25         </span></span>
+<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a><span class="do">##   [9] fs_1.6.3                ragg_1.2.6              vctrs_0.6.3             memoise_2.0.1          </span></span>
+<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a><span class="do">##  [13] askpass_1.2.0           terra_1.7-46            gh_1.4.0                janitor_2.2.0          </span></span>
+<span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a><span class="do">##  [17] htmltools_0.5.6.1       curl_5.1.0              raster_3.6-23           KernSmooth_2.23-22     </span></span>
+<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a><span class="do">##  [21] htmlwidgets_1.6.2       desc_1.4.2              httr2_0.2.3             plyr_1.8.9             </span></span>
+<span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a><span class="do">##  [25] testthat_3.2.0          stars_0.6-4             lubridate_1.9.3         cachem_1.0.8           </span></span>
+<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a><span class="do">##  [29] uuid_1.1-1              igraph_1.5.1            mime_0.12               lifecycle_1.0.3        </span></span>
+<span id="cb2-34"><a href="#cb2-34" tabindex="-1"></a><span class="do">##  [33] pkgconfig_2.0.3         Matrix_1.6-1.1          R6_2.5.1                fastmap_1.1.1          </span></span>
+<span id="cb2-35"><a href="#cb2-35" tabindex="-1"></a><span class="do">##  [37] rcmdcheck_1.4.0         shiny_1.7.5.1           snakecase_0.11.1        digest_0.6.33          </span></span>
+<span id="cb2-36"><a href="#cb2-36" tabindex="-1"></a><span class="do">##  [41] colorspace_2.1-0        ps_1.7.5                rprojroot_2.0.3         pkgload_1.3.3          </span></span>
+<span id="cb2-37"><a href="#cb2-37" tabindex="-1"></a><span class="do">##  [45] textshaping_0.3.7       RSQLite_2.3.1           fansi_1.0.5             timechange_0.2.0       </span></span>
+<span id="cb2-38"><a href="#cb2-38" tabindex="-1"></a><span class="do">##  [49] gdistance_1.6.4         abind_1.4-5             compiler_4.3.1          proxy_0.4-27           </span></span>
+<span id="cb2-39"><a href="#cb2-39" tabindex="-1"></a><span class="do">##  [53] remotes_2.4.2.1         bit64_4.0.5             fontquiver_0.2.1        withr_2.5.1            </span></span>
+<span id="cb2-40"><a href="#cb2-40" tabindex="-1"></a><span class="do">##  [57] DBI_1.1.3               pkgbuild_1.4.2          openssl_2.1.1           rappdirs_0.3.3         </span></span>
+<span id="cb2-41"><a href="#cb2-41" tabindex="-1"></a><span class="do">##  [61] icesDatras_1.4.1        sessioninfo_1.2.2       classInt_0.4-10         gfonts_0.2.0           </span></span>
+<span id="cb2-42"><a href="#cb2-42" tabindex="-1"></a><span class="do">##  [65] units_0.8-4             tools_4.3.1             foreign_0.8-85          zip_2.3.0              </span></span>
+<span id="cb2-43"><a href="#cb2-43" tabindex="-1"></a><span class="do">##  [69] httpuv_1.6.11           glue_1.6.2              callr_3.7.3             promises_1.2.1         </span></span>
+<span id="cb2-44"><a href="#cb2-44" tabindex="-1"></a><span class="do">##  [73] grid_4.3.1              sf_1.0-14               reshape2_1.4.4          generics_0.1.3         </span></span>
+<span id="cb2-45"><a href="#cb2-45" tabindex="-1"></a><span class="do">##  [77] gtable_0.3.4            class_7.3-22            tidyr_1.3.0             data.table_1.14.8      </span></span>
+<span id="cb2-46"><a href="#cb2-46" tabindex="-1"></a><span class="do">##  [81] xml2_1.3.5              utf8_1.2.3              pillar_1.9.0            stringr_1.5.0          </span></span>
+<span id="cb2-47"><a href="#cb2-47" tabindex="-1"></a><span class="do">##  [85] yulab.utils_0.1.0       later_1.3.1             splines_4.3.1           dplyr_1.1.3            </span></span>
+<span id="cb2-48"><a href="#cb2-48" tabindex="-1"></a><span class="do">##  [89] lattice_0.21-9          bit_4.0.5               tidyselect_1.2.0        rvcheck_0.2.1          </span></span>
+<span id="cb2-49"><a href="#cb2-49" tabindex="-1"></a><span class="do">##  [93] fontLiberation_0.1.0    miniUI_0.1.1.1          gitcreds_0.1.2          fontBitstreamVera_0.1.1</span></span>
+<span id="cb2-50"><a href="#cb2-50" tabindex="-1"></a><span class="do">##  [97] crul_1.4.0              xfun_0.40               adehabitatMA_0.3.16     credentials_2.0.1      </span></span>
+<span id="cb2-51"><a href="#cb2-51" tabindex="-1"></a><span class="do">## [101] brio_1.1.3              stringi_1.7.12          xopen_1.0.0             yaml_2.3.7             </span></span>
+<span id="cb2-52"><a href="#cb2-52" tabindex="-1"></a><span class="do">## [105] evaluate_0.22           codetools_0.2-19        httpcode_0.3.0          officer_0.6.2          </span></span>
+<span id="cb2-53"><a href="#cb2-53" tabindex="-1"></a><span class="do">## [109] gdtools_0.3.3           tibble_3.2.1            BiocManager_1.30.22     cli_3.6.1              </span></span>
+<span id="cb2-54"><a href="#cb2-54" tabindex="-1"></a><span class="do">## [113] xtable_1.8-4            systemfonts_1.0.5       munsell_0.5.0           processx_3.8.2         </span></span>
+<span id="cb2-55"><a href="#cb2-55" tabindex="-1"></a><span class="do">## [117] gert_2.0.0              Rcpp_1.0.11             ellipsis_0.3.2          ggplot2_3.4.4          </span></span>
+<span id="cb2-56"><a href="#cb2-56" tabindex="-1"></a><span class="do">## [121] blob_1.2.4              prettyunits_1.2.0       profvis_0.3.8           urlchecker_1.0.1       </span></span>
+<span id="cb2-57"><a href="#cb2-57" tabindex="-1"></a><span class="do">## [125] e1071_1.7-13            scales_1.2.1            ncdf4_1.21              purrr_1.0.2            </span></span>
+<span id="cb2-58"><a href="#cb2-58" tabindex="-1"></a><span class="do">## [129] crayon_1.5.2            flextable_0.9.3         rlang_1.1.1</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="noaa-readme">NOAA README<a class="anchor" aria-label="anchor" href="#noaa-readme"></a>
@@ -183,6 +189,11 @@
 <p>Software code created by U.S. Government employees is not subject to copyright in the United States (17 U.S.C. §105). The United States/Department of Commerce reserve all rights to seek and obtain copyright protection in countries other than the United States for Software authored in its entirety by the Department of Commerce. To this end, the Department of Commerce hereby grants to Recipient a royalty-free, nonexclusive license to use, copy, and create derivative works of the Software outside of the United States.</p>
 <p><img src="https://raw.githubusercontent.com/nmfs-general-modeling-tools/nmfspalette/main/man/figures/noaa-fisheries-rgb-2line-horizontal-small.png" alt="NOAA Fisheries" height="75"></p>
 <p><a href="https://www.commerce.gov/" class="external-link">U.S. Department of Commerce</a> | <a href="https://www.noaa.gov" class="external-link">National Oceanographic and Atmospheric Administration</a> | <a href="https://www.fisheries.noaa.gov/" class="external-link">NOAA Fisheries</a></p>
+<div id="refs" class="references csl-bib-body hanging-indent" line-spacing="2">
+<div id="ref-Berg2014" class="csl-entry">
+Berg, C. W., Nielsen, A., and Kristensen, K. (2014). Evaluation of alternative age-based methods for estimating relative abundance from survey data in relation to assessment models. <em>Fish. Res.</em>, <em>151</em>, 91–99. <a href="https://doi.org/10.1016/j.fishres.2013.10.005" class="external-link uri">https://doi.org/10.1016/j.fishres.2013.10.005</a>
+</div>
+</div>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="license">

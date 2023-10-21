@@ -59,11 +59,13 @@ Seattle, WA 98195
 
 ### Code was originally developed by:
 
-**Casper W. Berg** (@casperwberg) @Berg2014
+**Casper W. Berg** (https://orbit.dtu.dk/en/persons/casper-willestofte-berg; [\@casperwberg](https://github.com/casperwberg)) 
 
 National Institute of Aquatic Resources, 
 
 Technical University of Denmark
+
+*Based on the work published in:* @Berg2014
 
 Repository: `remotes::install_github("casperwberg/surveyIndex/surveyIndex")`
 

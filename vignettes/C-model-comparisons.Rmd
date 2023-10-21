@@ -21,7 +21,6 @@ knitr::opts_chunk$set(
 ```{r setup, echo = FALSE}
 PKG <- c(
   "remotes",
-  "sdmgamindex", 
   "DATRAS", # remotes::install_github("DTUAqua/DATRAS/DATRAS")
   "ggplot2", 
   "dplyr",
@@ -32,9 +31,10 @@ PKG <- c(
 
 for (p in PKG) {
   if(!require(p,character.only = TRUE)) {  
-    install.packages(p)
+    # install.packages(p)
     require(p,character.only = TRUE)}
 }
+library("sdmgamindex")
 ```
 
 ## 1. Wrangle Data
@@ -58,8 +58,8 @@ dat <- sdmgamindex::noaa_afsc_public_foss
 
 # Get cold pool data using cold pool data from the {coldpool} R package
 dat <- dat %>%
-  dplyr::mutate(sx = ((longitude_dd - mean(longitude_dd, na.rm = TRUE))/1000),
-                sy = ((latitude_dd - mean(latitude_dd, na.rm = TRUE))/1000)) %>% 
+  dplyr::mutate(sx = ((longitude_dd_start - mean(longitude_dd_start, na.rm = TRUE))/1000),
+                sy = ((latitude_dd_start - mean(latitude_dd_start, na.rm = TRUE))/1000)) %>% 
   stats::na.omit() %>% 
   dplyr::filter(common_name %in% SPECIES &
                   year %in% YEARS &
@@ -127,7 +127,7 @@ for(i in 1:nrow(comb)){
   
 }
 
-save(models, fittimes, file = paste0("../inst/vigC_model_output.rdata"))
+save(models, fittimes, file = here::here("inst","vigC_model_output.rdata"))
 ```
 
 ```{r model_file_load, echo = FALSE}
@@ -137,10 +137,8 @@ load(system.file("vigC_model_output.rdata", package = "sdmgamindex" ) )
 ## 4. Assess the model
 
 ```{r model_AIC}
-
 b <- lapply(X = models, FUN = AIC)
 bb <- sapply(models, `[`, 1)
-
 
 # sdmgamindex::get_surveyidx_aic(models)
 
@@ -168,7 +166,7 @@ dat0 <- dat[dat$Year == 2021,] %>%
 
 figure <- ggplot() +
   geom_point(data = dat0, 
-             mapping = aes(x= longitude_dd, y = latitude_dd, color = pred))
+             mapping = aes(x= longitude_dd_start, y = latitude_dd_start, color = pred))
 figure
 ```
 
@@ -186,7 +184,7 @@ dat0 <- dat[dat$Year == 2021,] %>%
 
 figure <- ggplot() +
   geom_point(data = dat0, 
-             mapping = aes(x= longitude_dd, y = latitude_dd, color = pred))
+             mapping = aes(x= longitude_dd_start, y = latitude_dd_start, color = pred))
 figure
 ```
 

@@ -33,7 +33,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">sdmgamindex</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -49,7 +49,7 @@
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
     <a class="dropdown-item" href="../articles/A-gam-basics.html">Intro to GAMs</a>
-    <a class="dropdown-item" href="../articles/A_gam_sdmTMB_example.html">Fitting a spatiotemporal model and deriving an abundance index</a>
+    <a class="dropdown-item" href="../articles/A_gam_sdmTMB_example.html">Fitting a spatiotemporal model with a GAM and deriving an abundance index</a>
     <a class="dropdown-item" href="../articles/B-model-tuning.html">Nuances in model choices</a>
     <a class="dropdown-item" href="../articles/C-model-comparisons.html">Compare {sdmgamindex} to regular GAMs</a>
     <a class="dropdown-item" href="../articles/D-simple-case-study.html">Simple {sdmgamindex} case study</a>
@@ -74,6 +74,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Compare {sdmgamindex} to regular GAMs</h1>
             
+            <h4 data-toc-skip class="date">October 20 2023</h4>
       
       
       <div class="d-none name"><code>C-model-comparisons.Rmd</code></div>
@@ -82,7 +83,7 @@
     
     
 <div class="section level2">
-<h2 id="gams-the-old-fashioned-way">GAMs; the old fashioned way<a class="anchor" aria-label="anchor" href="#gams-the-old-fashioned-way"></a>
+<h2 id="gams-the-old-fashioned-way">GAMs: the old fashioned way<a class="anchor" aria-label="anchor" href="#gams-the-old-fashioned-way"></a>
 </h2>
 <div class="section level3">
 <h3 id="wrangle-data">1. Wrangle Data<a class="anchor" aria-label="anchor" href="#wrangle-data"></a>
@@ -92,12 +93,12 @@
 <span>  <span class="st">"walleye pollock"</span>,</span>
 <span>  <span class="st">"yellowfin sole"</span>,</span>
 <span>  <span class="st">"red king crab"</span></span>
-<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span><span class="va">YEARS</span> <span class="op">&lt;-</span> <span class="fl">2015</span><span class="op">:</span><span class="fl">2021</span></span>
 <span><span class="va">SRVY</span> <span class="op">&lt;-</span> <span class="st">"EBS"</span></span>
 <span><span class="va">method</span> <span class="op">&lt;-</span> <span class="st">"ML"</span></span>
 <span><span class="va">knotsP</span> <span class="op">&lt;-</span> <span class="fl">376</span></span>
-<span><span class="va">dir_out</span> <span class="op">&lt;-</span> <span class="st">"../inst/regular_gam_approach"</span></span>
+<span><span class="co"># dir_out &lt;- here::here("inst","regular_gam_approach")</span></span>
 <span></span>
 <span><span class="va">crs_latlon</span> <span class="op">=</span> <span class="st">"+proj=longlat +datum=WGS84"</span></span>
 <span><span class="va">crs_proj</span> <span class="op">=</span> <span class="st">"EPSG:3338"</span></span>
@@ -105,34 +106,74 @@
 <span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu">sdmgamindex</span><span class="fu">::</span><span class="va"><a href="../reference/noaa_afsc_public_foss.html">noaa_afsc_public_foss</a></span></span>
 <span></span>
 <span><span class="co"># Get cold pool data using cold pool data from the {coldpool} R package</span></span>
-<span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="va">dat</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>sx <span class="op">=</span> <span class="op">(</span><span class="op">(</span><span class="va">longitude_dd</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">longitude_dd</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fl">1000</span><span class="op">)</span>,</span>
-<span>                sy <span class="op">=</span> <span class="op">(</span><span class="op">(</span><span class="va">latitude_dd</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">latitude_dd</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fl">1000</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">na.omit</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">common_name</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">SPECIES</span> <span class="op">&amp;</span></span>
+<span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="va">dat</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dplyr/man/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>sx <span class="op">=</span> <span class="op">(</span><span class="op">(</span><span class="va">longitude_dd_start</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">longitude_dd_start</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fl">1000</span><span class="op">)</span>,</span>
+<span>                sy <span class="op">=</span> <span class="op">(</span><span class="op">(</span><span class="va">latitude_dd_start</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">latitude_dd_start</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fl">1000</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
+<span>  <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">na.omit</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dplyr/man/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">common_name</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">SPECIES</span> <span class="op">&amp;</span></span>
 <span>                  <span class="va">year</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">YEARS</span> <span class="op">&amp;</span></span>
-<span>                  <span class="va">srvy</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">SRVY</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>GEAR_TEMPERATURE <span class="op">=</span> <span class="va">bottom_temperature_c</span>, </span>
+<span>                  <span class="va">srvy</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">SRVY</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dplyr/man/rename.html" class="external-link">rename</a></span><span class="op">(</span>GEAR_TEMPERATURE <span class="op">=</span> <span class="va">bottom_temperature_c</span>, </span>
 <span>                BOTTOM_DEPTH <span class="op">=</span> <span class="va">depth_m</span>, </span>
 <span>                Year <span class="op">=</span> <span class="va">year</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">dat</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 35</span></span></span>
-<span><span class="co">#&gt;    Year srvy  survey          survey_id cruise  haul stratum station vessel_name</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>  <span style="text-decoration: underline;">2</span>016 EBS   Eastern Bering…        98 <span style="text-decoration: underline;">201</span>601     2      10 E-12    Vesteraalen</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>  <span style="text-decoration: underline;">2</span>016 EBS   Eastern Bering…        98 <span style="text-decoration: underline;">201</span>601     2      10 E-12    Vesteraalen</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>  <span style="text-decoration: underline;">2</span>016 EBS   Eastern Bering…        98 <span style="text-decoration: underline;">201</span>601     2      10 E-12    Vesteraalen</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>  <span style="text-decoration: underline;">2</span>016 EBS   Eastern Bering…        98 <span style="text-decoration: underline;">201</span>601     2      31 D-10    Alaska Kni…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>  <span style="text-decoration: underline;">2</span>016 EBS   Eastern Bering…        98 <span style="text-decoration: underline;">201</span>601     2      31 D-10    Alaska Kni…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>  <span style="text-decoration: underline;">2</span>016 EBS   Eastern Bering…        98 <span style="text-decoration: underline;">201</span>601     2      31 D-10    Alaska Kni…</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 26 more variables: vessel_id &lt;dbl&gt;, date_time &lt;chr&gt;, latitude_dd &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   longitude_dd &lt;dbl&gt;, species_code &lt;dbl&gt;, common_name &lt;chr&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   scientific_name &lt;chr&gt;, taxon_confidence &lt;chr&gt;, cpue_kgha &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   cpue_kgkm2 &lt;dbl&gt;, cpue_kg1000km2 &lt;dbl&gt;, cpue_noha &lt;dbl&gt;, cpue_nokm2 &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   cpue_no1000km2 &lt;dbl&gt;, weight_kg &lt;dbl&gt;, count &lt;dbl&gt;, GEAR_TEMPERATURE &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   surface_temperature_c &lt;dbl&gt;, BOTTOM_DEPTH &lt;dbl&gt;, distance_fished_km &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   net_width_m &lt;dbl&gt;, net_height_m &lt;dbl&gt;, area_swept_ha &lt;dbl&gt;, …</span></span></span></code></pre></div>
+<span><span class="co">#&gt;   Year srvy             survey survey_definition_id</span></span>
+<span><span class="co">#&gt; 1 2021  EBS eastern Bering Sea                   98</span></span>
+<span><span class="co">#&gt; 2 2021  EBS eastern Bering Sea                   98</span></span>
+<span><span class="co">#&gt; 3 2016  EBS eastern Bering Sea                   98</span></span>
+<span><span class="co">#&gt; 4 2019  EBS eastern Bering Sea                   98</span></span>
+<span><span class="co">#&gt; 5 2018  EBS eastern Bering Sea                   98</span></span>
+<span><span class="co">#&gt; 6 2021  EBS eastern Bering Sea                   98</span></span>
+<span><span class="co">#&gt;                                              survey_name cruise cruisejoin haul</span></span>
+<span><span class="co">#&gt; 1 Eastern Bering Sea Crab/Groundfish Bottom Trawl Survey 202101       -752   59</span></span>
+<span><span class="co">#&gt; 2 Eastern Bering Sea Crab/Groundfish Bottom Trawl Survey 202101       -751   88</span></span>
+<span><span class="co">#&gt; 3 Eastern Bering Sea Crab/Groundfish Bottom Trawl Survey 201601       -706   48</span></span>
+<span><span class="co">#&gt; 4 Eastern Bering Sea Crab/Groundfish Bottom Trawl Survey 201901       -727   28</span></span>
+<span><span class="co">#&gt; 5 Eastern Bering Sea Crab/Groundfish Bottom Trawl Survey 201801       -722   22</span></span>
+<span><span class="co">#&gt; 6 Eastern Bering Sea Crab/Groundfish Bottom Trawl Survey 202101       -751   19</span></span>
+<span><span class="co">#&gt;   hauljoin stratum station vessel_id   vessel_name           date_time</span></span>
+<span><span class="co">#&gt; 1   -19973      31    I-03       162 ALASKA KNIGHT 2021-06-14 12:10:16</span></span>
+<span><span class="co">#&gt; 2   -19996      20    L-01        94   VESTERAALEN 2021-06-21 15:21:16</span></span>
+<span><span class="co">#&gt; 3   -15350      10    L-04        94   VESTERAALEN 2016-06-12 07:56:25</span></span>
+<span><span class="co">#&gt; 4   -18780      31    B-08       162 ALASKA KNIGHT 2019-06-09 06:27:08</span></span>
+<span><span class="co">#&gt; 5   -17559      31    I-12        94   VESTERAALEN 2018-06-06 12:32:44</span></span>
+<span><span class="co">#&gt; 6   -19886      10    I-11        94   VESTERAALEN 2021-06-03 13:11:46</span></span>
+<span><span class="co">#&gt;   latitude_dd_start longitude_dd_start latitude_dd_end longitude_dd_end</span></span>
+<span><span class="co">#&gt; 1          57.66072          -166.4836        57.66197        -166.5305</span></span>
+<span><span class="co">#&gt; 2          58.65480          -167.8979        58.67117        -167.8579</span></span>
+<span><span class="co">#&gt; 3          58.64714          -165.9241        58.67214        -165.9363</span></span>
+<span><span class="co">#&gt; 4          55.34481          -163.3904        55.34473        -163.4362</span></span>
+<span><span class="co">#&gt; 5          57.65918          -160.9100        57.68333        -160.9030</span></span>
+<span><span class="co">#&gt; 6          57.69411          -161.5022        57.66878        -161.5077</span></span>
+<span><span class="co">#&gt;   GEAR_TEMPERATURE surface_temperature_c BOTTOM_DEPTH species_code  itis  worms</span></span>
+<span><span class="co">#&gt; 1              3.2                   5.7           67        69322 97935 233889</span></span>
+<span><span class="co">#&gt; 2              3.7                   6.8           47        69322 97935 233889</span></span>
+<span><span class="co">#&gt; 3              6.5                   6.8           37        69322 97935 233889</span></span>
+<span><span class="co">#&gt; 4              5.4                   8.7           53        69322 97935 233889</span></span>
+<span><span class="co">#&gt; 5              4.1                   6.1           56        69322 97935 233889</span></span>
+<span><span class="co">#&gt; 6              4.1                   5.7           53        69322 97935 233889</span></span>
+<span><span class="co">#&gt;     common_name            scientific_name id_rank cpue_kgkm2 cpue_nokm2 count</span></span>
+<span><span class="co">#&gt; 1 red king crab Paralithodes camtschaticus species   69.57943   21.41565     1</span></span>
+<span><span class="co">#&gt; 2 red king crab Paralithodes camtschaticus species   73.81732   43.11760     2</span></span>
+<span><span class="co">#&gt; 3 red king crab Paralithodes camtschaticus species   66.83110   70.34853     3</span></span>
+<span><span class="co">#&gt; 4 red king crab Paralithodes camtschaticus species  127.86046   82.09339     4</span></span>
+<span><span class="co">#&gt; 5 red king crab Paralithodes camtschaticus species  531.50033  274.20481    12</span></span>
+<span><span class="co">#&gt; 6 red king crab Paralithodes camtschaticus species 1166.16772  964.34424    42</span></span>
+<span><span class="co">#&gt;   weight_kg taxon_confidence area_swept_km2 distance_fished_km duration_hr</span></span>
+<span><span class="co">#&gt; 1     3.249                1       0.046695              2.805       0.519</span></span>
+<span><span class="co">#&gt; 2     3.424                1       0.046385              2.952       0.535</span></span>
+<span><span class="co">#&gt; 3     2.850                1       0.042645              2.869       0.524</span></span>
+<span><span class="co">#&gt; 4     6.230                1       0.048725              2.914       0.523</span></span>
+<span><span class="co">#&gt; 5    23.260                1       0.043763              2.716       0.498</span></span>
+<span><span class="co">#&gt; 6    50.790                1       0.043553              2.834       0.512</span></span>
+<span><span class="co">#&gt;   net_width_m net_height_m performance           sx            sy</span></span>
+<span><span class="co">#&gt; 1      16.647        2.400         0.0 0.0022749475 -0.0006000254</span></span>
+<span><span class="co">#&gt; 2      15.713        2.299         0.0 0.0008607375  0.0003940546</span></span>
+<span><span class="co">#&gt; 3      14.864        2.250         0.0 0.0028345175  0.0003863946</span></span>
+<span><span class="co">#&gt; 4      16.721        2.244         6.3 0.0053682275 -0.0029159354</span></span>
+<span><span class="co">#&gt; 5      16.113        3.144         0.0 0.0078485775 -0.0006015654</span></span>
+<span><span class="co">#&gt; 6      15.368        2.572         0.0 0.0072563875 -0.0005666354</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="formulas">2. Formulas<a class="anchor" aria-label="anchor" href="#formulas"></a>
@@ -143,10 +184,10 @@
 <span>  <span class="st">"fm_1_s_t_st"</span> <span class="op">=</span> <span class="st">"Year +</span></span>
 <span><span class="st">    s(sx,sy,bs=c('ts'),k=376) + </span></span>
 <span><span class="st">    s(sx,sy,bs=c('ts'),k=10,by=Year)"</span>,</span>
-<span></span>
+<span>  </span>
 <span>  <span class="co"># Mdoel with simple covariates</span></span>
 <span>  <span class="st">"fm_2_cov"</span> <span class="op">=</span> </span>
-<span><span class="st">"s(BOTTOM_DEPTH,bs='ts',k=10) +</span></span>
+<span>    <span class="st">"s(BOTTOM_DEPTH,bs='ts',k=10) +</span></span>
 <span><span class="st">s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -155,16 +196,16 @@
 </h3>
 <p>Here are all of the models we want to try fitting:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="va">comb</span> <span class="op">&lt;-</span> <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/expand.html" class="external-link">crossing</a></span><span class="op">(</span></span>
-<span>    <span class="st">"SPECIES"</span> <span class="op">=</span> <span class="va">SPECIES</span>, </span>
-<span>    <span class="st">"fm_name"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">" "</span>, replacement <span class="op">=</span> <span class="st">"_"</span>, x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fm</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span></span>
-<span>      x <span class="op">=</span> <span class="va">.</span>, </span>
-<span>      y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="st">"fm"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">"\n"</span>, replacement <span class="op">=</span> <span class="st">""</span>, </span>
-<span>                                 x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">fm</span><span class="op">)</span>, fixed <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, </span>
-<span>                     <span class="st">"fm_name"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">" "</span>, replacement <span class="op">=</span> <span class="st">"_"</span>, </span>
-<span>                                      x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fm</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, </span>
-<span>                     by <span class="op">=</span> <span class="st">"fm_name"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">comb</span> <span class="op">&lt;-</span> <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/expand.html" class="external-link">crossing</a></span><span class="op">(</span></span>
+<span>  <span class="st">"SPECIES"</span> <span class="op">=</span> <span class="va">SPECIES</span>, </span>
+<span>  <span class="st">"fm_name"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">" "</span>, replacement <span class="op">=</span> <span class="st">"_"</span>, x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fm</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dplyr/man/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span></span>
+<span>    x <span class="op">=</span> <span class="va">.</span>, </span>
+<span>    y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="st">"fm"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">"\n"</span>, replacement <span class="op">=</span> <span class="st">""</span>, </span>
+<span>                               x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">fm</span><span class="op">)</span>, fixed <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, </span>
+<span>                   <span class="st">"fm_name"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">" "</span>, replacement <span class="op">=</span> <span class="st">"_"</span>, </span>
+<span>                                    x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fm</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, </span>
+<span>    by <span class="op">=</span> <span class="st">"fm_name"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">comb</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 3</span></span></span>
@@ -177,38 +218,35 @@
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> yellowfin sole  fm_1_s_t_st Year +    s(sx,sy,bs=c('ts'),k=376) +     s(sx,sy…</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> yellowfin sole  fm_2_cov    s(BOTTOM_DEPTH,bs='ts',k=10) +s(log(GEAR_TEMPERAT…</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="va">models</span> <span class="op">&lt;-</span> <span class="va">fittimes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="va">fittimes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span>  <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">comb</span><span class="op">)</span><span class="op">)</span><span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Fitting "</span>,<span class="va">comb</span><span class="op">$</span><span class="va">SPECIES</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="st">"\n"</span>, <span class="va">comb</span><span class="op">$</span><span class="va">fm_name</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="st">": "</span>, <span class="va">comb</span><span class="op">$</span><span class="va">fm</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">comb</span><span class="op">)</span><span class="op">)</span><span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Fitting "</span>,<span class="va">comb</span><span class="op">$</span><span class="va">SPECIES</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>,<span class="st">"\n"</span>, <span class="va">comb</span><span class="op">$</span><span class="va">fm_name</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="st">": "</span>, <span class="va">comb</span><span class="op">$</span><span class="va">fm</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="va">temp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">comb</span><span class="op">$</span><span class="va">SPECIES</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="st">" "</span>, <span class="va">comb</span><span class="op">$</span><span class="va">fm_name</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="va">dat0</span> <span class="op">&lt;-</span> <span class="va">dat</span> <span class="op">%&gt;%</span> </span>
+<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dplyr/man/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">common_name</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">comb</span><span class="op">$</span><span class="va">SPECIES</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="va">fittimes</span><span class="op">[[</span> <span class="va">temp</span> <span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span> <span class="op">(</span> <span class="va">models</span><span class="op">[[</span> <span class="va">temp</span> <span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span></span>
+<span>                    <span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/gam.html" class="external-link">gam</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/formula.html" class="external-link">as.formula</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"cpue_kgha ~ "</span>, <span class="va">comb</span><span class="op">$</span><span class="va">fm</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span><span class="op">)</span>, </span>
+<span>                        data <span class="op">=</span> <span class="va">dat0</span>, </span>
+<span>                        family <span class="op">=</span> <span class="va">tw</span>, </span>
+<span>                        gamma <span class="op">=</span> <span class="fl">1.4</span><span class="op">)</span>  <span class="op">)</span></span>
+<span>  </span>
+<span><span class="op">}</span></span>
 <span></span>
-<span>    <span class="va">temp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">comb</span><span class="op">$</span><span class="va">SPECIES</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="st">" "</span>, <span class="va">comb</span><span class="op">$</span><span class="va">fm_name</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span></span>
-<span></span>
-<span>    <span class="va">dat0</span> <span class="op">&lt;-</span> <span class="va">dat</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>      <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">common_name</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">comb</span><span class="op">$</span><span class="va">SPECIES</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span></span>
-<span>    </span>
-<span>    <span class="va">fittimes</span><span class="op">[[</span> <span class="va">temp</span> <span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span></span>
-<span>      <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span> <span class="op">(</span> <span class="va">models</span><span class="op">[[</span> <span class="va">temp</span> <span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span></span>
-<span>                     <span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/gam.html" class="external-link">gam</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/formula.html" class="external-link">as.formula</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"cpue_kgha ~ "</span>, <span class="va">comb</span><span class="op">$</span><span class="va">fm</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span><span class="op">)</span>, </span>
-<span>                         data <span class="op">=</span> <span class="va">dat0</span>, </span>
-<span>                         family <span class="op">=</span> <span class="va">tw</span>, </span>
-<span>                         gamma <span class="op">=</span> <span class="fl">1.4</span><span class="op">)</span>  <span class="op">)</span></span>
-<span></span>
-<span>  <span class="op">}</span></span>
-<span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/save.html" class="external-link">save</a></span><span class="op">(</span><span class="va">models</span>, <span class="va">fittimes</span>, file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"../inst/vigC_model_output.rdata"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/save.html" class="external-link">save</a></span><span class="op">(</span><span class="va">models</span>, <span class="va">fittimes</span>, file <span class="op">=</span> <span class="fu">here</span><span class="fu">::</span><span class="fu"><a href="https://here.r-lib.org//reference/here.html" class="external-link">here</a></span><span class="op">(</span><span class="st">"inst"</span>,<span class="st">"vigC_model_output.rdata"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="assess-the-model">4. Assess the model<a class="anchor" aria-label="anchor" href="#assess-the-model"></a>
 </h3>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="va">b</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span>X <span class="op">=</span> <span class="va">models</span>, FUN <span class="op">=</span> <span class="va">AIC</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">b</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span>X <span class="op">=</span> <span class="va">models</span>, FUN <span class="op">=</span> <span class="va">AIC</span><span class="op">)</span></span>
 <span><span class="va">bb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">models</span>, <span class="va">`[`</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
-<span></span>
 <span><span class="co"># sdmgamindex::get_surveyidx_aic(models)</span></span>
-<span></span>
 <span></span>
 <span><span class="va">b</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC</a></span><span class="op">(</span><span class="va">models</span><span class="op">$</span><span class="va">`yellowfin sole fm_1_s_t_st`</span>, <span class="va">models</span><span class="op">$</span><span class="va">`yellowfin sole fm_2_cov`</span><span class="op">)</span><span class="co"># get(paste0("b", 1:9))</span></span>
 <span></span>
@@ -223,66 +261,36 @@
 <span><span class="co"># bb</span></span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bb</span> <span class="op">&lt;-</span> <span class="va">models</span><span class="op">$</span><span class="va">`yellowfin sole fm_1_s_t_st`</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>,<span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/gam.check.html" class="external-link">gam.check</a></span><span class="op">(</span><span class="va">bb</span><span class="op">)</span></span></code></pre></div>
-<p><img src="C-model-comparisons_files/figure-html/model_plots_1-1.png" width="700"></p>
-<pre><code><span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Method: REML   Optimizer: outer newton</span></span>
-<span><span class="co">#&gt; full convergence after 12 iterations.</span></span>
-<span><span class="co">#&gt; Gradient range [-0.0005733144,2.745408e-05]</span></span>
-<span><span class="co">#&gt; (score 5032.03 &amp; scale 1.216341).</span></span>
-<span><span class="co">#&gt; Hessian positive definite, eigenvalue range [1.671861,776.4961].</span></span>
-<span><span class="co">#&gt; Model rank =  387 / 387 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Basis dimension (k) checking results. Low p-value (k-index&lt;1) may</span></span>
-<span><span class="co">#&gt; indicate that k is too low, especially if edf is close to k'.</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;                   k'    edf k-index p-value</span></span>
-<span><span class="co">#&gt; s(sx,sy)      375.00  95.70    0.94    0.53</span></span>
-<span><span class="co">#&gt; s(sx,sy):Year  10.00   3.08    0.94    0.64</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/vis.gam.html" class="external-link">vis.gam</a></span><span class="op">(</span><span class="va">bb</span><span class="op">)</span></span>
+<span><span class="co"># gam.check(bb)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/vis.gam.html" class="external-link">vis.gam</a></span><span class="op">(</span><span class="va">bb</span><span class="op">)</span></span></code></pre></div>
+<p><img src="C-model-comparisons_files/figure-html/model_plots_1a-1.png" width="700"></p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/predict.gam.html" class="external-link">predict.gam</a></span><span class="op">(</span>object <span class="op">=</span> <span class="va">bb</span>, newdata <span class="op">=</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">cc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/predict.gam.html" class="external-link">predict.gam</a></span><span class="op">(</span>object <span class="op">=</span> <span class="va">bb</span>, newdata <span class="op">=</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">dat0</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span> <span class="op">%&gt;%</span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dplyr/man/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>pred <span class="op">=</span> <span class="va">cc</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">dat0</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>pred <span class="op">=</span> <span class="va">cc</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">figure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">dat0</span>, </span>
-<span>             mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span> <span class="va">longitude_dd</span>, y <span class="op">=</span> <span class="va">latitude_dd</span>, color <span class="op">=</span> <span class="va">pred</span><span class="op">)</span><span class="op">)</span></span></code></pre>
-<p><img src="C-model-comparisons_files/figure-html/model_plots_1-2.png" width="700"></p>
+<span><span class="va">figure</span> <span class="op">&lt;-</span> <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_point</span><span class="op">(</span>data <span class="op">=</span> <span class="va">dat0</span>, </span>
+<span>             mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span> <span class="va">longitude_dd_start</span>, y <span class="op">=</span> <span class="va">latitude_dd_start</span>, color <span class="op">=</span> <span class="va">pred</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">figure</span></span></code></pre></div>
+<p><img src="C-model-comparisons_files/figure-html/model_plots_1b-1.png" width="700"></p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bb</span> <span class="op">&lt;-</span> <span class="va">models</span><span class="op">$</span><span class="va">`yellowfin sole fm_2_cov`</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>,<span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/gam.check.html" class="external-link">gam.check</a></span><span class="op">(</span><span class="va">bb</span><span class="op">)</span></span></code></pre></div>
-<p><img src="C-model-comparisons_files/figure-html/model_plots_2-1.png" width="700"></p>
-<pre><code><span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Method: REML   Optimizer: outer newton</span></span>
-<span><span class="co">#&gt; full convergence after 7 iterations.</span></span>
-<span><span class="co">#&gt; Gradient range [-0.003097536,9.293221e-07]</span></span>
-<span><span class="co">#&gt; (score 5221.523 &amp; scale 1.41888).</span></span>
-<span><span class="co">#&gt; Hessian positive definite, eigenvalue range [2.428442,758.3792].</span></span>
-<span><span class="co">#&gt; Model rank =  19 / 19 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Basis dimension (k) checking results. Low p-value (k-index&lt;1) may</span></span>
-<span><span class="co">#&gt; indicate that k is too low, especially if edf is close to k'.</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;                                k'  edf k-index p-value    </span></span>
-<span><span class="co">#&gt; s(BOTTOM_DEPTH)              9.00 4.75    0.75  &lt;2e-16 ***</span></span>
-<span><span class="co">#&gt; s(log(GEAR_TEMPERATURE + 3)) 9.00 6.78    0.74  &lt;2e-16 ***</span></span>
-<span><span class="co">#&gt; ---</span></span>
-<span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/vis.gam.html" class="external-link">vis.gam</a></span><span class="op">(</span><span class="va">bb</span><span class="op">)</span></span>
+<span><span class="co"># gam.check(bb)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/vis.gam.html" class="external-link">vis.gam</a></span><span class="op">(</span><span class="va">bb</span><span class="op">)</span></span></code></pre></div>
+<p><img src="C-model-comparisons_files/figure-html/model_plots_2a-1.png" width="700"></p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/predict.gam.html" class="external-link">predict.gam</a></span><span class="op">(</span>object <span class="op">=</span> <span class="va">bb</span>, newdata <span class="op">=</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">cc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/mgcv/man/predict.gam.html" class="external-link">predict.gam</a></span><span class="op">(</span>object <span class="op">=</span> <span class="va">bb</span>, newdata <span class="op">=</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">dat0</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span> <span class="op">%&gt;%</span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dplyr/man/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>pred <span class="op">=</span> <span class="va">cc</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">dat0</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>pred <span class="op">=</span> <span class="va">cc</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">figure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">dat0</span>, </span>
-<span>             mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span> <span class="va">longitude_dd</span>, y <span class="op">=</span> <span class="va">latitude_dd</span>, color <span class="op">=</span> <span class="va">pred</span><span class="op">)</span><span class="op">)</span></span></code></pre>
-<p><img src="C-model-comparisons_files/figure-html/model_plots_2-2.png" width="700"></p>
+<span><span class="va">figure</span> <span class="op">&lt;-</span> <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_point</span><span class="op">(</span>data <span class="op">=</span> <span class="va">dat0</span>, </span>
+<span>             mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span> <span class="va">longitude_dd_start</span>, y <span class="op">=</span> <span class="va">latitude_dd_start</span>, color <span class="op">=</span> <span class="va">pred</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">figure</span></span></code></pre></div>
+<p><img src="C-model-comparisons_files/figure-html/model_plots_2b-1.png" width="700"></p>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

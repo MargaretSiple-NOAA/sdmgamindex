@@ -1,8 +1,8 @@
-#' @title Public data from FOSS
-#' @description These datasets, FOSS_CATCH, FOSS_CPUE_PRESONLY, FOSS_HAUL, and FOSS_SPECIES, when full joined by the HAULJOIN variable, includes zero-filled (presence and absence) observations and catch-per-unit-effort (CPUE) estimates for all identified species at for index stations. These tables were created by the Resource Assessment and Conservation Engineering Division (RACE) Groundfish Assessment Program (GAP) of the Alaska Fisheries Science Center (AFSC). There are legal restrictions on access to the data. These data are not intended for public dissemination and should not be shared without the explicit written consent of the data managers and owners (NOAA Fisheries). The GitHub repository for the scripts that created this code can be found at https://github.com/afsc-gap-products/gap_products. For more information about codes used in the tables, please refer to the survey code books (https://www.fisheries.noaa.gov/resource/document/groundfish-survey-species-code-manual-and-data-codes-manual). These data were last updated October 17, 2023. Data was pulled 2023-10-19.  
+#' @title Public data from FOSS for EBS walleye pollock, yellowfin sole, and red king crab from 2015 to present
+#' @description These datasets, FOSS_CATCH, FOSS_CPUE_PRESONLY, FOSS_HAUL, and FOSS_SPECIES, when full joined by the HAULJOIN variable, includes zero-filled (presence and absence) observations and catch-per-unit-effort (CPUE) estimates for all identified species at for index stations. These tables were created by the Resource Assessment and Conservation Engineering Division (RACE) Groundfish Assessment Program (GAP) of the Alaska Fisheries Science Center (AFSC). There are legal restrictions on access to the data. These data are not intended for public dissemination and should not be shared without the explicit written consent of the data managers and owners (NOAA Fisheries). The GitHub repository for the scripts that created this code can be found at https://github.com/afsc-gap-products/gap_products. For more information about codes used in the tables, please refer to the survey code books (https://www.fisheries.noaa.gov/resource/document/groundfish-survey-species-code-manual-and-data-codes-manual). These data were last updated October 17, 2023. 
 #' @usage data('noaa_afsc_public_foss')
 #' @author Emily Markowitz (Emily.Markowitz AT noaa.gov)
-#' @format A data frame with 5124 observations on the following 38 variables.
+#' @format A data frame with 9024 observations on the following 38 variables.
 #' \describe{
 #'   \item{\code{date_time}}{Date and time. The date (MM/DD/YYYY) and time (HH:MM) of the haul.}
 #'   \item{\code{depth_m}}{Depth (m). Bottom depth (meters).}
@@ -41,9 +41,10 @@
 #'   \item{\code{cpue_nokm2}}{Number CPUE (no/km2). Numerical catch per unit effort (area swept by the net, units square kilometers).}
 #'   \item{\code{cruise}}{Cruise ID. This is a six-digit integer identifying the cruise number of the form: YYYY99 (where YYYY = year of the cruise; 99 = 2-digit number and is sequential; 01 denotes the first cruise that vessel made in this year, 02 is the second, etc.).}
 #'   \item{\code{cruisejoin}}{Cruise ID. Unique interger ID assigned to each survey, vessel, and year combination.}#'   }
-#' @source https://github.com/afsc-gap-products/gap_public_data
+#' @source https://github.com/afsc-gap-products/gap_products
 #' @keywords species code data
 #' @examples
 #' data(noaa_afsc_public_foss)
-#' @details DETAILS
+#' @details The Resource Assessment and Conservation Engineering (RACE) Division Groundfish Assessment Program (GAP) of the Alaska Fisheries Science Center (AFSC) conducts fisheries-independent bottom trawl surveys to assess the populations of demersal fish and crab stocks of Alaska. 
+
 'noaa_afsc_public_foss'

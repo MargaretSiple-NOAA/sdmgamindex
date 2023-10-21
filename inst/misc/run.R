@@ -1,5 +1,5 @@
 
-# Load new FOSS data -----------------------------------------------------------
+# Connect to oracle ------------------------------------------------------------
 
 # This has a specific username and password because I DONT want people to have access to this!
 # source("https://raw.githubusercontent.com/afsc-gap-products/metadata/main/code/functions_oracle.R")
@@ -15,6 +15,8 @@ for (i in 1:length(locations)){
   }
 }
 
+# Load column metadata table ---------------------------------------------------
+
 metadata_table_comment <- dplyr::bind_rows(
   # tables
   RODBC::sqlQuery(
@@ -29,22 +31,19 @@ ORDER BY table_name") %>%
     channel = channel_products,
     query = "SELECT *FROM user_mview_comments") %>% 
     data.frame() %>% 
-    dplyr::rename(TABLE_NAME = MVIEW_NAME)
-) %>% 
-  dplyr::filter(TABLE_NAME == "FOSS_CATCH")
-
-metadata_table_comment <- paste0(metadata_table_comment$COMMENTS, 
-                                 " Data was pulled ", Sys.Date(), ". ")
+    dplyr::rename(TABLE_NAME = MVIEW_NAME) ) 
 
 metadata_colname <- RODBC::sqlQuery(
   channel = channel_products, 
   query = "SELECT * FROM GAP_PRODUCTS.METADATA_COLUMN") %>% 
   janitor::clean_names()
 
+# Load new FOSS data -----------------------------------------------------------
+
 noaa_afsc_public_foss <- RODBC::sqlQuery(
     channel = channel_products, 
     query = 
-      "SELECT DISTINCT 
+      "SELECT 
 hh.YEAR,
 hh.SRVY,                 
 hh.SURVEY,
@@ -72,26 +71,83 @@ ss.WORMS,
 ss.COMMON_NAME,     
 ss.SCIENTIFIC_NAME,
 ss.ID_RANK,
-cc.TAXON_CONFIDENCE,
-cc.WEIGHT_KG,
-cc.COUNT,
-cc.CPUE_KGKM2,
-cc.CPUE_NOKM2,
+CASE WHEN cc.CPUE_KGKM2 IS NULL THEN 0 ELSE cc.CPUE_KGKM2 END AS CPUE_KGKM2,
+CASE WHEN cc.CPUE_NOKM2 IS NULL THEN 0 ELSE cc.CPUE_NOKM2 END AS CPUE_NOKM2,
+CASE WHEN cc.COUNT IS NULL THEN 0 ELSE cc.COUNT END AS COUNT,
+CASE WHEN cc.WEIGHT_KG IS NULL THEN 0 ELSE cc.WEIGHT_KG END AS WEIGHT_KG,
+CASE WHEN cc.TAXON_CONFIDENCE IS NULL THEN NULL ELSE cc.TAXON_CONFIDENCE END AS TAXON_CONFIDENCE,
 hh.AREA_SWEPT_KM2,       
 hh.DISTANCE_FISHED_KM,
 hh.DURATION_HR,          
 hh.NET_WIDTH_M,
 hh.NET_HEIGHT_M,
 hh.PERFORMANCE 
-FROM GAP_PRODUCTS.FOSS_CATCH cc
-LEFT JOIN GAP_PRODUCTS.FOSS_HAUL hh
-ON cc.HAULJOIN = hh.HAULJOIN
-FULL JOIN GAP_PRODUCTS.FOSS_SPECIES_TEST ss
-ON cc.SPECIES_CODE = ss.SPECIES_CODE
-WHERE hh.SRVY = 'EBS' 
-AND cc.SPECIES_CODE IN (21740, 10210, 69323) 
-AND hh.YEAR >= 2015") %>% 
+FROM GAP_PRODUCTS.FOSS_SURVEY_SPECIES sv
+FULL OUTER JOIN GAP_PRODUCTS.FOSS_SPECIES ss
+ON sv.SPECIES_CODE = ss.SPECIES_CODE
+FULL OUTER JOIN GAP_PRODUCTS.FOSS_HAUL hh
+ON sv.SURVEY_DEFINITION_ID = hh.SURVEY_DEFINITION_ID
+FULL OUTER JOIN GAP_PRODUCTS.FOSS_CATCH cc
+ON sv.SPECIES_CODE = cc.SPECIES_CODE
+AND hh.HAULJOIN = cc.HAULJOIN
+WHERE sv.SURVEY_DEFINITION_ID = 98 
+AND sv.SPECIES_CODE IN (21740, 10210, 69322) 
+AND hh.YEAR >= 2015
+--GROUP BY ss.COMMON_NAME, hh.HAULJOIN
+") %>% 
   janitor::clean_names()
+
+# noaa_afsc_public_foss <- RODBC::sqlQuery(
+#   channel = channel_products, 
+#   query = 
+#     "SELECT --DISTINCT 
+# hh.YEAR,
+# hh.SRVY,                 
+# hh.SURVEY,
+# hh.SURVEY_DEFINITION_ID,
+# hh.SURVEY_NAME,
+# hh.CRUISE,
+# hh.CRUISEJOIN,           
+# hh.HAUL,
+# hh.HAULJOIN,
+# hh.STRATUM,
+# hh.STATION,
+# hh.VESSEL_ID,
+# hh.VESSEL_NAME,          
+# hh.DATE_TIME,
+# hh.LATITUDE_DD_START, 
+# hh.LONGITUDE_DD_START, 
+# hh.LATITUDE_DD_END,
+# hh.LONGITUDE_DD_END, 
+# hh.BOTTOM_TEMPERATURE_C,
+# hh.SURFACE_TEMPERATURE_C,
+# hh.DEPTH_M,
+# cc.SPECIES_CODE,
+# ss.ITIS,
+# ss.WORMS,
+# ss.COMMON_NAME,     
+# ss.SCIENTIFIC_NAME,
+# ss.ID_RANK,
+# cc.TAXON_CONFIDENCE,
+# cc.WEIGHT_KG,
+# cc.COUNT,
+# cc.CPUE_KGKM2,
+# cc.CPUE_NOKM2,
+# hh.AREA_SWEPT_KM2,       
+# hh.DISTANCE_FISHED_KM,
+# hh.DURATION_HR,          
+# hh.NET_WIDTH_M,
+# hh.NET_HEIGHT_M,
+# hh.PERFORMANCE 
+# FROM GAP_PRODUCTS.FOSS_CATCH cc
+# FULL OUTER JOIN GAP_PRODUCTS.FOSS_HAUL hh
+# ON cc.HAULJOIN = hh.HAULJOIN
+# FULL OUTER JOIN GAP_PRODUCTS.FOSS_SPECIES ss
+# ON cc.SPECIES_CODE = ss.SPECIES_CODE
+# WHERE hh.SRVY = 'EBS' 
+# AND cc.SPECIES_CODE IN (21740, 10210, 69322) 
+# AND hh.YEAR >= 2015") %>% 
+#   janitor::clean_names()
 
 # Save table to local directory
 save(noaa_afsc_public_foss, file = here::here("data", "noaa_afsc_public_foss.rda"))
@@ -101,15 +157,8 @@ column <- metadata_colname %>%
   dplyr::mutate(metadata_colname = tolower(metadata_colname)) %>%
   dplyr::distinct()
 
-# column <- read_csv(file = "../notforgit/metadata_column_current.csv")
-# column <- column[column$TABLE_NAME == "FOSS_CPUE_PRESONLY",]
-# column$col_name <- names(public_data)
-# table <- read_csv(file = "../notforgit/metadata_table_current.csv")
-
-table0 <- "noaa_afsc_public_foss"
-
-str0 <- paste0("#' @title Public data from FOSS
-#' @description ",metadata_table_comment," 
+str0 <- paste0("#' @title Public data from FOSS for EBS walleye pollock, yellowfin sole, and red king crab from 2015 to present
+#' @description ",metadata_table_comment$COMMENT[metadata_table_comment$TABLE_NAME == "FOSS_CATCH"]," 
 #' @usage data('noaa_afsc_public_foss')
 #' @author Emily Markowitz (Emily.Markowitz AT noaa.gov)
 #' @format A data frame with ",nrow(noaa_afsc_public_foss)," observations on the following ",
@@ -118,18 +167,75 @@ ncol(noaa_afsc_public_foss)," variables.
 ",
                paste0(paste0("#'   \\item{\\code{",column$metadata_colname,"}}{", column$metadata_colname_long, ". ", column$metadata_colname_desc,"}"), collapse = "\n"),
                "#'   }
-#' @source https://github.com/afsc-gap-products/gap_public_data
+#' @source https://github.com/afsc-gap-products/gap_products
 #' @keywords species code data
 #' @examples
 #' data(noaa_afsc_public_foss)
-#' @details DETAILS
+#' @details The Resource Assessment and Conservation Engineering (RACE) Division Groundfish Assessment Program (GAP) of the Alaska Fisheries Science Center (AFSC) conducts fisheries-independent bottom trawl surveys to assess the populations of demersal fish and crab stocks of Alaska. 
+
 'noaa_afsc_public_foss'")
 
 write.table(str0, 
             file = here::here("R","noaa_afsc_public_foss.R"), 
             sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
+# Load new FOSS data -----------------------------------------------------------
+
+noaa_afsc_biomass_estimates <- RODBC::sqlQuery(
+  channel = channel_products, 
+  query = 
+    "SELECT DISTINCT 
+bb.SURVEY_DEFINITION_ID,
+bb.SPECIES_CODE,
+bb.YEAR,
+bb.BIOMASS_MT,
+bb.BIOMASS_VAR,
+bb.POPULATION_COUNT,
+bb.POPULATION_VAR
+FROM GAP_PRODUCTS.AKFIN_BIOMASS bb
+WHERE bb.SURVEY_DEFINITION_ID = 98 
+AND bb.SPECIES_CODE IN (21740, 10210, 69322) 
+AND AREA_ID = 99901
+AND bb.YEAR >= 2015
+") %>% 
+  janitor::clean_names()
+
+# Save table to local directory
+save(noaa_afsc_biomass_estimates, file = here::here("data", "noaa_afsc_biomass_estimates.rda"))
+
+column <- metadata_colname %>%
+  dplyr::filter(metadata_colname %in% toupper(names(noaa_afsc_biomass_estimates))) %>%
+  dplyr::mutate(metadata_colname = tolower(metadata_colname)) %>%
+  dplyr::distinct()
+
+str0 <- paste0("#' @title Biomass Estimates from AKFIN for EBS walleye pollock, yellowfin sole, and red king crab from 2015 to present
+#' @description ",metadata_table_comment$COMMENT[metadata_table_comment$TABLE_NAME == "AKFIN_BIOMASS"]," 
+#' @usage data('noaa_afsc_biomass_estimates')
+#' @author Emily Markowitz (Emily.Markowitz AT noaa.gov)
+#' @format A data frame with ",nrow(noaa_afsc_biomass_estimates)," observations on the following ",
+               ncol(noaa_afsc_biomass_estimates)," variables.
+#' \\describe{
+",
+               paste0(paste0("#'   \\item{\\code{",column$metadata_colname,"}}{", column$metadata_colname_long, ". ", column$metadata_colname_desc,"}"), collapse = "\n"),
+               "#'   }
+#' @source https://github.com/afsc-gap-products/gap_products
+#' @keywords species code data biomass
+#' @examples
+#' data(noaa_afsc_biomass_estimates)
+#' @details The Resource Assessment and Conservation Engineering (RACE) Division Groundfish Assessment Program (GAP) of the Alaska Fisheries Science Center (AFSC) conducts fisheries-independent bottom trawl surveys to assess the populations of demersal fish and crab stocks of Alaska. 
+
+'noaa_afsc_biomass_estimates'")
+
+write.table(str0, 
+            file = here::here("R","noaa_afsc_biomass_estimates.R"), 
+            sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
+
+
 # Document and create Package --------------------------------------------------
+
+# library(remotes)
+# remotes::install_github("DTUAqua/DATRAS/DATRAS")
+
 .rs.restartR()
 
 # options(rmarkdown.html_vignette.check_title = FALSE)
@@ -146,11 +252,6 @@ install("sdmgamindex")
 setwd(here::here())
 # devtools::check()
 
-## Create Package Readme.md -----------------------------------------------------
-rmarkdown::render(here::here("inst", "misc", "README.Rmd"),
-                  output_dir = "./",
-                  output_file = "README.md")
-
 ## Create Documentation GitHub-Pages -------------------------------------------
 
 .rs.restartR()
@@ -159,7 +260,7 @@ rmarkdown::render(here::here("inst", "misc", "README.Rmd"),
 library(here)
 library(usethis)
 library(pkgdown)
-rmarkdown::render(input = "./inst/r/README.Rmd",
+rmarkdown::render(here::here("inst", "misc", "README.Rmd"),
                   output_dir = "./",
                   output_file = "README.md")
 
@@ -171,3 +272,4 @@ rmarkdown::render(input = "./inst/r/README.Rmd",
 
 pkgdown::build_site(pkg = here::here())
 # usethis::use_github_action("pkgdown")
+

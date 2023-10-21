@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">sdmgamindex</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -25,7 +25,7 @@
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
     <a class="dropdown-item" href="../articles/A-gam-basics.html">Intro to GAMs</a>
-    <a class="dropdown-item" href="../articles/A_gam_sdmTMB_example.html">Fitting a spatiotemporal model and deriving an abundance index</a>
+    <a class="dropdown-item" href="../articles/A_gam_sdmTMB_example.html">Fitting a spatiotemporal model with a GAM and deriving an abundance index</a>
     <a class="dropdown-item" href="../articles/B-model-tuning.html">Nuances in model choices</a>
     <a class="dropdown-item" href="../articles/C-model-comparisons.html">Compare {sdmgamindex} to regular GAMs</a>
     <a class="dropdown-item" href="../articles/D-simple-case-study.html">Simple {sdmgamindex} case study</a>
@@ -108,7 +108,7 @@
 <span class="r-in"><span>       varsbyyr <span class="op">=</span> <span class="va">varsbyyr</span><span class="op">)</span></span></span>
 <span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in tidyr::crossing(varsbyyr, year) %&gt;% dplyr::mutate(vars0 = paste0(varsbyyr,     year)) %&gt;% dplyr::select(vars0) %&gt;% unlist():</span> could not find function "%&gt;%"</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">pg</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">YEARS</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in names(pg) &lt;- YEARS:</span> object 'pg' not found</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'pg' not found</span>
 <span class="r-in"><span><span class="va">pg</span></span></span>
 <span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in eval(expr, envir, enclos):</span> object 'pg' not found</span>
 </code></pre></div>
