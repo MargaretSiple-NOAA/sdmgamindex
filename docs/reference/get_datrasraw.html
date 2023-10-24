@@ -25,10 +25,9 @@
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
     <a class="dropdown-item" href="../articles/A-gam-basics.html">Intro to GAMs</a>
-    <a class="dropdown-item" href="../articles/A_gam_sdmTMB_example.html">Fitting a spatiotemporal model with a GAM and deriving an abundance index</a>
-    <a class="dropdown-item" href="../articles/B-model-tuning.html">Nuances in model choices</a>
+    <a class="dropdown-item" href="../articles/B_gam_sdmTMB_example.html">Fitting a spatiotemporal model with a GAM and deriving an abundance index</a>
     <a class="dropdown-item" href="../articles/C-model-comparisons.html">Compare {sdmgamindex} to regular GAMs</a>
-    <a class="dropdown-item" href="../articles/D-simple-case-study.html">Simple {sdmgamindex} case study</a>
+    <a class="dropdown-item" href="../articles/D-simple-case-study.html">{sdmgamindex} case study with and without covariates</a>
   </div>
 </li>
       </ul><form class="form-inline my-2 my-lg-0" role="search">
@@ -81,18 +80,18 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> data frame with 0 columns and 0 rows</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   species Year      lon      lat       sx       sy      covA     covB    EFFORT</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1       1 2016 150.4871 163.9425 66.49797 164.8145  7.059592 13.36828 35.405136</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3       1 2018 177.8019 173.2978 53.78261 166.7043  3.173622 15.27988 20.387656</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5       1 2020 167.3484 170.8283 46.33304 169.2488  9.818074 14.89254 17.752855</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7       1 2017 162.7013 180.6734 72.12597 168.8007 17.294662 33.95182  5.179582</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9       1 2019 185.2534 163.0928 43.99904 165.3589  7.106785 14.79454  4.924414</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   haul.id</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3       2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5       3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7       4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9       5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   species Year      lon      lat       sx       sy        covA      covB</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1       1 2016 171.9658 185.9311 57.12508 153.4558  -0.6086003 28.108688</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3       1 2018 164.5690 161.0045 45.40534 168.9528  12.6279807 33.533712</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5       1 2020 176.2555 167.9341 70.82258 163.8001 -10.1355760  3.793549</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7       1 2017 176.9951 170.1377 62.57869 164.4629   2.8398308 26.125135</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9       1 2019 175.4708 174.2312 64.75088 165.0390   4.0540046 21.531879</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     EFFORT haul.id</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 45.73173       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 14.19250       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 14.78188       3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7 18.07005       4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9 13.94318       5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[3]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> data frame with 0 columns and 0 rows</span>
@@ -105,18 +104,18 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> data frame with 0 columns and 0 rows</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    species Year      lon      lat       sx       sy      covA     covB   EFFORT</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2        2 2017 165.6773 153.9855 57.69382 162.0112 14.588974 33.79577 31.02774</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4        2 2019 165.8345 181.9584 57.38854 175.7144 12.252396 11.99126 21.61437</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6        2 2016 171.9300 158.0902 63.34329 178.3322 11.345357 41.52126 16.32446</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8        2 2018 160.9925 169.6685 53.28805 152.5681  4.604156 29.41764 21.04013</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10       2 2020 183.2697 167.1471 64.13807 177.0909 -1.081134 29.05158 15.50017</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    haul.id</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2        1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4        2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6        3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8        4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10       5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    species Year      lon      lat       sx       sy       covA     covB</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        2 2017 189.1875 162.9365 46.45449 181.0881  16.473323 12.49986</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        2 2019 166.1214 163.1017 32.08388 168.4485   3.861784 25.02678</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6        2 2016 178.6857 164.7567 55.20306 150.6914 -11.871169 17.74088</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8        2 2018 164.8139 156.7186 67.43077 149.3575  19.667027 26.13118</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10       2 2020 161.5189 158.4678 51.99045 173.6875  12.443499 23.82653</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      EFFORT haul.id</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  11.20447       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  21.80970       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  21.91519       3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8  18.41592       4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10 11.94535       5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[3]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> data frame with 0 columns and 0 rows</span>

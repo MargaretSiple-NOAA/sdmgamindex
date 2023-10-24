@@ -9,33 +9,35 @@ vignette: >
 fig_width: 6 
 ---
 
-```{r, include = FALSE}
+```{r setup, include = FALSE}
+# csl: "https://raw.githubusercontent.com/citation-style-language/styles/master/apa-no-ampersand.csl"
+# bibliography: "https://raw.githubusercontent.com/afsc-gap-products/citations/main/cite/bibliography.bib"
 knitr::opts_chunk$set(
   collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE, 
   comment = "#>"
 )
-```
 
-# GAMs: the old fashioned way
-
-```{r setup, echo = FALSE}
+# library(remotes)
 PKG <- c(
+  "sdmgamindex", 
   "remotes",
   "DATRAS", # remotes::install_github("DTUAqua/DATRAS/DATRAS")
   "ggplot2", 
   "dplyr",
   "sf", 
   "gstat",
-  "magrittr"
+  "magrittr", 
+  "tidyr"
 )
 
 for (p in PKG) {
-  if(!require(p,character.only = TRUE)) {  
+  # if(!require(p,character.only = TRUE)) {  
     # install.packages(p)
     require(p,character.only = TRUE)}
-}
-library("sdmgamindex")
+# }
 ```
+
+# GAMs: the old fashioned way
 
 ## 1. Wrangle Data
 
@@ -127,11 +129,11 @@ for(i in 1:nrow(comb)){
   
 }
 
-save(models, fittimes, file = here::here("inst","vigC_model_output.rdata"))
+save(models, fittimes, file = here::here("inst","VigC_model_output.rdata"))
 ```
 
 ```{r model_file_load, echo = FALSE}
-load(system.file("vigC_model_output.rdata", package = "sdmgamindex" ) ) 
+load(system.file("VigC_model_output.rdata", package = "sdmgamindex" ) ) 
 ```
 
 ## 4. Assess the model

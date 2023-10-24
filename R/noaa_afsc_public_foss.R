@@ -2,7 +2,7 @@
 #' @description These datasets, FOSS_CATCH, FOSS_CPUE_PRESONLY, FOSS_HAUL, and FOSS_SPECIES, when full joined by the HAULJOIN variable, includes zero-filled (presence and absence) observations and catch-per-unit-effort (CPUE) estimates for all identified species at for index stations. These tables were created by the Resource Assessment and Conservation Engineering Division (RACE) Groundfish Assessment Program (GAP) of the Alaska Fisheries Science Center (AFSC). There are legal restrictions on access to the data. These data are not intended for public dissemination and should not be shared without the explicit written consent of the data managers and owners (NOAA Fisheries). The GitHub repository for the scripts that created this code can be found at https://github.com/afsc-gap-products/gap_products. For more information about codes used in the tables, please refer to the survey code books (https://www.fisheries.noaa.gov/resource/document/groundfish-survey-species-code-manual-and-data-codes-manual). These data were last updated October 17, 2023. 
 #' @usage data('noaa_afsc_public_foss')
 #' @author Emily Markowitz (Emily.Markowitz AT noaa.gov)
-#' @format A data frame with 9024 observations on the following 38 variables.
+#' @format A data frame with 9024 observations on the following 37 variables.
 #' \describe{
 #'   \item{\code{date_time}}{Date and time. The date (MM/DD/YYYY) and time (HH:MM) of the haul.}
 #'   \item{\code{depth_m}}{Depth (m). Bottom depth (meters).}

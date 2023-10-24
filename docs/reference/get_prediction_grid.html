@@ -25,10 +25,9 @@
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
     <a class="dropdown-item" href="../articles/A-gam-basics.html">Intro to GAMs</a>
-    <a class="dropdown-item" href="../articles/A_gam_sdmTMB_example.html">Fitting a spatiotemporal model with a GAM and deriving an abundance index</a>
-    <a class="dropdown-item" href="../articles/B-model-tuning.html">Nuances in model choices</a>
+    <a class="dropdown-item" href="../articles/B_gam_sdmTMB_example.html">Fitting a spatiotemporal model with a GAM and deriving an abundance index</a>
     <a class="dropdown-item" href="../articles/C-model-comparisons.html">Compare {sdmgamindex} to regular GAMs</a>
-    <a class="dropdown-item" href="../articles/D-simple-case-study.html">Simple {sdmgamindex} case study</a>
+    <a class="dropdown-item" href="../articles/D-simple-case-study.html">{sdmgamindex} case study with and without covariates</a>
   </div>
 </li>
       </ul><form class="form-inline my-2 my-lg-0" role="search">
@@ -106,11 +105,60 @@
 <span class="r-in"><span>       x <span class="op">=</span> <span class="va">dat</span>,</span></span>
 <span class="r-in"><span>       vars <span class="op">=</span> <span class="va">vars</span>,</span></span>
 <span class="r-in"><span>       varsbyyr <span class="op">=</span> <span class="va">varsbyyr</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in tidyr::crossing(varsbyyr, year) %&gt;% dplyr::mutate(vars0 = paste0(varsbyyr,     year)) %&gt;% dplyr::select(vars0) %&gt;% unlist():</span> could not find function "%&gt;%"</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">pg</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">YEARS</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'pg' not found</span>
 <span class="r-in"><span><span class="va">pg</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in eval(expr, envir, enclos):</span> object 'pg' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $`2019`</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         lon      lat       sx       sy        covA     covB EFFORT</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  179.4242 184.3270 62.10293 164.0738   6.2686226 21.87722      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  170.9362 178.8298 61.52399 177.1213 -19.6268257 16.67652      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  174.6364 155.5844 37.80219 173.4947  -8.0634191 27.31421      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  177.4054 163.4338 71.60276 176.2007  10.8044773 42.63101      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  165.8797 178.9615 58.29921 179.7318   0.2806729 16.20041      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  171.0307 179.5228 46.62181 179.1862   7.5315336 27.22897      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  189.8857 143.8038 57.02544 170.6029 -10.4098203 17.41273      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8  185.5979 179.0027 49.17806 183.0194  -9.6861084 24.26300      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9  175.3998 172.6949 55.97855 166.1138  22.7668549 16.61735      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10 158.2016 169.2381 67.60331 175.8735  11.0930703 25.07773      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $`2020`</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         lon      lat       sx       sy        covA      covB EFFORT</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  179.4242 184.3270 62.10293 164.0738   6.2686226 10.964659      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  170.9362 178.8298 61.52399 177.1213 -19.6268257 16.851065      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  174.6364 155.5844 37.80219 173.4947  -8.0634191 11.002124      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  177.4054 163.4338 71.60276 176.2007  10.8044773  9.086924      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  165.8797 178.9615 58.29921 179.7318   0.2806729 19.759115      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  171.0307 179.5228 46.62181 179.1862   7.5315336 21.045404      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  189.8857 143.8038 57.02544 170.6029 -10.4098203 23.766747      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8  185.5979 179.0027 49.17806 183.0194  -9.6861084 20.378613      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9  175.3998 172.6949 55.97855 166.1138  22.7668549  2.262500      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10 158.2016 169.2381 67.60331 175.8735  11.0930703 31.034716      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $`2021`</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         lon      lat       sx       sy        covA      covB EFFORT</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  179.4242 184.3270 62.10293 164.0738   6.2686226 22.678481      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  170.9362 178.8298 61.52399 177.1213 -19.6268257  7.154168      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  174.6364 155.5844 37.80219 173.4947  -8.0634191 20.151753      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  177.4054 163.4338 71.60276 176.2007  10.8044773 17.286984      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  165.8797 178.9615 58.29921 179.7318   0.2806729 19.649726      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  171.0307 179.5228 46.62181 179.1862   7.5315336 25.220538      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  189.8857 143.8038 57.02544 170.6029 -10.4098203 29.448537      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8  185.5979 179.0027 49.17806 183.0194  -9.6861084 37.051956      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9  175.3998 172.6949 55.97855 166.1138  22.7668549 15.029900      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10 158.2016 169.2381 67.60331 175.8735  11.0930703 19.500755      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $`2022`</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         lon      lat       sx       sy        covA      covB EFFORT</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  179.4242 184.3270 62.10293 164.0738   6.2686226 16.368636      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  170.9362 178.8298 61.52399 177.1213 -19.6268257 17.890457      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  174.6364 155.5844 37.80219 173.4947  -8.0634191 12.690109      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  177.4054 163.4338 71.60276 176.2007  10.8044773 15.144942      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  165.8797 178.9615 58.29921 179.7318   0.2806729 13.501317      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  171.0307 179.5228 46.62181 179.1862   7.5315336 18.367647      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  189.8857 143.8038 57.02544 170.6029 -10.4098203 18.081750      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8  185.5979 179.0027 49.17806 183.0194  -9.6861084 22.082121      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9  175.3998 172.6949 55.97855 166.1138  22.7668549  3.429071      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10 158.2016 169.2381 67.60331 175.8735  11.0930703 19.480452      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

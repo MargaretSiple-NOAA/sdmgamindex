@@ -36,7 +36,8 @@
 #' library(DATRAS) # example data
 #' library(sdmgamindex)
 #' library(tidyverse)
-#' load("data/ebs_example_datras.rda") #object: dat_wrangled. Source: FOSS; see https://emilymarkowitz-noaa.github.io/sdmgamindex/articles/A-data-prep.html for how these data were wrangled in preparation for this example.
+#' dat <- yfs <- sdmgamindex::noaa_afsc_public_foss |> 
+#'   dplyr::filter(srvy=="EBS" & species_code == 10210)
 #' # Megsie todo: add example here using EBS data!
 #' }
 #' @importFrom MASS mvrnorm
@@ -168,7 +169,7 @@ get_surveyidx <- function(x,
       
       
       print(system.time(m_pos <-
-                          DATRAS:::tryCatch.W.E(
+                          DATRAS::tryCatch.W.E(
                             mgcv::gam(
                               f.pos,
                               data = ddd[ddd$A1 > cutoff, ],
@@ -193,7 +194,7 @@ get_surveyidx <- function(x,
       }
       
       print(system.time(m0 <-
-                          DATRAS:::tryCatch.W.E(
+                          DATRAS::tryCatch.W.E(
                             mgcv::gam(
                               f.0,
                               gamma = gammaZ,
@@ -224,7 +225,7 @@ get_surveyidx <- function(x,
         stats::as.formula(paste("A1>", cutOff, " ~", modelZ[a]))
       
       
-      print(system.time(m_pos <- DATRAS:::tryCatch.W.E(
+      print(system.time(m_pos <- DATRAS::tryCatch.W.E(
         mgcv::gam(
           formula = f.pos,
           data = ddd[ddd$A1 >
@@ -252,7 +253,7 @@ get_surveyidx <- function(x,
       }
       
       print(system.time(m0 <-
-                          DATRAS:::tryCatch.W.E(
+                          DATRAS::tryCatch.W.E(
                             mgcv::gam(
                               formula = f.0,
                               gamma = gammaZ,
@@ -282,7 +283,7 @@ get_surveyidx <- function(x,
       f.pos <- stats::as.formula(paste("A1 ~", modelP[a]))
       
       print(system.time(m_pos <-
-                          DATRAS:::tryCatch.W.E(
+                          DATRAS::tryCatch.W.E(
                             mgcv::gam(
                               formula = f.pos,
                               data = ddd,
@@ -310,7 +311,7 @@ get_surveyidx <- function(x,
       f.pos <- stats::as.formula(paste("A1 ~", modelP[a]))
       
       print(system.time(m_pos <-
-                          DATRAS:::tryCatch.W.E(
+                          DATRAS::tryCatch.W.E(
                             mgcv::gam(
                               formula = f.pos,
                               data = ddd,
@@ -2141,15 +2142,19 @@ get_datrasraw <- function(x) {
 get_prediction_grid <- function(year,
                                 x,
                                 subsel = NULL,
-                                varsbyyr,
-                                vars) {
-  nam <- c("lon", "lat", "sx", "sy", vars)
+                                varsbyyr = NULL,
+                                vars = NULL) {
+  
+  nam <- c("lon", "lat", "sx", "sy")
+  if (!is.null(vars)) {
+    nam <- c(nam, vars)
+  }
+  pd <- data.frame(x[, c(nam)])
+  if (!is.null(varsbyyr)) {
   nam2 <- tidyr::crossing(varsbyyr, year) %>%
     dplyr::mutate(vars0 = paste0(varsbyyr, year)) %>%
     dplyr::select(vars0) %>%
     unlist()
-  # nam2 = paste0(c(vars),year)
-  
   pd <- data.frame(x[, c(nam, nam2)])
   colnames(pd) <- c(nam,
                     unique(gsub(
@@ -2157,7 +2162,7 @@ get_prediction_grid <- function(year,
                       replacement = "",
                       x = nam2
                     )))
-  
+  }
   pd$EFFORT <- 1.0
   ## Note, Better to use median effort here if splines on effort is used.
   ## Otherwise uncertainty is inflated because it is outside normal effort range.
@@ -2259,7 +2264,8 @@ convert_crs <- function(x,
                         y,
                         crs_in = "+proj=longlat +datum=WGS84",
                         crs_out = "EPSG:3338"){ # "+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs",) {
-  
+  library(sf)
+  library(sp)
   xy = data.frame(ID = 1:length(x),
                   X = x,
                   Y = y)

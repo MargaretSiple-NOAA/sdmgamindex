@@ -51,10 +51,9 @@
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
     <a class="dropdown-item" href="articles/A-gam-basics.html">Intro to GAMs</a>
-    <a class="dropdown-item" href="articles/A_gam_sdmTMB_example.html">Fitting a spatiotemporal model with a GAM and deriving an abundance index</a>
-    <a class="dropdown-item" href="articles/B-model-tuning.html">Nuances in model choices</a>
+    <a class="dropdown-item" href="articles/B_gam_sdmTMB_example.html">Fitting a spatiotemporal model with a GAM and deriving an abundance index</a>
     <a class="dropdown-item" href="articles/C-model-comparisons.html">Compare {sdmgamindex} to regular GAMs</a>
-    <a class="dropdown-item" href="articles/D-simple-case-study.html">Simple {sdmgamindex} case study</a>
+    <a class="dropdown-item" href="articles/D-simple-case-study.html">{sdmgamindex} case study with and without covariates</a>
   </div>
 </li>
       </ul>
@@ -138,45 +137,51 @@
 <span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="do">## [1] parallel  stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="do">## </span></span>
 <span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="do">## other attached packages:</span></span>
-<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a><span class="do">##  [1] knitr_1.44        badger_0.2.3      pkgdown_2.0.7     sdmgamindex_0.1.1 tweedie_2.3.5    </span></span>
-<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="do">##  [6] MASS_7.3-60       RANN_2.6.1        marmap_1.0.10     maptools_1.1-8    sp_2.1-0         </span></span>
-<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="do">## [11] mapdata_2.3.1     maps_3.4.1        mgcv_1.9-0        nlme_3.1-163      DATRAS_1.01      </span></span>
-<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a><span class="do">## [16] RODBC_1.3-21      roxygen2_7.2.3    devtools_2.4.5    usethis_2.2.2     here_1.0.1       </span></span>
-<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a><span class="do">## loaded via a namespace (and not attached):</span></span>
-<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a><span class="do">##   [1] RColorBrewer_1.1-3      sys_3.4.2               dlstats_0.1.7           rstudioapi_0.15.0      </span></span>
-<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a><span class="do">##   [5] jsonlite_1.8.7          shape_1.4.6             magrittr_2.0.3          rmarkdown_2.25         </span></span>
-<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a><span class="do">##   [9] fs_1.6.3                ragg_1.2.6              vctrs_0.6.3             memoise_2.0.1          </span></span>
-<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a><span class="do">##  [13] askpass_1.2.0           terra_1.7-46            gh_1.4.0                janitor_2.2.0          </span></span>
-<span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a><span class="do">##  [17] htmltools_0.5.6.1       curl_5.1.0              raster_3.6-23           KernSmooth_2.23-22     </span></span>
-<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a><span class="do">##  [21] htmlwidgets_1.6.2       desc_1.4.2              httr2_0.2.3             plyr_1.8.9             </span></span>
-<span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a><span class="do">##  [25] testthat_3.2.0          stars_0.6-4             lubridate_1.9.3         cachem_1.0.8           </span></span>
-<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a><span class="do">##  [29] uuid_1.1-1              igraph_1.5.1            mime_0.12               lifecycle_1.0.3        </span></span>
-<span id="cb2-34"><a href="#cb2-34" tabindex="-1"></a><span class="do">##  [33] pkgconfig_2.0.3         Matrix_1.6-1.1          R6_2.5.1                fastmap_1.1.1          </span></span>
-<span id="cb2-35"><a href="#cb2-35" tabindex="-1"></a><span class="do">##  [37] rcmdcheck_1.4.0         shiny_1.7.5.1           snakecase_0.11.1        digest_0.6.33          </span></span>
-<span id="cb2-36"><a href="#cb2-36" tabindex="-1"></a><span class="do">##  [41] colorspace_2.1-0        ps_1.7.5                rprojroot_2.0.3         pkgload_1.3.3          </span></span>
-<span id="cb2-37"><a href="#cb2-37" tabindex="-1"></a><span class="do">##  [45] textshaping_0.3.7       RSQLite_2.3.1           fansi_1.0.5             timechange_0.2.0       </span></span>
-<span id="cb2-38"><a href="#cb2-38" tabindex="-1"></a><span class="do">##  [49] gdistance_1.6.4         abind_1.4-5             compiler_4.3.1          proxy_0.4-27           </span></span>
-<span id="cb2-39"><a href="#cb2-39" tabindex="-1"></a><span class="do">##  [53] remotes_2.4.2.1         bit64_4.0.5             fontquiver_0.2.1        withr_2.5.1            </span></span>
-<span id="cb2-40"><a href="#cb2-40" tabindex="-1"></a><span class="do">##  [57] DBI_1.1.3               pkgbuild_1.4.2          openssl_2.1.1           rappdirs_0.3.3         </span></span>
-<span id="cb2-41"><a href="#cb2-41" tabindex="-1"></a><span class="do">##  [61] icesDatras_1.4.1        sessioninfo_1.2.2       classInt_0.4-10         gfonts_0.2.0           </span></span>
-<span id="cb2-42"><a href="#cb2-42" tabindex="-1"></a><span class="do">##  [65] units_0.8-4             tools_4.3.1             foreign_0.8-85          zip_2.3.0              </span></span>
-<span id="cb2-43"><a href="#cb2-43" tabindex="-1"></a><span class="do">##  [69] httpuv_1.6.11           glue_1.6.2              callr_3.7.3             promises_1.2.1         </span></span>
-<span id="cb2-44"><a href="#cb2-44" tabindex="-1"></a><span class="do">##  [73] grid_4.3.1              sf_1.0-14               reshape2_1.4.4          generics_0.1.3         </span></span>
-<span id="cb2-45"><a href="#cb2-45" tabindex="-1"></a><span class="do">##  [77] gtable_0.3.4            class_7.3-22            tidyr_1.3.0             data.table_1.14.8      </span></span>
-<span id="cb2-46"><a href="#cb2-46" tabindex="-1"></a><span class="do">##  [81] xml2_1.3.5              utf8_1.2.3              pillar_1.9.0            stringr_1.5.0          </span></span>
-<span id="cb2-47"><a href="#cb2-47" tabindex="-1"></a><span class="do">##  [85] yulab.utils_0.1.0       later_1.3.1             splines_4.3.1           dplyr_1.1.3            </span></span>
-<span id="cb2-48"><a href="#cb2-48" tabindex="-1"></a><span class="do">##  [89] lattice_0.21-9          bit_4.0.5               tidyselect_1.2.0        rvcheck_0.2.1          </span></span>
-<span id="cb2-49"><a href="#cb2-49" tabindex="-1"></a><span class="do">##  [93] fontLiberation_0.1.0    miniUI_0.1.1.1          gitcreds_0.1.2          fontBitstreamVera_0.1.1</span></span>
-<span id="cb2-50"><a href="#cb2-50" tabindex="-1"></a><span class="do">##  [97] crul_1.4.0              xfun_0.40               adehabitatMA_0.3.16     credentials_2.0.1      </span></span>
-<span id="cb2-51"><a href="#cb2-51" tabindex="-1"></a><span class="do">## [101] brio_1.1.3              stringi_1.7.12          xopen_1.0.0             yaml_2.3.7             </span></span>
-<span id="cb2-52"><a href="#cb2-52" tabindex="-1"></a><span class="do">## [105] evaluate_0.22           codetools_0.2-19        httpcode_0.3.0          officer_0.6.2          </span></span>
-<span id="cb2-53"><a href="#cb2-53" tabindex="-1"></a><span class="do">## [109] gdtools_0.3.3           tibble_3.2.1            BiocManager_1.30.22     cli_3.6.1              </span></span>
-<span id="cb2-54"><a href="#cb2-54" tabindex="-1"></a><span class="do">## [113] xtable_1.8-4            systemfonts_1.0.5       munsell_0.5.0           processx_3.8.2         </span></span>
-<span id="cb2-55"><a href="#cb2-55" tabindex="-1"></a><span class="do">## [117] gert_2.0.0              Rcpp_1.0.11             ellipsis_0.3.2          ggplot2_3.4.4          </span></span>
-<span id="cb2-56"><a href="#cb2-56" tabindex="-1"></a><span class="do">## [121] blob_1.2.4              prettyunits_1.2.0       profvis_0.3.8           urlchecker_1.0.1       </span></span>
-<span id="cb2-57"><a href="#cb2-57" tabindex="-1"></a><span class="do">## [125] e1071_1.7-13            scales_1.2.1            ncdf4_1.21              purrr_1.0.2            </span></span>
-<span id="cb2-58"><a href="#cb2-58" tabindex="-1"></a><span class="do">## [129] crayon_1.5.2            flextable_0.9.3         rlang_1.1.1</span></span></code></pre></div>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a><span class="do">##  [1] knitr_1.44         badger_0.2.3       pkgdown_2.0.7.9000 usethis_2.2.2     </span></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="do">##  [5] here_1.0.1         sdmgamindex_0.1.1  tweedie_2.3.5      MASS_7.3-60       </span></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="do">##  [9] sf_1.0-14          sp_2.0-0           RANN_2.6.1         marmap_1.0.10     </span></span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a><span class="do">## [13] mapdata_2.3.1      maps_3.4.1         tidyr_1.3.0        mgcv_1.8-42       </span></span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a><span class="do">## [17] nlme_3.1-162      </span></span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a><span class="do">## loaded via a namespace (and not attached):</span></span>
+<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a><span class="do">##   [1] RColorBrewer_1.1-3      sys_3.4.2               rstudioapi_0.15.0      </span></span>
+<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a><span class="do">##   [4] dlstats_0.1.7           jsonlite_1.8.7          shape_1.4.6            </span></span>
+<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a><span class="do">##   [7] magrittr_2.0.3          rmarkdown_2.25          fs_1.6.3               </span></span>
+<span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a><span class="do">##  [10] ragg_1.2.5              vctrs_0.6.3             memoise_2.0.1          </span></span>
+<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a><span class="do">##  [13] askpass_1.2.0           terra_1.7-46            gh_1.4.0               </span></span>
+<span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a><span class="do">##  [16] janitor_2.2.0           htmltools_0.5.6         curl_5.0.2             </span></span>
+<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a><span class="do">##  [19] raster_3.6-23           KernSmooth_2.23-22      httr2_0.2.3            </span></span>
+<span id="cb2-34"><a href="#cb2-34" tabindex="-1"></a><span class="do">##  [22] plyr_1.8.8              stars_0.6-4             lubridate_1.9.2        </span></span>
+<span id="cb2-35"><a href="#cb2-35" tabindex="-1"></a><span class="do">##  [25] cachem_1.0.8            uuid_1.1-1              igraph_1.5.1           </span></span>
+<span id="cb2-36"><a href="#cb2-36" tabindex="-1"></a><span class="do">##  [28] mime_0.12               lifecycle_1.0.3         pkgconfig_2.0.3        </span></span>
+<span id="cb2-37"><a href="#cb2-37" tabindex="-1"></a><span class="do">##  [31] Matrix_1.5-4.1          R6_2.5.1                fastmap_1.1.1          </span></span>
+<span id="cb2-38"><a href="#cb2-38" tabindex="-1"></a><span class="do">##  [34] shiny_1.7.5             snakecase_0.11.1        digest_0.6.33          </span></span>
+<span id="cb2-39"><a href="#cb2-39" tabindex="-1"></a><span class="do">##  [37] colorspace_2.1-0        patchwork_1.1.3         rprojroot_2.0.3        </span></span>
+<span id="cb2-40"><a href="#cb2-40" tabindex="-1"></a><span class="do">##  [40] textshaping_0.3.6       RSQLite_2.3.1           fansi_1.0.4            </span></span>
+<span id="cb2-41"><a href="#cb2-41" tabindex="-1"></a><span class="do">##  [43] timechange_0.2.0        gdistance_1.6.4         abind_1.4-5            </span></span>
+<span id="cb2-42"><a href="#cb2-42" tabindex="-1"></a><span class="do">##  [46] compiler_4.3.1          proxy_0.4-27            bit64_4.0.5            </span></span>
+<span id="cb2-43"><a href="#cb2-43" tabindex="-1"></a><span class="do">##  [49] fontquiver_0.2.1        DBI_1.1.3               gratia_0.8.1           </span></span>
+<span id="cb2-44"><a href="#cb2-44" tabindex="-1"></a><span class="do">##  [52] openssl_2.1.0           rappdirs_0.3.3          classInt_0.4-10        </span></span>
+<span id="cb2-45"><a href="#cb2-45" tabindex="-1"></a><span class="do">##  [55] gfonts_0.2.0            tools_4.3.1             units_0.8-3            </span></span>
+<span id="cb2-46"><a href="#cb2-46" tabindex="-1"></a><span class="do">##  [58] zip_2.3.0               httpuv_1.6.11           glue_1.6.2             </span></span>
+<span id="cb2-47"><a href="#cb2-47" tabindex="-1"></a><span class="do">##  [61] promises_1.2.1          grid_4.3.1              reshape2_1.4.4         </span></span>
+<span id="cb2-48"><a href="#cb2-48" tabindex="-1"></a><span class="do">##  [64] generics_0.1.3          gtable_0.3.4            class_7.3-22           </span></span>
+<span id="cb2-49"><a href="#cb2-49" tabindex="-1"></a><span class="do">##  [67] data.table_1.14.8       xml2_1.3.5              utf8_1.2.3             </span></span>
+<span id="cb2-50"><a href="#cb2-50" tabindex="-1"></a><span class="do">##  [70] pillar_1.9.0            stringr_1.5.0           yulab.utils_0.1.0      </span></span>
+<span id="cb2-51"><a href="#cb2-51" tabindex="-1"></a><span class="do">##  [73] later_1.3.1             splines_4.3.1           dplyr_1.1.3            </span></span>
+<span id="cb2-52"><a href="#cb2-52" tabindex="-1"></a><span class="do">##  [76] lattice_0.21-8          bit_4.0.5               tidyselect_1.2.0       </span></span>
+<span id="cb2-53"><a href="#cb2-53" tabindex="-1"></a><span class="do">##  [79] rvcheck_0.2.1           fontLiberation_0.1.0    gitcreds_0.1.2         </span></span>
+<span id="cb2-54"><a href="#cb2-54" tabindex="-1"></a><span class="do">##  [82] fontBitstreamVera_0.1.1 crul_1.4.0              xfun_0.40              </span></span>
+<span id="cb2-55"><a href="#cb2-55" tabindex="-1"></a><span class="do">##  [85] adehabitatMA_0.3.16     credentials_2.0.1       stringi_1.7.12         </span></span>
+<span id="cb2-56"><a href="#cb2-56" tabindex="-1"></a><span class="do">##  [88] yaml_2.3.7              evaluate_0.22           codetools_0.2-19       </span></span>
+<span id="cb2-57"><a href="#cb2-57" tabindex="-1"></a><span class="do">##  [91] httpcode_0.3.0          officer_0.6.2           gdtools_0.3.3          </span></span>
+<span id="cb2-58"><a href="#cb2-58" tabindex="-1"></a><span class="do">##  [94] tibble_3.2.1            BiocManager_1.30.22     cli_3.6.1              </span></span>
+<span id="cb2-59"><a href="#cb2-59" tabindex="-1"></a><span class="do">##  [97] xtable_1.8-4            systemfonts_1.0.4       munsell_0.5.0          </span></span>
+<span id="cb2-60"><a href="#cb2-60" tabindex="-1"></a><span class="do">## [100] Rcpp_1.0.11             gert_2.0.0              ellipsis_0.3.2         </span></span>
+<span id="cb2-61"><a href="#cb2-61" tabindex="-1"></a><span class="do">## [103] ggplot2_3.4.3           blob_1.2.4              mvnfast_0.2.8          </span></span>
+<span id="cb2-62"><a href="#cb2-62" tabindex="-1"></a><span class="do">## [106] scales_1.2.1            e1071_1.7-13            ncdf4_1.21             </span></span>
+<span id="cb2-63"><a href="#cb2-63" tabindex="-1"></a><span class="do">## [109] purrr_1.0.2             crayon_1.5.2            flextable_0.9.3        </span></span>
+<span id="cb2-64"><a href="#cb2-64" tabindex="-1"></a><span class="do">## [112] rlang_1.1.1</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="noaa-readme">NOAA README<a class="anchor" aria-label="anchor" href="#noaa-readme"></a>
