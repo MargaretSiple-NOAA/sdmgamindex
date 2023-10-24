@@ -48,7 +48,7 @@ hh.YEAR,
 hh.SRVY,                 
 hh.SURVEY,
 hh.SURVEY_DEFINITION_ID,
-hh.SURVEY_NAME,
+-- hh.SURVEY_NAME,
 hh.CRUISE,
 hh.CRUISEJOIN,           
 hh.HAUL,
@@ -179,7 +179,7 @@ write.table(str0,
             file = here::here("R","noaa_afsc_public_foss.R"), 
             sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
-# Load new FOSS data -----------------------------------------------------------
+# Load Biomass data ------------------------------------------------------------
 
 noaa_afsc_biomass_estimates <- RODBC::sqlQuery(
   channel = channel_products, 

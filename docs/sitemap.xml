@@ -4,16 +4,10 @@
     <loc>https://emilymarkowitz-noaa.github.io/sdmgamindex/404.html</loc>
   </url>
   <url>
-    <loc>https://emilymarkowitz-noaa.github.io/sdmgamindex/articles/A-data-prep.html</loc>
-  </url>
-  <url>
     <loc>https://emilymarkowitz-noaa.github.io/sdmgamindex/articles/A-gam-basics.html</loc>
   </url>
   <url>
-    <loc>https://emilymarkowitz-noaa.github.io/sdmgamindex/articles/A_gam_sdmTMB_example.html</loc>
-  </url>
-  <url>
-    <loc>https://emilymarkowitz-noaa.github.io/sdmgamindex/articles/B-model-tuning.html</loc>
+    <loc>https://emilymarkowitz-noaa.github.io/sdmgamindex/articles/B_gam_sdmTMB_example.html</loc>
   </url>
   <url>
     <loc>https://emilymarkowitz-noaa.github.io/sdmgamindex/articles/C-model-comparisons.html</loc>
@@ -53,9 +47,6 @@
   </url>
   <url>
     <loc>https://emilymarkowitz-noaa.github.io/sdmgamindex/reference/convert_deg_rad.html</loc>
-  </url>
-  <url>
-    <loc>https://emilymarkowitz-noaa.github.io/sdmgamindex/reference/export_si.html</loc>
   </url>
   <url>
     <loc>https://emilymarkowitz-noaa.github.io/sdmgamindex/reference/export_surveyidx.html</loc>
@@ -119,8 +110,5 @@
   </url>
   <url>
     <loc>https://emilymarkowitz-noaa.github.io/sdmgamindex/reference/redo_surveyidx.html</loc>
-  </url>
-  <url>
-    <loc>https://emilymarkowitz-noaa.github.io/sdmgamindex/reference/simulate_surveyidx.html</loc>
   </url>
 </urlset>

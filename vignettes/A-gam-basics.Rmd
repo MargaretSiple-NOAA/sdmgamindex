@@ -9,15 +9,14 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r setup, include = FALSE}
+# csl: "https://raw.githubusercontent.com/citation-style-language/styles/master/apa-no-ampersand.csl"
+# bibliography: "https://raw.githubusercontent.com/afsc-gap-products/citations/main/cite/bibliography.bib"
 knitr::opts_chunk$set(
-  collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE, 
-  eval = FALSE, 
+  collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE, eval = FALSE,  
   comment = "#>"
 )
-```
 
-```{r setup, echo = FALSE}
 # library(remotes)
 PKG <- c(
   "sdmgamindex", 
@@ -36,10 +35,10 @@ PKG <- c(
 )
 
 for (p in PKG) {
-  if(!require(p,character.only = TRUE)) {  
-    install.packages(p)
+  # if(!require(p,character.only = TRUE)) {  
+    # install.packages(p)
     require(p,character.only = TRUE)}
-}
+# }
 ```
 
 ## Example set up and context:
@@ -99,7 +98,7 @@ SRVY <- "EBS"
 
 ## 1. What data area we using?
 
-Here, we use the public facing data from the [NOAA AFSC groundfish Bering sea bottom trawl survey](https://www.fisheries.noaa.gov/foss/f?p=215:29:5480997826449::NO:::). For more information about how these data were compiled, see [afsc-gap-products GitHub repo](https://github.com/afsc-gap-products/gap_public_data). 
+Here, we use the public facing data from the [NOAA AFSC groundfish Bering sea bottom trawl survey](https://www.fisheries.noaa.gov/foss). For more information about how these data were compiled, see [afsc-gap-products GitHub repo](https://afsc-gap-products.github.io/gap_products/content/foss-intro.html). 
 
 ```{r view_data}
 dat <- sdmgamindex::noaa_afsc_public_foss %>% 
@@ -461,6 +460,7 @@ for(i in 1:nrow(comb)){
 
 save(models, fittimes, file = paste0("../inst/VigA_simple_gam_model_fits.Rdata"))
 ```
+
 ```{r, eval = FALSE}
 
 # Lesson 8: Modling

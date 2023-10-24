@@ -24,17 +24,20 @@ LazyData: true
 Depends:
     R (>= 3.0),
     mgcv,
+    tidyr,
     parallel,
     maps,
     mapdata, 
     marmap, 
     RANN, 
     sp, 
+    sf, 
     MASS, 
     tweedie
 Imports:
-    MASS,
-    tweedie
+    DATRAS, 
+    akgfmaps, 
+    coldpool
 Remotes: 
     DTUAqua/DATRAS/DATRAS,	
     afsc-gap-products/akgfmaps, 
@@ -43,6 +46,7 @@ RoxygenNote: 7.2.3
 Suggests: 
     knitr,
     rmarkdown, 
-    dplyr
+    dplyr, 
+    flextable
 VignetteBuilder: knitr
 URL: https://emilymarkowitz-noaa.github.io/sdmgamindex/

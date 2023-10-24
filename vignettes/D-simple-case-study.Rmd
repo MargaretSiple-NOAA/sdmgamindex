@@ -1,26 +1,22 @@
 ---
-title: "Simple {sdmgamindex} case study"
+title: "{sdmgamindex} case study with and without covariates"
 date: "`r format(Sys.Date(), format='%B %d %Y') `"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Simple {sdmgamindex} case study}
+  %\VignetteIndexEntry{{sdmgamindex} case study with and without covariates}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
-# csl: "https://raw.githubusercontent.com/citation-style-language/styles/master/apa-no-ampersand.csl"
-# bibliography: "https://raw.githubusercontent.com/afsc-gap-products/citations/main/cite/bibliography.bib"
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE#, 
-  # comment = "#>"
+  collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE, 
+  comment = "#>"
 )
-```
 
-```{r setup, echo = FALSE}
 # library(remotes)
 PKG <- c(
-  # "sdmgamindex", 
+  "sdmgamindex", 
   "DATRAS", # remotes::install_github("DTUAqua/DATRAS/DATRAS")
   "dplyr",
   "sf", 
@@ -28,7 +24,6 @@ PKG <- c(
   "magrittr", 
   "flextable", 
   "raster", 
-  "sdmgamindex", 
   "dplyr", 
   "magrittr",
   
@@ -38,12 +33,10 @@ PKG <- c(
 )
 
 for (p in PKG) {
-  if(!require(p,character.only = TRUE)) {  
+  # if(!require(p,character.only = TRUE)) {  
     # install.packages(p)
     require(p,character.only = TRUE)}
-}
-library()
-
+# }
 ```
 
 ## Example set up and context:
@@ -102,7 +95,7 @@ SRVY <- "EBS"
 
 ## 1. What data area we using?
 
-Here, we use the public facing data from the [NOAA AFSC groundfish Bering sea bottom trawl survey](https://www.fisheries.noaa.gov/foss/f?p=215:29:5480997826449::NO:::). For more information about how these data were compiled, see [afsc-gap-products GitHub repo](https://afsc-gap-products.github.io/gap_products/). These data are zero-filled (presence and absence). 
+Here, we use the public facing data from the [NOAA AFSC groundfish Bering sea bottom trawl survey](https://www.fisheries.noaa.gov/foss). For more information about how these data were compiled, see [afsc-gap-products GitHub repo](https://afsc-gap-products.github.io/gap_products/content/foss-intro.html). 
 
 ```{r view-data}
 dat <- sdmgamindex::noaa_afsc_public_foss %>% 
@@ -467,7 +460,7 @@ lapply(models,function(x) gam.check(x$pModels[[1]]))
 # --- failed re-building 'D-simple-case-study.Rmd'
 # par(mfrow = c(2,2))
 a <- lapply(models,function(x) gam.check(x$pModels[[1]]))
-png(filename = here::here("inst","VigD_gamcheck.png"),
+png(filename = here::here("inst","vigD_gamcheck.png"),
     width=640,height=480)
 
 

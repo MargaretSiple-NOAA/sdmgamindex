@@ -1,4 +1,5 @@
 url: https://emilymarkowitz-noaa.github.io/sdmgamindex/
 template:
   bootstrap: 5
-
+csl: "https://raw.githubusercontent.com/citation-style-language/styles/master/apa-no-ampersand.csl"
+bibliography: "https://raw.githubusercontent.com/afsc-gap-products/citations/main/cite/bibliography.bib"
