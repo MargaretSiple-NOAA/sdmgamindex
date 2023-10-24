@@ -339,7 +339,7 @@ sims_sum <-  sims %>%
                            upr = upr_fn))
 ```
 
-Note that this approach uses a Gaussian approximation to the posterior, which is all that is implemented currently in the gratia package. However, a better estimate of uncertainty could be derived from sampling from the actual posterior distribution. However, this is beyond the scope of today's lesson.
+Note that this approach uses a Gaussian approximation to the posterior, which is all that is implemented currently in the `{gratia}` package. However, a better estimate of uncertainty could be derived from sampling from the actual posterior distribution. However, this is beyond the scope of today's lesson.
 
 Plot the biomass index:
 
