@@ -304,18 +304,18 @@ For this we are going to lean on our in-house prepared validated and pre-prepare
 
 ```{r covar-bt-test}
 # Just so we can see what we are looking at:
-plot(terra::unwrap(coldpool::ebs_bottom_temperature)) 
+#plot(terra::unwrap(coldpool::ebs_bottom_temperature)) 
 ```
 
 ```{r covar-bt}
-tmp <- which(names(terra::unwrap(coldpool::ebs_bottom_temperature)) %in% YEARS)
+tmp <- which(readr::parse_number(names(terra::unwrap(coldpool::ebs_bottom_temperature))) %in% YEARS)
 
 dat_temperature <- terra::unwrap(coldpool::ebs_bottom_temperature)[[tmp]] %>% 
   terra::extract(y = dat_cov[,c("lon", "lat")] %>% 
                    sf::sf_project(from = "+proj=longlat",
                                   to = "EPSG:3338")) %>% 
   data.frame()
-names(dat_temperature) <- paste0("GEAR_TEMPERATURE", YEARS)
+names(dat_temperature) <- paste0("GEAR_TEMPERATURE", YEARS)[-8]# remove the final year
 
 dat_cov <- dplyr::bind_cols(dat_cov, dat_temperature) %>% 
   na.omit()
