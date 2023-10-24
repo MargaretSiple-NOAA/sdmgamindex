@@ -9,8 +9,6 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
-# csl: "https://raw.githubusercontent.com/citation-style-language/styles/master/apa-no-ampersand.csl"
-# bibliography: "https://raw.githubusercontent.com/afsc-gap-products/citations/main/cite/bibliography.bib"
 knitr::opts_chunk$set(
   collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE, 
   comment = "#>"
