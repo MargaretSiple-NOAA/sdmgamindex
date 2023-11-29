@@ -39,9 +39,9 @@ for (p in PKG) {
 # }
 ```
 
-## Example set up and context:
+## Case study
 
-For this example, let's say we want to assess: 
+In this example, we will use data from NOAA Fisheries' eastern and northern Bering sea (EBS) bottom trawl survey. The Resource Assessment and Conservation Engineering (RACE) Division Groundfish Assessment Program (GAP) of the Alaska Fisheries Science Center (AFSC) conducts fisheries-independent bottom trawl surveys to assess the populations of demersal fish and crab stocks of Alaska. The species covered in this case study include yellow fin sole, walleye pollock, and red king crab. 
 
 ```{r info-table, eval = TRUE, echo = FALSE}
 img_url <- paste0("https://raw.githubusercontent.com/afsc-gap-products/gap_bs_data_report/main/img/", 
@@ -75,6 +75,8 @@ table_print <- table_raw %>%
 table_print
 ```
 
+And we are going to estimate the indicies of these species Over the eastern and northern Bering Sea shelf. 
+
 ```{r survey-figure, echo=FALSE, fig.cap=readLines("https://raw.githubusercontent.com/afsc-gap-products/survey-live-temperature-map/main/examples/current_grid_bs.txt"), out.width = '100%'}
 
 img_url <- "https://raw.githubusercontent.com/afsc-gap-products/survey-live-temperature-map/main/examples/current_grid_bs.png"
@@ -82,8 +84,6 @@ img_loc <- here::here("vignettes", "current_grid_bs.png")
 download.file(url = img_url, destfile = img_loc, mode="wb")
 knitr::include_graphics(img_loc)
 ```
-
-In this example, we will use data from NOAA Fisheries' eastern Bering sea (EBS) bottom trawl survey. The Resource Assessment and Conservation Engineering (RACE) Division Groundfish Assessment Program (GAP) of the Alaska Fisheries Science Center (AFSC) conducts fisheries-independent bottom trawl surveys to assess the populations of demersal fish and crab stocks of Alaska. Data presented here are presence-only (non-zero) observations from those surveys and therefore CANNOT be aggregated. 
 
 For the sake of a simple example, we will only assess data from 2015 to 2021. 
 
@@ -382,6 +382,14 @@ fm <-  list(
   # Mdoel with simple covariates
   "fm_2_cov" =
     "s(BOTTOM_DEPTH,bs='ts',k=10) +
+s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)",
+  
+  # Mdoel with simple covariates
+  "fm_3_s_t_st_cov" =
+    "Year +
+    s(sx,sy,bs=c('ts'),k=376) +
+    s(sx,sy,bs=c('ts'),k=10,by=Year) + 
+    s(BOTTOM_DEPTH,bs='ts',k=10) +
 s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)"
 )
 ```
@@ -454,7 +462,8 @@ lapply(models,function(x) gam.check(x$pModels[[1]]))
 ```
 
 ```{r model_check1_run, eval = FALSE, echo = FALSE}
-#Quitting from lines 460-462 [model_check1] (D-simple-case-study.Rmd)
+# 
+# Quitting from lines 460-462 [model_check1] (D-simple-case-study.Rmd)
 # Error: processing vignette 'D-simple-case-study.Rmd' failed with diagnostics:
 # figure margins too large
 # --- failed re-building 'D-simple-case-study.Rmd'

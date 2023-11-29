@@ -270,6 +270,8 @@ rmarkdown::render(here::here("inst", "misc", "README.Rmd"),
 # devtools::build_vignettes()
 # usethis::use_pkgdown(config_file = "./pkgdown/_pkgdown.yml")
 
-pkgdown::build_site(pkg = here::here())
+# pkgdown::clean_site()
+# pkgdown::build_site(pkg = here::here())
+pkgdown::build_site()
 # usethis::use_github_action("pkgdown")
 
