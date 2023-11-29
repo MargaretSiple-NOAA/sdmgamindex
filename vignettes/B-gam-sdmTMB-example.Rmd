@@ -88,7 +88,8 @@ The dataset contains sampling locations (`longitude` and `latitude`) and `year`.
 
 ```{r}
 ggplot(data = dat, 
-       mapping = aes(x = longitude_dd, y = latitude_dd, size = cpue_kgha, color = bottom_temperature_c)) + 
+       mapping = aes(x = longitude_dd_start, y = latitude_dd_start, 
+                     size = cpue_kgkm2, color = bottom_temperature_c)) + 
   geom_point(alpha = 0.3)
 ```
 
@@ -99,7 +100,7 @@ ggplot(data = dat,
 ```{r}
 dat <- add_utm_columns(dat, 
                        ll_crs = 4326,
-                       ll_names = c("longitude_dd", "latitude_dd"))
+                       ll_names = c("longitude_dd_start", "latitude_dd_start"))
 
 dat$log_depth <- log(dat$depth_m)
 dat$year_factor <- as.factor(dat$year)
@@ -120,7 +121,7 @@ First, fit a GAM without any covariates: just year as a factor and a spatial smo
 ```{r}
 start.time <- Sys.time()
 fit_gam <- gam(
-  formula = cpue_kgha ~ as.factor(year) +
+  formula = cpue_kgkm2 ~ as.factor(year) +
     s(X, Y, k = 50),
   family = tw(link = "log"),
   data = dat
@@ -143,7 +144,7 @@ Include a 2-D smooth over space, and depth as a covariate.
 ```{r}
 start.time <- Sys.time()
 fit_gam_s <- gam(
-  formula = cpue_kgha ~ s(depth_m) + as.factor(year) + 
+  formula = cpue_kgkm2 ~ s(depth_m) + as.factor(year) + 
     s(X,Y), 
   family = tw(link = "log"),
   data = dat
@@ -231,13 +232,13 @@ Plot predictions over survey area. Note: Because the EBS grid is irregularly spa
 
 ```{r}
 pred_gam_df |>
-  filter(year==1999) |> # single year 
-ggplot(aes(X, Y, color=pred_gam)) + 
-  geom_point(size = 0.1) + 
-  scale_fill_viridis_c() + 
-  #facet_wrap(~year) + 
+  dplyr::filter(year == 2019) |> # single year
+  ggplot(aes(X, Y, color = pred_gam)) +
+  geom_point(size = 0.1) +
+  scale_fill_viridis_c() +
+  # facet_wrap(~year) +
   coord_fixed() +
-  labs(color = expression(CPUE (kg/km^2))) +
+  labs(color = expression(CPUE(kg / km^2))) +
   theme_light() +
   theme(legend.position = "bottom")
 ```
