@@ -28,8 +28,8 @@ knitr::opts_chunk$set(
 
 # Our goals for this vignette:
 
-- Fit a GAM and obtain an area-weighted biomass index
-- Fit a basic spatiotemporal model (a GLMM!) using sdmTMB and compare GAM to GLMM 
+-   Fit a GAM and obtain an area-weighted biomass index
+-   Fit a basic spatiotemporal model (a GLMM!) using sdmTMB and compare GAM to GLMM
 
 ```{r install_inla, eval = FALSE, include = FALSE}
 # install.packages("INLA", repos = c(getOption("repos"), INLA = "https://inla.r-inla-download.org/R/stable"), dependencies = TRUE)
@@ -133,6 +133,7 @@ cat(
   " mins to run"
 )
 ```
+
 Get diagnostics and perform model checking:
 
 ```{r}
@@ -159,7 +160,7 @@ gam.check(fit_gam_s)
 
 # Fit a GAM analogous to a spatiotemporal model in sdmTMB
 
-**NOTE**: This takes a long time to fit. Include a 2-D smooth over space for each year. In this case, there a different 2-D smooth for each year. This will take much longer to fit than the other two. 
+**NOTE**: This takes a long time to fit. Include a 2-D smooth over space for each year. In this case, there a different 2-D smooth for each year. This will take much longer to fit than the other two.
 
 ```{r}
 start.time <- Sys.time()
@@ -192,7 +193,8 @@ Examine the four diagnostic plots. Each of these gives a different way of lookin
 # Predict to full survey area with new data
 
 ## Load the grid
-Extrapolation grid for the EBS. 
+
+Extrapolation grid for the EBS.
 
 ```{r}
 # This is another form of the same grid:
@@ -218,7 +220,7 @@ grid <- purrr::map_dfr(unique(dat$year), ~ tibble(grid, year = .x))
 
 ## Predict CPUE across the grid
 
-To get predicted 
+To get predicted CPUE across the survey grid.
 
 ```{r}
 pred_gam <- predict(fit_gam, type = "response", newdata = grid) #This takes a long time.
@@ -228,7 +230,7 @@ pred_gam_df$predicted_tot_grid <- pred_gam_df$Shape_Area_ha*pred_gam_df$pred_gam
 
 ```
 
-Plot predictions over survey area. Note: Because the EBS grid is irregularly spaced, you have to use `geom_point()` here instead of `geom_tile()` or `geom_raster()`. 
+Plot predictions over survey area. Note: Because the EBS grid is irregularly spaced, you have to use `geom_point()` here instead of `geom_tile()` or `geom_raster()`.
 
 ```{r}
 pred_gam_df |>
@@ -257,7 +259,7 @@ head(gam_idx_mt)
 
 ## Get uncertainties for GAM-based index by sampling from posteriors
 
-[`{gratia}`](https://gavinsimpson.github.io/gratia/) is an R package for evaluating and displaying GAM fits. This script uses the `fitted_samples()` function, which draws fitted values from the posterior of a model using a Gaussian approximation. 
+[`{gratia}`](https://gavinsimpson.github.io/gratia/) is an R package for evaluating and displaying GAM fits. This script uses the `fitted_samples()` function, which draws fitted values from the posterior of a model using a Gaussian approximation.
 
 ```{r}
 sims <- gratia::fitted_samples(fit_gam, n=10, data=grid, 
@@ -281,7 +283,7 @@ sims_sum <-  sims %>%
                            upr = upr_fn))
 ```
 
-# Index standardization using `sdmTMB`
+# Calculate biomass using `sdmTMB`
 
 To calculate an index from any of these models, we need to run the `predict.sdmTMB()` function with the argument `return_tmb_object = TRUE`. We can then run the `get_index()` function to extract the total biomass calculations and standard errors.
 
@@ -311,7 +313,6 @@ bind_rows(index, index_c) %>%
   xlab("Year") +
   ylab("Biomass estimate (tonnes)")
 ```
-
 
 # Calculate biomass index from GAM via simulation
 
