@@ -86,12 +86,16 @@ dat <- yfs <- sdmgamindex::noaa_afsc_public_foss |>
 
 The dataset contains sampling locations (`longitude` and `latitude`) and `year`. It also contains sampling `depth` in meters and sample CPUE `density` in units of tonnes/km^2^.
 
-```{r}
-ggplot(data = dat, 
-       mapping = aes(x = longitude_dd_start, y = latitude_dd_start, 
-                     size = cpue_kgkm2, color = bottom_temperature_c)) + 
-  geom_point(alpha = 0.3)
-```
+-   <div>
+
+    ```{r}
+    ggplot(data = dat, 
+           mapping = aes(x = longitude_dd_start, y = latitude_dd_start, 
+                         size = cpue_kgkm2, color = bottom_temperature_c)) + 
+      geom_point(alpha = 0.3)
+    ```
+
+    </div>
 
 # Fit a GAM to spatial data (analogous to spatial-only model in sdmTMB)
 
@@ -158,16 +162,17 @@ cat("The GAM took ",
 gam.check(fit_gam_s)
 ```
 
-# Fit a GAM analogous to a spatiotemporal model in sdmTMB
+## Spatiotemporal effect + all of the above
 
-**NOTE**: This takes a long time to fit. Include a 2-D smooth over space for each year. In this case, there a different 2-D smooth for each year. This will take much longer to fit than the other two.
+**NOTE**: This takes a long time to fit. Include a 2-D smooth over space for each year. In this case, there a different 2-D smooth for each year. This will take much longer to fit than the other two (this model takes about 10-15 mins - I have set `cache=TRUE` in the chunk so that the outputs are saved and can be used again the next time this doc is run). This model also includes area swept as an offset.
 
 ```{r}
+#| cache = TRUE
 start.time <- Sys.time()
 
 fit_gam_st <- gam(
-  formula = count ~ as.factor(year) +
-    s(X, Y, by = as.factor(year)),
+  formula = count ~ as.factor(year) +  s(X, Y) +
+    s(X, Y, by = as.factor(year)) + offset(area_swept_km2),
   family = tw(link = "log"),
   data = dat
 )
@@ -180,21 +185,27 @@ cat(
 
 ```
 
-Get diagnostics and perform model checking
+Get diagnostics and perform model checking:
 
 ```{r}
 gam.check(fit_gam_st)
+
+# To save the k' values, edf, k-index, and p-value:
+qq.gam(fit_gam_st, rep = 0, level = 0.9, rl.col = 2, 
+       rep.col = "gray80")
 ```
 
-Review console output to help verify convergence, and whether there were an adequate number of basis functions (k).
+Review console output to help verify convergence, and whether there were an adequate number of basis functions (k). If you compare this to the `gam.check()` results from the GAM above with no spatiotemporal effects,
 
 Examine the four diagnostic plots. Each of these gives a different way of looking at your model residuals. On the top-left is a Q-Q plot, which compares the model residuals to the expected/assumed distribution family. A well-fit model's residuals will be close to the 1-1 line, otherwise there may be under- or over-dispersion present. On bottom left is a histogram of residuals. We want this to have a shape similar to the distribution family we specified. On top-right is a plot of residual values as a function of the linear predictor. These should be evenly distributed around zero in a well-fitted model. Finally, on the bottom-right is plot of response against fitted values. A well-fitted model would show values near the 1-1 line.
 
-# Predict to full survey area with new data
+# Calculate biomass index from GAM via simulation
 
-## Load the grid
+## Predict to full survey area with new data
 
-Extrapolation grid for the EBS.
+### Load the grid
+
+Extrapolation grid for the EBS. Ignore the warnings about the UTM zones-- it's a Bering Sea thing.
 
 ```{r}
 # This is another form of the same grid:
@@ -218,12 +229,12 @@ When you have spatiotemporal data, you need a grid for each year. There is a nic
 grid <- purrr::map_dfr(unique(dat$year), ~ tibble(grid, year = .x))
 ```
 
-## Predict CPUE across the grid
+### Predict CPUE across the grid
 
-To get predicted CPUE across the survey grid.
+To get predicted CPUE across the survey grid. Here you can use any of the models from above, as long as they have `YEAR` as a factor and as long as all your covariates are also in the grid. Here we use the basic model (`fit_gam`) because `grid` does not contain depth.
 
 ```{r}
-pred_gam <- predict(fit_gam, type = "response", newdata = grid) #This takes a long time.
+pred_gam <- predict(fit_gam, type = "response", newdata = grid) #This takes a long time
 pred_gam_df <- cbind(grid, pred_gam)
 pred_gam_df$Shape_Area_ha <- pred_gam_df$Shape_Area*0.0001 # original Shape_area is in m^2
 pred_gam_df$predicted_tot_grid <- pred_gam_df$Shape_Area_ha*pred_gam_df$pred_gam
@@ -245,7 +256,7 @@ pred_gam_df |>
   theme(legend.position = "bottom")
 ```
 
-# Calculate biomass index from GAM via simulation
+## Calculate index
 
 Generally, model-based indices of abundance use the area of each grid cell and the prediction for that area to calculate a total index across the survey area. The simplest way to do this is to sum the predicted biomasses across the full grid like so:
 
@@ -259,7 +270,7 @@ head(gam_idx_mt)
 
 ## Get uncertainties for GAM-based index by sampling from posteriors
 
-[`{gratia}`](https://gavinsimpson.github.io/gratia/) is an R package for evaluating and displaying GAM fits. This script uses the `fitted_samples()` function, which draws fitted values from the posterior of a model using a Gaussian approximation.
+[`{gratia}`](https://gavinsimpson.github.io/gratia/) is an R package for evaluating and displaying GAM fits. This script uses the `fitted_samples()` function, which draws fitted values from the posterior of a model using a Gaussian approximation. This will also take a while.
 
 ```{r}
 sims <- gratia::fitted_samples(fit_gam, n=10, data=grid, 
@@ -283,7 +294,19 @@ sims_sum <-  sims %>%
                            upr = upr_fn))
 ```
 
-# Calculate biomass using `sdmTMB`
+## Plot the index
+
+Now you can plot your GAM model-based index over time just like we do for all the other indices!
+
+```{r}
+p1 <- sims_sum |>
+
+
+```
+
+# Fit an analogous model in `` `sdmTMB` ``
+
+Theoretically, there should be a
 
 To calculate an index from any of these models, we need to run the `predict.sdmTMB()` function with the argument `return_tmb_object = TRUE`. We can then run the `get_index()` function to extract the total biomass calculations and standard errors.
 
@@ -314,35 +337,4 @@ bind_rows(index, index_c) %>%
   ylab("Biomass estimate (tonnes)")
 ```
 
-# Calculate biomass index from GAM via simulation
-
-```{r}
-sims <- gratia::fitted_samples(fit_gam, n=10, newdata=grid, 
-                               scale="response", seed=9)
-sims$year <- grid$year[sims$row]
-sims$biomass <- sims$fitted * 4 # expand from density to biomass, given area
-
-level <- 0.95 # specify probability for confidence interval
-
-# Get sum of simulated biomass (density*area) across grid cells, with CI
-lwr_fn <- function(x) {as.numeric(quantile(x, probs = (1 - level) / 2))}
-upr_fn <- function(x) {as.numeric(quantile(x, probs = 1 - (1 - level) / 2))}
-
-sims_sum <-  sims %>% 
-  group_by(year,draw) %>% 
-  summarise_at("biomass", list(biomass = sum)) %>%
-  group_by(year) %>%
-  summarise_at("biomass", list(est = median, # could use mean
-                           lwr = lwr_fn,
-                           upr = upr_fn))
-```
-
-Note that this approach uses a Gaussian approximation to the posterior, which is all that is implemented currently in the `{gratia}` package. However, a better estimate of uncertainty could be derived from sampling from the actual posterior distribution. However, this is beyond the scope of today's lesson.
-
-Plot the biomass index:
-
-```{r}
-ggplot(sims_sum, aes(year, est)) + geom_line() +
-  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.4) +
-  xlab('Year') + ylab('Biomass estimate (kg)')
-```
+# 
