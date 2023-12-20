@@ -87,7 +87,8 @@ Fisheries Research 151(2014) 91-99.
 library(DATRAS) # example data
 library(sdmgamindex)
 library(tidyverse)
-load("data/ebs_example_datras.rda") #object: dat_wrangled. Source: FOSS; see https://emilymarkowitz-noaa.github.io/sdmgamindex/articles/A-data-prep.html for how these data were wrangled in preparation for this example.
+dat <- yfs <- sdmgamindex::noaa_afsc_public_foss |> 
+  dplyr::filter(srvy=="EBS" & species_code == 10210)
 # Megsie todo: add example here using EBS data!
 }
 }

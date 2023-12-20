@@ -4,7 +4,7 @@
 \alias{get_prediction_grid}
 \title{Prediction a grid for a specific year}
 \usage{
-get_prediction_grid(year, x, subsel = NULL, varsbyyr, vars)
+get_prediction_grid(year, x, subsel = NULL, varsbyyr = NULL, vars = NULL)
 }
 \arguments{
 \item{year}{Numeric string. The years the data is available for.}

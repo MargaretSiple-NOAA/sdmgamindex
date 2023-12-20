@@ -39,9 +39,9 @@ for (p in PKG) {
 # }
 ```
 
-## Example set up and context:
+## Case study
 
-For this example, let's say we want to assess: 
+In this example, we will use data from NOAA Fisheries' eastern and northern Bering sea (EBS) bottom trawl survey. The Resource Assessment and Conservation Engineering (RACE) Division Groundfish Assessment Program (GAP) of the Alaska Fisheries Science Center (AFSC) conducts fisheries-independent bottom trawl surveys to assess the populations of demersal fish and crab stocks of Alaska. The species covered in this case study include yellow fin sole, walleye pollock, and red king crab. 
 
 ```{r info-table, eval = TRUE, echo = FALSE}
 img_url <- paste0("https://raw.githubusercontent.com/afsc-gap-products/gap_bs_data_report/main/img/", 
@@ -75,6 +75,8 @@ table_print <- table_raw %>%
 table_print
 ```
 
+And we are going to estimate the indicies of these species Over the eastern and northern Bering Sea shelf. 
+
 ```{r survey-figure, echo=FALSE, fig.cap=readLines("https://raw.githubusercontent.com/afsc-gap-products/survey-live-temperature-map/main/examples/current_grid_bs.txt"), out.width = '100%'}
 
 img_url <- "https://raw.githubusercontent.com/afsc-gap-products/survey-live-temperature-map/main/examples/current_grid_bs.png"
@@ -82,8 +84,6 @@ img_loc <- here::here("vignettes", "current_grid_bs.png")
 download.file(url = img_url, destfile = img_loc, mode="wb")
 knitr::include_graphics(img_loc)
 ```
-
-In this example, we will use data from NOAA Fisheries' eastern Bering sea (EBS) bottom trawl survey. The Resource Assessment and Conservation Engineering (RACE) Division Groundfish Assessment Program (GAP) of the Alaska Fisheries Science Center (AFSC) conducts fisheries-independent bottom trawl surveys to assess the populations of demersal fish and crab stocks of Alaska. Data presented here are presence-only (non-zero) observations from those surveys and therefore CANNOT be aggregated. 
 
 For the sake of a simple example, we will only assess data from 2015 to 2021. 
 
@@ -315,7 +315,7 @@ dat_temperature <- terra::unwrap(coldpool::ebs_bottom_temperature)[[tmp]] %>%
                    sf::sf_project(from = "+proj=longlat",
                                   to = "EPSG:3338")) %>% 
   data.frame()
-names(dat_temperature) <- paste0("GEAR_TEMPERATURE", YEARS)[-8]# remove the final year
+names(dat_temperature) <- paste0("GEAR_TEMPERATURE", YEARS)
 
 dat_cov <- dplyr::bind_cols(dat_cov, dat_temperature) %>% 
   na.omit()
@@ -347,8 +347,11 @@ head(dat_catch_haul)
 ```
 
 ```{r catch_haul_datras }
-allpd <- lapply(YEARS, FUN = sdmgamindex::get_prediction_grid, x = dat_cov, 
-                vars = vars, varsbyyr = varsbyyr)
+allpd <- lapply(YEARS, 
+                FUN = sdmgamindex::get_prediction_grid, 
+                x = dat_cov, 
+                vars = vars, 
+                varsbyyr = varsbyyr)
 names(allpd) <- as.character(YEARS)
 ```
 
@@ -382,6 +385,14 @@ fm <-  list(
   # Mdoel with simple covariates
   "fm_2_cov" =
     "s(BOTTOM_DEPTH,bs='ts',k=10) +
+s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)",
+  
+  # Mdoel with simple covariates and spatial and temporal with an additional year effect
+  "fm_3_s_t_st_cov" =
+    "Year +
+    s(sx,sy,bs=c('ts'),k=376) +
+    s(sx,sy,bs=c('ts'),k=10,by=Year) + 
+    s(BOTTOM_DEPTH,bs='ts',k=10) +
 s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)"
 )
 ```
@@ -404,7 +415,17 @@ comb <- tidyr::crossing(
 ```
 
 ```{r model_fit_load, echo = FALSE}
-load(system.file("vigD_model_fits.Rdata", package = "sdmgamindex") )
+# Would normally save the whole list, but need smaller files 
+# to fit example on GitHub
+# load(system.file("vigD_model_fits.Rdata", package = "sdmgamindex") )
+
+models0 <- list()
+for (i in unique(comb$fm_name)){
+  load(system.file(paste0("vigD_model_fits_",i,".Rdata"), 
+                   package = "sdmgamindex"), verbose = TRUE)
+  models0 <- c(models0, models)
+}
+models <- models0
 ```
 
 ```{r model_fit, eval = FALSE}
@@ -430,8 +451,21 @@ for(i in 1:nrow(comb)){
                                      maxit = 20))  )
   
 }
+```
 
+```{r model_fit_save_butdont, eval = FALSE}
 save(models, fittimes, file = here::here("inst","vigD_model_fits.Rdata"))
+```
+
+```{r model_fit_save_butdo, eval = FALSE, echo = FALSE}
+# Would normally save the whole list (like above), but need smaller files 
+# to fit example on GitHub
+models0 <- models
+for (i in unique(comb$fm_name)){
+  models <- models0[grepl(pattern = i, x = names(models0))]
+  save(models, fittimes, file = here::here("inst",paste0("vigD_model_fits_",i,".Rdata")))
+}
+models <- models0
 ```
 
 ``` {r model_aic}
@@ -442,10 +476,13 @@ save(models, fittimes, file = here::here("inst","vigD_model_fits.Rdata"))
 # sdmgamindex::get_surveyidx_aic(x = models)
 AIC(models$`red king crab fm_1_s_t_st`$pModels[[1]], 
     models$`red king crab fm_2_cov`$pModels[[1]], 
+    models$`red king crab fm_3_s_t_st_cov`$pModels[[1]], 
     models$`walleye pollock fm_1_s_t_st`$pModels[[1]], 
     models$`walleye pollock fm_2_cov`$pModels[[1]], 
+    models$`walleye pollock fm_3_s_t_st_cov`$pModels[[1]], 
     models$`yellowfin sole fm_1_s_t_st`$pModels[[1]], 
-    models$`yellowfin sole fm_2_cov`$pModels[[1]])
+    models$`yellowfin sole fm_2_cov`$pModels[[1]], 
+    models$`yellowfin sole fm_3_s_t_st_cov`$pModels[[1]])
 
 ```
 
@@ -454,7 +491,8 @@ lapply(models,function(x) gam.check(x$pModels[[1]]))
 ```
 
 ```{r model_check1_run, eval = FALSE, echo = FALSE}
-#Quitting from lines 460-462 [model_check1] (D-simple-case-study.Rmd)
+# 
+# Quitting from lines 460-462 [model_check1] (D-simple-case-study.Rmd)
 # Error: processing vignette 'D-simple-case-study.Rmd' failed with diagnostics:
 # figure margins too large
 # --- failed re-building 'D-simple-case-study.Rmd'
