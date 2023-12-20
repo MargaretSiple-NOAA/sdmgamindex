@@ -315,7 +315,7 @@ dat_temperature <- terra::unwrap(coldpool::ebs_bottom_temperature)[[tmp]] %>%
                    sf::sf_project(from = "+proj=longlat",
                                   to = "EPSG:3338")) %>% 
   data.frame()
-names(dat_temperature) <- paste0("GEAR_TEMPERATURE", YEARS)[-8]# remove the final year
+names(dat_temperature) <- paste0("GEAR_TEMPERATURE", YEARS)
 
 dat_cov <- dplyr::bind_cols(dat_cov, dat_temperature) %>% 
   na.omit()
@@ -347,8 +347,11 @@ head(dat_catch_haul)
 ```
 
 ```{r catch_haul_datras }
-allpd <- lapply(YEARS, FUN = sdmgamindex::get_prediction_grid, x = dat_cov, 
-                vars = vars, varsbyyr = varsbyyr)
+allpd <- lapply(YEARS, 
+                FUN = sdmgamindex::get_prediction_grid, 
+                x = dat_cov, 
+                vars = vars, 
+                varsbyyr = varsbyyr)
 names(allpd) <- as.character(YEARS)
 ```
 
@@ -384,7 +387,7 @@ fm <-  list(
     "s(BOTTOM_DEPTH,bs='ts',k=10) +
 s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)",
   
-  # Mdoel with simple covariates
+  # Mdoel with simple covariates and spatial and temporal with an additional year effect
   "fm_3_s_t_st_cov" =
     "Year +
     s(sx,sy,bs=c('ts'),k=376) +
@@ -412,7 +415,17 @@ comb <- tidyr::crossing(
 ```
 
 ```{r model_fit_load, echo = FALSE}
-load(system.file("vigD_model_fits.Rdata", package = "sdmgamindex") )
+# Would normally save the whole list, but need smaller files 
+# to fit example on GitHub
+# load(system.file("vigD_model_fits.Rdata", package = "sdmgamindex") )
+
+models0 <- list()
+for (i in unique(comb$fm_name)){
+  load(system.file(paste0("vigD_model_fits_",i,".Rdata"), 
+                   package = "sdmgamindex"), verbose = TRUE)
+  models0 <- c(models0, models)
+}
+models <- models0
 ```
 
 ```{r model_fit, eval = FALSE}
@@ -438,8 +451,21 @@ for(i in 1:nrow(comb)){
                                      maxit = 20))  )
   
 }
+```
 
+```{r model_fit_save_butdont, eval = FALSE}
 save(models, fittimes, file = here::here("inst","vigD_model_fits.Rdata"))
+```
+
+```{r model_fit_save_butdo, eval = FALSE, echo = FALSE}
+# Would normally save the whole list (like above), but need smaller files 
+# to fit example on GitHub
+models0 <- models
+for (i in unique(comb$fm_name)){
+  models <- models0[grepl(pattern = i, x = names(models0))]
+  save(models, fittimes, file = here::here("inst",paste0("vigD_model_fits_",i,".Rdata")))
+}
+models <- models0
 ```
 
 ``` {r model_aic}
@@ -450,10 +476,13 @@ save(models, fittimes, file = here::here("inst","vigD_model_fits.Rdata"))
 # sdmgamindex::get_surveyidx_aic(x = models)
 AIC(models$`red king crab fm_1_s_t_st`$pModels[[1]], 
     models$`red king crab fm_2_cov`$pModels[[1]], 
+    models$`red king crab fm_3_s_t_st_cov`$pModels[[1]], 
     models$`walleye pollock fm_1_s_t_st`$pModels[[1]], 
     models$`walleye pollock fm_2_cov`$pModels[[1]], 
+    models$`walleye pollock fm_3_s_t_st_cov`$pModels[[1]], 
     models$`yellowfin sole fm_1_s_t_st`$pModels[[1]], 
-    models$`yellowfin sole fm_2_cov`$pModels[[1]])
+    models$`yellowfin sole fm_2_cov`$pModels[[1]], 
+    models$`yellowfin sole fm_3_s_t_st_cov`$pModels[[1]])
 
 ```
 

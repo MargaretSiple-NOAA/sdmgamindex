@@ -5,7 +5,7 @@
 \alias{noaa_afsc_public_foss}
 \title{Public data from FOSS for EBS walleye pollock, yellowfin sole, and red king crab from 2015 to present}
 \format{
-A data frame with 9024 observations on the following 38 variables.
+A data frame with 9024 observations on the following 37 variables.
 \describe{
   \item{\code{date_time}}{Date and time. The date (MM/DD/YYYY) and time (HH:MM) of the haul.}
   \item{\code{depth_m}}{Depth (m). Bottom depth (meters).}
