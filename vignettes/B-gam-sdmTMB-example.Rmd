@@ -11,14 +11,14 @@ vignette: >
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE, 
-  comment = "#>", 
+  comment = "#>",
   eval = FALSE
 )
 ```
 
 > Adapted from Lewis Barnett's sdmTMB tutorial for the Fisheries Survey Course at UW: [GitHub pbs-assess/sdmTMB-teaching 2023-02-14](https://github.com/pbs-assess/sdmTMB-teaching/blob/490ee04157f19d1059c55a1318b894e8b8f460bb/uw-survey-2023/02-exercise.qmd#L356)
 
-# Goals of the original exercise:
+# Goals of the original exercise
 
 -   Practice fitting a basic spatiotemporal model.
 -   Understand how to inspect the model output.
@@ -162,11 +162,11 @@ cat("The GAM took ",
 gam.check(fit_gam_s)
 ```
 
-## Spatiotemporal effect + all of the above
+## Spatiotemporal effect
 
 **NOTE**: This takes a long time to fit. Include a 2-D smooth over space for each year. In this case, there a different 2-D smooth for each year. This will take much longer to fit than the other two (this model takes about 10-15 mins - I have set `cache=TRUE` in the chunk so that the outputs are saved and can be used again the next time this doc is run). This model also includes area swept as an offset.
 
-```{r}
+```{r cache=TRUE}
 #| cache = TRUE
 start.time <- Sys.time()
 
@@ -195,7 +195,7 @@ qq.gam(fit_gam_st, rep = 0, level = 0.9, rl.col = 2,
        rep.col = "gray80")
 ```
 
-Review console output to help verify convergence, and whether there were an adequate number of basis functions (k). If you compare this to the `gam.check()` results from the GAM above with no spatiotemporal effects,
+Review console output to help verify convergence, and whether there were an adequate number of basis functions (k). If you compare this to the `gam.check()` results from the GAM above with no spatiotemporal effects, you can see that the Q-Q plot is closer to the line.
 
 Examine the four diagnostic plots. Each of these gives a different way of looking at your model residuals. On the top-left is a Q-Q plot, which compares the model residuals to the expected/assumed distribution family. A well-fit model's residuals will be close to the 1-1 line, otherwise there may be under- or over-dispersion present. On bottom left is a histogram of residuals. We want this to have a shape similar to the distribution family we specified. On top-right is a plot of residual values as a function of the linear predictor. These should be evenly distributed around zero in a well-fitted model. Finally, on the bottom-right is plot of response against fitted values. A well-fitted model would show values near the 1-1 line.
 
@@ -217,10 +217,10 @@ get_crs(dat = pred_grid_ebs,ll_names =c("lon","lat"))
 grid <- add_utm_columns(pred_grid_ebs, 
                        #ll_crs = 32603, 
                        ll_names = c("lon", "lat"))
+grid$area_swept_km2 <- 1 # if you have area swept in your model as an offset (common when you're using CPUE data) you can do this (I think)
+
 range(grid$X)
 
-# Grid from example
-#wcvi_grid <- readRDS(here::here("data/wcvi-grid.rds"))
 ```
 
 When you have spatiotemporal data, you need a grid for each year. There is a nice tidy little chunk of `{purrr}` code that will do that for you!
@@ -300,20 +300,45 @@ Now you can plot your GAM model-based index over time just like we do for all th
 
 ```{r}
 p1 <- sims_sum |>
+  ggplot() +
+  geom_line(aes(x = year, y = est)) +
+  geom_ribbon(aes(x = year, y = est, ymin = lwr, ymax = upr), alpha = 0.4) +
+  xlab("Year") +
+  ylab("Biomass estimate (tons)")
 
-
+p1
 ```
 
 # Fit an analogous model in `` `sdmTMB` ``
 
-Theoretically, there should be a
+The spatiotemporal GAM we fit above (`fit_gam_st`) should have an analog in sdmTMB. Here I am trying to get the same (more or less) index using sdmTMB instead.
 
 To calculate an index from any of these models, we need to run the `predict.sdmTMB()` function with the argument `return_tmb_object = TRUE`. We can then run the `get_index()` function to extract the total biomass calculations and standard errors.
 
 We can set the area argument to our `cell_area` column in km^2^. In this case the value is 4 km^2^ for all of the cells, since our grid cells are 2 km x 2 km. If some grid cells were not fully in the survey domain (or were on land), we could feed a vector of grid areas to the area argument that matched the number of grid cells. Because the density units are tonnes per km^2^ for this data, the index is in tonnes.
 
 ```{r}
+#  gam(
+#   formula = count ~ as.factor(year) +  s(X, Y) +
+#     s(X, Y, by = as.factor(year)) + offset(area_swept_km2),
+#   family = tw(link = "log"),
+#   data = dat
+# )
+# make a mesh for the predictions
+mesh <- make_mesh(dat, c("X", "Y"),cutoff=10)
+
+fit <- sdmTMB(formula = count ~ 1, 
+              data = dat, 
+              mesh = mesh,
+              family = tweedie(link = "log"),
+              spatial = "on", 
+              spatiotemporal = "iid", 
+              time="year",
+              offset = "area_swept_km2")
+
+
 p <- predict(fit, newdata = grid, return_tmb_object = TRUE)
+
 index <- get_index(p, area = grid$cell_area, bias_correct = FALSE)
 
 ggplot(index, aes(year, est)) +
