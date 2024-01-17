@@ -325,11 +325,11 @@ We can set the area argument to our `cell_area` column in km^2^. In this case th
 #   data = dat
 # )
 # make a mesh for the predictions
-mesh <- make_mesh(dat, c("X", "Y"),cutoff=25)
+mesh <- make_mesh(dat, c("X", "Y"),cutoff=5)
 plot(mesh)
 
 fit <- sdmTMB(data = dat, 
-              formula = count ~ 1 +year_factor, 
+              formula = count ~ year_factor, 
               mesh = mesh,
               family = tweedie(link = "log"),
               spatial = "on", 
