@@ -320,17 +320,14 @@ We can set the area argument to our `cell_area` column in km^2^. In this case th
 ```{r cache = TRUE}
 
 # make a mesh for the predictions - this takes a while with cutoff = 10!!
-mesh <- make_mesh(dat, c("X", "Y"), cutoff=20)
+mesh <- make_mesh(dat, c("X", "Y"), cutoff=10)
 plot(mesh)
 
 fit <- sdmTMB(data = dat, 
-              formula = count ~ 1 + as.factor(year), 
+              formula = cpue_kgkm2 ~ 0 + as.factor(year), 
               mesh = mesh,
               family = tweedie(link = "log"),
-              spatial = "on", 
-              spatiotemporal = "iid", 
-              time= "year",
-              offset = "area_swept_km2"
+              time= "year"
               )
 
 sanity(fit)
