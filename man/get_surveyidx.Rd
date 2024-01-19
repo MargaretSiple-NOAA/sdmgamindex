@@ -55,11 +55,11 @@ get_surveyidx(
 
 \item{predD}{optional DATRASraw object or data.frame (or named list with such objects, one for each year with names(predD) being the years) , defaults to NULL. If not null this is used as grid.}
 
-\item{modelZ}{vector of model formulae for presence/absence part, one pr. age group (ignored for Tweedie models)}
+\item{modelZ}{vector of model formula for presence/absence part, one pr. age group (ignored for Tweedie models)}
 
-\item{modelP}{vector of model formulae for strictly positive repsonses, one pr. age group}
+\item{modelP}{vector of model formula for strictly positive responses, one pr. age group}
 
-\item{knotsP}{optional list of knots to gam, strictly positive repsonses}
+\item{knotsP}{optional list of knots to gam, strictly positive responses}
 
 \item{knotsZ}{optional list of knots to gam, presence/absence}
 
