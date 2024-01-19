@@ -84,21 +84,6 @@ dat <- yfs <- sdmgamindex::noaa_afsc_public_foss |>
 
 ```
 
-The dataset contains sampling locations (`longitude` and `latitude`) and `year`. It also contains sampling `depth` in meters and sample CPUE `density` in units of tonnes/km^2^.
-
--   <div>
-
-    ```{r}
-    ggplot(data = dat, 
-           mapping = aes(x = longitude_dd_start, y = latitude_dd_start, 
-                         size = cpue_kgkm2, color = bottom_temperature_c)) + 
-      geom_point(alpha = 0.3)
-    ```
-
-    </div>
-
-# Fit a GAM to spatial data (analogous to spatial-only model in sdmTMB)
-
 ## Add UTM columns, log depth, and year as factor
 
 ```{r}
@@ -118,6 +103,49 @@ ggplot(dat, aes(X, Y, size = cpue_kgkm2)) +
   coord_fixed()
 ```
 
+The dataset contains sampling locations (`longitude` and `latitude`) and `year`. It also contains sampling `depth` in meters and sample CPUE `density` in units of tonnes/km^2^.
+
+-   <div>
+
+    ```{r}
+    ggplot(data = dat, 
+           mapping = aes(x = longitude_dd_start, y = latitude_dd_start, 
+                         size = cpue_kgkm2, color = bottom_temperature_c)) + 
+      geom_point(alpha = 0.3)
+    ```
+
+# The prediction grid
+## Load the grid
+
+Extrapolation grid for the EBS. Ignore the warnings about the UTM zones-- it's a Bering Sea thing.
+
+```{r}
+# This is another form of the same grid:
+load(here::here("data/pred_grid_ebs.rda")) # object: pred_grid_ebs
+#pred_grid_ebs <- read.csv(here::here("data/ebs_2022_epsg3338.csv"),header = TRUE)
+
+get_crs(dat = pred_grid_ebs,ll_names =c("lon","lat"))
+
+grid <- add_utm_columns(pred_grid_ebs, 
+                       #ll_crs = 32603, 
+                       ll_names = c("lon", "lat"))
+grid$area_swept_km2 <- 1 # if you have area swept in your model as an offset (common when you're using CPUE data) you can do this (I think)
+
+range(grid$X)
+
+grid$Shape_Area_ha <- grid$Shape_Area*0.0001 # original Shape_area is in m^2
+
+```
+## Replicate the grid for each year
+
+When you have spatiotemporal data, you need a grid for each year. There is a nice tidy little chunk of `{purrr}` code that will do that for you!
+
+```{r}
+grid <- purrr::map_dfr(unique(dat$year), ~ tibble(grid, year = .x))
+```
+
+
+# Fit a GAM to spatial data (analogous to spatial-only model in sdmTMB)
 ## Temporal effect plus spatial smoother, no covariates
 
 First, fit a GAM without any covariates: just year as a factor and a spatial smoother $s(X,Y)$. The `as.factor(year)` part is a common component of SDMs that are being used to generate indices.
@@ -200,35 +228,7 @@ Review console output to help verify convergence, and whether there were an adeq
 Examine the four diagnostic plots. Each of these gives a different way of looking at your model residuals. On the top-left is a Q-Q plot, which compares the model residuals to the expected/assumed distribution family. A well-fit model's residuals will be close to the 1-1 line, otherwise there may be under- or over-dispersion present. On bottom left is a histogram of residuals. We want this to have a shape similar to the distribution family we specified. On top-right is a plot of residual values as a function of the linear predictor. These should be evenly distributed around zero in a well-fitted model. Finally, on the bottom-right is plot of response against fitted values. A well-fitted model would show values near the 1-1 line.
 
 # Calculate biomass index from GAM via simulation
-
 ## Predict to full survey area with new data
-
-### Load the grid
-
-Extrapolation grid for the EBS. Ignore the warnings about the UTM zones-- it's a Bering Sea thing.
-
-```{r}
-# This is another form of the same grid:
-load(here::here("data/pred_grid_ebs.rda")) # object: pred_grid_ebs
-#pred_grid_ebs <- read.csv(here::here("data/ebs_2022_epsg3338.csv"),header = TRUE)
-
-get_crs(dat = pred_grid_ebs,ll_names =c("lon","lat"))
-
-grid <- add_utm_columns(pred_grid_ebs, 
-                       #ll_crs = 32603, 
-                       ll_names = c("lon", "lat"))
-grid$area_swept_km2 <- 1 # if you have area swept in your model as an offset (common when you're using CPUE data) you can do this (I think)
-
-range(grid$X)
-
-```
-
-When you have spatiotemporal data, you need a grid for each year. There is a nice tidy little chunk of `{purrr}` code that will do that for you!
-
-```{r}
-grid <- purrr::map_dfr(unique(dat$year), ~ tibble(grid, year = .x))
-```
-
 ### Predict CPUE across the grid
 
 To get predicted CPUE across the survey grid. Here you can use any of the models from above, as long as they have `YEAR` as a factor and as long as all your covariates are also in the grid. Here we use the basic model (`fit_gam`) because `grid` does not contain depth.
@@ -236,7 +236,6 @@ To get predicted CPUE across the survey grid. Here you can use any of the models
 ```{r}
 pred_gam <- predict(fit_gam, type = "response", newdata = grid) #This takes a long time
 pred_gam_df <- cbind(grid, pred_gam)
-pred_gam_df$Shape_Area_ha <- pred_gam_df$Shape_Area*0.0001 # original Shape_area is in m^2
 pred_gam_df$predicted_tot_grid <- pred_gam_df$Shape_Area_ha*pred_gam_df$pred_gam
 
 ```
@@ -313,7 +312,7 @@ p1
 
 The spatiotemporal GAM we fit above (`fit_gam_st`) should have an analog in sdmTMB. Here I am trying to get the same (more or less) index using sdmTMB instead.
 
-To calculate an index from a model in \`sdmTMB\`, we need to run the `predict.sdmTMB()` function with the argument `return_tmb_object = TRUE`. We can then run the `get_index()` function to extract the total biomass calculations and standard errors.
+To calculate an index from a model in `sdmTMB`, we need to run the `predict.sdmTMB()` function with the argument `return_tmb_object = TRUE`. We can then run the `get_index()` function to extract the total biomass calculations and standard errors.
 
 We can set the area argument to our `cell_area` column in km^2^. In this case the value is 4 km^2^ for all of the cells, since our grid cells are 2 km x 2 km. If some grid cells were not fully in the survey domain (or were on land), we could feed a vector of grid areas to the area argument that matched the number of grid cells. Because the density units are tonnes per km^2^ for this data, the index is in tonnes.
 
@@ -324,7 +323,7 @@ mesh <- make_mesh(dat, c("X", "Y"), cutoff=10)
 plot(mesh)
 
 fit <- sdmTMB(data = dat, 
-              formula = cpue_kgkm2 ~ 0 + as.factor(year), 
+              formula = cpue_kgkm2 ~ 1 + as.factor(year), # If you set the intercept to zero, R spontaneously aborts!
               mesh = mesh,
               family = tweedie(link = "log"),
               time= "year"
@@ -335,7 +334,8 @@ tidy(fit)
 
 p <- predict(fit, newdata = grid, return_tmb_object = TRUE)
 
-index <- get_index(p, area = grid$cell_area, bias_correct = FALSE)
+grid$cell_area <- 4 #Shape_Area_ha
+index <- get_index(p, area = grid$Shape_Area_ha, bias_correct = FALSE)
 
 ggplot(index, aes(year, est)) +
   geom_line() +
