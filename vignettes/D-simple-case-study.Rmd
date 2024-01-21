@@ -453,11 +453,9 @@ for(i in 1:nrow(comb)){
 }
 ```
 
-```{r model_fit_save_butdont, eval = FALSE}
-save(models, fittimes, file = here::here("inst","vigD_model_fits.Rdata"))
-```
-
 ```{r model_fit_save_butdo, eval = FALSE, echo = FALSE}
+# save(models, fittimes, file = here::here("inst","vigD_model_fits.Rdata"))
+
 # Would normally save the whole list (like above), but need smaller files 
 # to fit example on GitHub
 models0 <- models

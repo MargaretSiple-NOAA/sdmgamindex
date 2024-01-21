@@ -1,12 +1,12 @@
 pandoc: 3.1.1
-pkgdown: 2.0.7.9000
-pkgdown_sha: c354aa7e5ea1f9936692494c28c89e5bdd31fc68
+pkgdown: 2.0.7
+pkgdown_sha: ~
 articles:
   A-gam-basics: A-gam-basics.html
-  B_gam_sdmTMB_example: B_gam_sdmTMB_example.html
+  B-gam-sdmTMB-example: B-gam-sdmTMB-example.html
   C-model-comparisons: C-model-comparisons.html
   D-simple-case-study: D-simple-case-study.html
-last_built: 2023-10-24T07:54Z
+last_built: 2024-01-20T09:20Z
 urls:
   reference: https://emilymarkowitz-noaa.github.io/sdmgamindex/reference
   article: https://emilymarkowitz-noaa.github.io/sdmgamindex/articles
