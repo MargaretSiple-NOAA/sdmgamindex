@@ -97,58 +97,6 @@ AND hh.YEAR >= 2015
 ") %>% 
   janitor::clean_names()
 
-# noaa_afsc_public_foss <- RODBC::sqlQuery(
-#   channel = channel_products, 
-#   query = 
-#     "SELECT --DISTINCT 
-# hh.YEAR,
-# hh.SRVY,                 
-# hh.SURVEY,
-# hh.SURVEY_DEFINITION_ID,
-# hh.SURVEY_NAME,
-# hh.CRUISE,
-# hh.CRUISEJOIN,           
-# hh.HAUL,
-# hh.HAULJOIN,
-# hh.STRATUM,
-# hh.STATION,
-# hh.VESSEL_ID,
-# hh.VESSEL_NAME,          
-# hh.DATE_TIME,
-# hh.LATITUDE_DD_START, 
-# hh.LONGITUDE_DD_START, 
-# hh.LATITUDE_DD_END,
-# hh.LONGITUDE_DD_END, 
-# hh.BOTTOM_TEMPERATURE_C,
-# hh.SURFACE_TEMPERATURE_C,
-# hh.DEPTH_M,
-# cc.SPECIES_CODE,
-# ss.ITIS,
-# ss.WORMS,
-# ss.COMMON_NAME,     
-# ss.SCIENTIFIC_NAME,
-# ss.ID_RANK,
-# cc.TAXON_CONFIDENCE,
-# cc.WEIGHT_KG,
-# cc.COUNT,
-# cc.CPUE_KGKM2,
-# cc.CPUE_NOKM2,
-# hh.AREA_SWEPT_KM2,       
-# hh.DISTANCE_FISHED_KM,
-# hh.DURATION_HR,          
-# hh.NET_WIDTH_M,
-# hh.NET_HEIGHT_M,
-# hh.PERFORMANCE 
-# FROM GAP_PRODUCTS.FOSS_CATCH cc
-# FULL OUTER JOIN GAP_PRODUCTS.FOSS_HAUL hh
-# ON cc.HAULJOIN = hh.HAULJOIN
-# FULL OUTER JOIN GAP_PRODUCTS.FOSS_SPECIES ss
-# ON cc.SPECIES_CODE = ss.SPECIES_CODE
-# WHERE hh.SRVY = 'EBS' 
-# AND cc.SPECIES_CODE IN (21740, 10210, 69322) 
-# AND hh.YEAR >= 2015") %>% 
-#   janitor::clean_names()
-
 # Save table to local directory
 save(noaa_afsc_public_foss, file = here::here("data", "noaa_afsc_public_foss.rda"))
   

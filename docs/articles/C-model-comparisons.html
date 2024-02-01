@@ -14,8 +14,8 @@
 <link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png">
 <link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.2.2/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.2.2/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
+<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Compare {sdmgamindex} to regular GAMs">
 <meta property="og:description" content="sdmgamindex">
@@ -49,7 +49,7 @@
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
     <a class="dropdown-item" href="../articles/A-gam-basics.html">Intro to GAMs</a>
-    <a class="dropdown-item" href="../articles/B_gam_sdmTMB_example.html">Fitting a spatiotemporal model with a GAM and deriving an abundance index</a>
+    <a class="dropdown-item" href="../articles/B-gam-sdmTMB-example.html">Fitting a spatiotemporal model with a GAM and deriving an abundance index</a>
     <a class="dropdown-item" href="../articles/C-model-comparisons.html">Compare {sdmgamindex} to regular GAMs</a>
     <a class="dropdown-item" href="../articles/D-simple-case-study.html">{sdmgamindex} case study with and without covariates</a>
   </div>
@@ -73,7 +73,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Compare {sdmgamindex} to regular GAMs</h1>
             
-            <h4 data-toc-skip class="date">October 24 2023</h4>
+            <h4 data-toc-skip class="date">January 20 2024</h4>
       
       
       <div class="d-none name"><code>C-model-comparisons.Rmd</code></div>
@@ -118,54 +118,54 @@
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">dat</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   Year srvy             survey survey_definition_id cruise cruisejoin haul</span></span>
-<span><span class="co">#&gt; 1 2021  EBS eastern Bering Sea                   98 202101       -752   59</span></span>
-<span><span class="co">#&gt; 2 2021  EBS eastern Bering Sea                   98 202101       -751   88</span></span>
-<span><span class="co">#&gt; 3 2016  EBS eastern Bering Sea                   98 201601       -706   48</span></span>
-<span><span class="co">#&gt; 4 2019  EBS eastern Bering Sea                   98 201901       -727   28</span></span>
-<span><span class="co">#&gt; 5 2018  EBS eastern Bering Sea                   98 201801       -722   22</span></span>
-<span><span class="co">#&gt; 6 2021  EBS eastern Bering Sea                   98 202101       -751   19</span></span>
+<span><span class="co">#&gt; 1 2015  EBS eastern Bering Sea                   98 201501       -698  152</span></span>
+<span><span class="co">#&gt; 2 2015  EBS eastern Bering Sea                   98 201501       -698  127</span></span>
+<span><span class="co">#&gt; 3 2015  EBS eastern Bering Sea                   98 201501       -698  126</span></span>
+<span><span class="co">#&gt; 4 2015  EBS eastern Bering Sea                   98 201501       -698  104</span></span>
+<span><span class="co">#&gt; 5 2015  EBS eastern Bering Sea                   98 201501       -698   99</span></span>
+<span><span class="co">#&gt; 6 2015  EBS eastern Bering Sea                   98 201501       -698   98</span></span>
 <span><span class="co">#&gt;   hauljoin stratum station vessel_id   vessel_name           date_time</span></span>
-<span><span class="co">#&gt; 1   -19973      31    I-03       162 ALASKA KNIGHT 2021-06-14 12:10:16</span></span>
-<span><span class="co">#&gt; 2   -19996      20    L-01        94   VESTERAALEN 2021-06-21 15:21:16</span></span>
-<span><span class="co">#&gt; 3   -15350      10    L-04        94   VESTERAALEN 2016-06-12 07:56:25</span></span>
-<span><span class="co">#&gt; 4   -18780      31    B-08       162 ALASKA KNIGHT 2019-06-09 06:27:08</span></span>
-<span><span class="co">#&gt; 5   -17559      31    I-12        94   VESTERAALEN 2018-06-06 12:32:44</span></span>
-<span><span class="co">#&gt; 6   -19886      10    I-11        94   VESTERAALEN 2021-06-03 13:11:46</span></span>
+<span><span class="co">#&gt; 1   -14477      42  IH2221       162 ALASKA KNIGHT 2015-06-28 12:23:43</span></span>
+<span><span class="co">#&gt; 2   -14393      42    H-20       162 ALASKA KNIGHT 2015-06-23 14:32:25</span></span>
+<span><span class="co">#&gt; 3   -14392      42  HG2019       162 ALASKA KNIGHT 2015-06-23 12:04:09</span></span>
+<span><span class="co">#&gt; 4   -14184      20    N-18       162 ALASKA KNIGHT 2015-07-26 10:27:31</span></span>
+<span><span class="co">#&gt; 5   -14183      20    O-02       162 ALASKA KNIGHT 2015-07-26 07:43:24</span></span>
+<span><span class="co">#&gt; 6   -14182      20    N-02       162 ALASKA KNIGHT 2015-07-25 12:29:19</span></span>
 <span><span class="co">#&gt;   latitude_dd_start longitude_dd_start latitude_dd_end longitude_dd_end</span></span>
-<span><span class="co">#&gt; 1          57.66072          -166.4836        57.66197        -166.5305</span></span>
-<span><span class="co">#&gt; 2          58.65480          -167.8979        58.67117        -167.8579</span></span>
-<span><span class="co">#&gt; 3          58.64714          -165.9241        58.67214        -165.9363</span></span>
-<span><span class="co">#&gt; 4          55.34481          -163.3904        55.34473        -163.4362</span></span>
-<span><span class="co">#&gt; 5          57.65918          -160.9100        57.68333        -160.9030</span></span>
-<span><span class="co">#&gt; 6          57.69411          -161.5022        57.66878        -161.5077</span></span>
+<span><span class="co">#&gt; 1          57.52534          -170.5923        57.49911        -170.5882</span></span>
+<span><span class="co">#&gt; 2          57.32033          -169.5767        57.32758        -169.6213</span></span>
+<span><span class="co">#&gt; 3          57.15541          -169.3307        57.17475        -169.3037</span></span>
+<span><span class="co">#&gt; 4          59.34784          -168.5795        59.32518        -168.5514</span></span>
+<span><span class="co">#&gt; 5          59.64832          -167.2660        59.66672        -167.3018</span></span>
+<span><span class="co">#&gt; 6          59.33036          -167.2015        59.33162        -167.2511</span></span>
 <span><span class="co">#&gt;   GEAR_TEMPERATURE surface_temperature_c BOTTOM_DEPTH species_code  itis  worms</span></span>
-<span><span class="co">#&gt; 1              3.2                   5.7           67        69322 97935 233889</span></span>
-<span><span class="co">#&gt; 2              3.7                   6.8           47        69322 97935 233889</span></span>
-<span><span class="co">#&gt; 3              6.5                   6.8           37        69322 97935 233889</span></span>
-<span><span class="co">#&gt; 4              5.4                   8.7           53        69322 97935 233889</span></span>
-<span><span class="co">#&gt; 5              4.1                   6.1           56        69322 97935 233889</span></span>
-<span><span class="co">#&gt; 6              4.1                   5.7           53        69322 97935 233889</span></span>
+<span><span class="co">#&gt; 1              4.8                   8.0           75        69322 97935 233889</span></span>
+<span><span class="co">#&gt; 2              3.8                   7.7           61        69322 97935 233889</span></span>
+<span><span class="co">#&gt; 3              4.5                   8.1           72        69322 97935 233889</span></span>
+<span><span class="co">#&gt; 4              3.2                   4.0           42        69322 97935 233889</span></span>
+<span><span class="co">#&gt; 5              4.5                   4.8           31        69322 97935 233889</span></span>
+<span><span class="co">#&gt; 6              5.9                   6.0           32        69322 97935 233889</span></span>
 <span><span class="co">#&gt;     common_name            scientific_name id_rank cpue_kgkm2 cpue_nokm2 count</span></span>
-<span><span class="co">#&gt; 1 red king crab Paralithodes camtschaticus species   69.57943   21.41565     1</span></span>
-<span><span class="co">#&gt; 2 red king crab Paralithodes camtschaticus species   73.81732   43.11760     2</span></span>
-<span><span class="co">#&gt; 3 red king crab Paralithodes camtschaticus species   66.83110   70.34853     3</span></span>
-<span><span class="co">#&gt; 4 red king crab Paralithodes camtschaticus species  127.86046   82.09339     4</span></span>
-<span><span class="co">#&gt; 5 red king crab Paralithodes camtschaticus species  531.50033  274.20481    12</span></span>
-<span><span class="co">#&gt; 6 red king crab Paralithodes camtschaticus species 1166.16772  964.34424    42</span></span>
+<span><span class="co">#&gt; 1 red king crab Paralithodes camtschaticus species 1149.68610  284.27420    14</span></span>
+<span><span class="co">#&gt; 2 red king crab Paralithodes camtschaticus species  149.59332   46.96807     2</span></span>
+<span><span class="co">#&gt; 3 red king crab Paralithodes camtschaticus species  313.89395   50.50587     2</span></span>
+<span><span class="co">#&gt; 4 red king crab Paralithodes camtschaticus species   78.96451   20.37268     1</span></span>
+<span><span class="co">#&gt; 5 red king crab Paralithodes camtschaticus species   19.15929   21.52729     1</span></span>
+<span><span class="co">#&gt; 6 red king crab Paralithodes camtschaticus species   17.04284   22.19120     1</span></span>
 <span><span class="co">#&gt;   weight_kg taxon_confidence area_swept_km2 distance_fished_km duration_hr</span></span>
-<span><span class="co">#&gt; 1     3.249                1       0.046695              2.805       0.519</span></span>
-<span><span class="co">#&gt; 2     3.424                1       0.046385              2.952       0.535</span></span>
-<span><span class="co">#&gt; 3     2.850                1       0.042645              2.869       0.524</span></span>
-<span><span class="co">#&gt; 4     6.230                1       0.048725              2.914       0.523</span></span>
-<span><span class="co">#&gt; 5    23.260                1       0.043763              2.716       0.498</span></span>
-<span><span class="co">#&gt; 6    50.790                1       0.043553              2.834       0.512</span></span>
-<span><span class="co">#&gt;   net_width_m net_height_m performance           sx            sy</span></span>
-<span><span class="co">#&gt; 1      16.647        2.400         0.0 0.0022749475 -0.0006000254</span></span>
-<span><span class="co">#&gt; 2      15.713        2.299         0.0 0.0008607375  0.0003940546</span></span>
-<span><span class="co">#&gt; 3      14.864        2.250         0.0 0.0028345175  0.0003863946</span></span>
-<span><span class="co">#&gt; 4      16.721        2.244         6.3 0.0053682275 -0.0029159354</span></span>
-<span><span class="co">#&gt; 5      16.113        3.144         0.0 0.0078485775 -0.0006015654</span></span>
-<span><span class="co">#&gt; 6      15.368        2.572         0.0 0.0072563875 -0.0005666354</span></span></code></pre></div>
+<span><span class="co">#&gt; 1    56.620                1       0.049248              2.925       0.524</span></span>
+<span><span class="co">#&gt; 2     6.370                1       0.042582              2.812       0.516</span></span>
+<span><span class="co">#&gt; 3    12.430                1       0.039599              2.701       0.503</span></span>
+<span><span class="co">#&gt; 4     3.876                1       0.049085              2.985       0.527</span></span>
+<span><span class="co">#&gt; 5     0.890                1       0.046453              2.879       0.516</span></span>
+<span><span class="co">#&gt; 6     0.768                1       0.045063              2.837       0.521</span></span>
+<span><span class="co">#&gt;   net_width_m net_height_m performance            sx            sy</span></span>
+<span><span class="co">#&gt; 1      16.837        1.855           0 -0.0018134758 -0.0007369124</span></span>
+<span><span class="co">#&gt; 2      15.143        2.368           0 -0.0007978858 -0.0009419224</span></span>
+<span><span class="co">#&gt; 3      14.661        1.996           0 -0.0005518858 -0.0011068424</span></span>
+<span><span class="co">#&gt; 4      16.444        2.406           0  0.0001992742  0.0010855876</span></span>
+<span><span class="co">#&gt; 5      16.135        2.277           0  0.0015128142  0.0013860676</span></span>
+<span><span class="co">#&gt; 6      15.884        2.326           0  0.0015773242  0.0010681076</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="formulas">2. Formulas<a class="anchor" aria-label="anchor" href="#formulas"></a>
@@ -262,9 +262,9 @@
 <span><span class="va">dat0</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>pred <span class="op">=</span> <span class="va">cc</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">figure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">dat0</span>, </span>
-<span>             mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span> <span class="va">longitude_dd_start</span>, y <span class="op">=</span> <span class="va">latitude_dd_start</span>, color <span class="op">=</span> <span class="va">pred</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">figure</span> <span class="op">&lt;-</span> <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_point</span><span class="op">(</span>data <span class="op">=</span> <span class="va">dat0</span>, </span>
+<span>             mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span> <span class="va">longitude_dd_start</span>, y <span class="op">=</span> <span class="va">latitude_dd_start</span>, color <span class="op">=</span> <span class="va">pred</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">figure</span></span></code></pre></div>
 <p><img src="C-model-comparisons_files/figure-html/model_plots_1b-1.png" width="700"></p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
@@ -278,9 +278,9 @@
 <span><span class="va">dat0</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">[</span><span class="va">dat</span><span class="op">$</span><span class="va">Year</span> <span class="op">==</span> <span class="fl">2021</span>,<span class="op">]</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>pred <span class="op">=</span> <span class="va">cc</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">figure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">dat0</span>, </span>
-<span>             mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span> <span class="va">longitude_dd_start</span>, y <span class="op">=</span> <span class="va">latitude_dd_start</span>, color <span class="op">=</span> <span class="va">pred</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">figure</span> <span class="op">&lt;-</span> <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_point</span><span class="op">(</span>data <span class="op">=</span> <span class="va">dat0</span>, </span>
+<span>             mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span> <span class="va">longitude_dd_start</span>, y <span class="op">=</span> <span class="va">latitude_dd_start</span>, color <span class="op">=</span> <span class="va">pred</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">figure</span></span></code></pre></div>
 <p><img src="C-model-comparisons_files/figure-html/model_plots_2b-1.png" width="700"></p>
 </div>
@@ -298,7 +298,7 @@
 
 <div class="pkgdown-footer-right">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.9000.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
     </footer>

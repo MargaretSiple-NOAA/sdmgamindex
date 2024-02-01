@@ -1,5 +1,25 @@
 
 
+## We want to catch *and* save both errors and warnings, and in the case of
+## a warning, also keep the computed result.
+##
+## @title tryCatch both warnings and errors
+## @param expr expression to evaluate
+## @return a list with 'value' and 'warning', where
+##   'value' may be an error caught.
+## @author Martin Maechler
+tryCatch.W.E <- function(expr)
+{
+  W <- NULL
+  w.handler <- function(w){ # warning handler
+    W <<- w
+    invokeRestart("muffleWarning")
+  }
+  list(value = withCallingHandlers(tryCatch(expr, error = function(e) e),
+                                   warning = w.handler),
+       warning = W)
+}
+
 # Produce Index ----------------------------------------------------------------
 
 
@@ -22,9 +42,9 @@
 #' @param mc.cores number of cores for parallel processing
 #' @param method smoothness selection method used by 'gam'
 #' @param predD optional DATRASraw object or data.frame (or named list with such objects, one for each year with names(predD) being the years) , defaults to NULL. If not null this is used as grid.
-#' @param modelZ vector of model formulae for presence/absence part, one pr. age group (ignored for Tweedie models)
-#' @param modelP vector of model formulae for strictly positive repsonses, one pr. age group
-#' @param knotsP optional list of knots to gam, strictly positive repsonses
+#' @param modelZ vector of model formula for presence/absence part, one pr. age group (ignored for Tweedie models)
+#' @param modelP vector of model formula for strictly positive responses, one pr. age group
+#' @param knotsP optional list of knots to gam, strictly positive responses
 #' @param knotsZ optional list of knots to gam, presence/absence
 #' @param predfix optional named list of extra variables (besides Gear, HaulDur, Ship, and TimeShotHour),  that should be fixed during prediction step (standardized)
 #' @param linkZ link function for the grDevices::dev.new part of the model, default: "logit" (not used for Tweedie models).
@@ -169,7 +189,7 @@ get_surveyidx <- function(x,
       
       
       print(system.time(m_pos <-
-                          DATRAS::tryCatch.W.E(
+                          tryCatch.W.E(
                             mgcv::gam(
                               f.pos,
                               data = ddd[ddd$A1 > cutoff, ],
@@ -194,7 +214,7 @@ get_surveyidx <- function(x,
       }
       
       print(system.time(m0 <-
-                          DATRAS::tryCatch.W.E(
+                          tryCatch.W.E(
                             mgcv::gam(
                               f.0,
                               gamma = gammaZ,
@@ -225,7 +245,7 @@ get_surveyidx <- function(x,
         stats::as.formula(paste("A1>", cutOff, " ~", modelZ[a]))
       
       
-      print(system.time(m_pos <- DATRAS::tryCatch.W.E(
+      print(system.time(m_pos <- tryCatch.W.E(
         mgcv::gam(
           formula = f.pos,
           data = ddd[ddd$A1 >
@@ -253,7 +273,7 @@ get_surveyidx <- function(x,
       }
       
       print(system.time(m0 <-
-                          DATRAS::tryCatch.W.E(
+                          tryCatch.W.E(
                             mgcv::gam(
                               formula = f.0,
                               gamma = gammaZ,
@@ -283,7 +303,7 @@ get_surveyidx <- function(x,
       f.pos <- stats::as.formula(paste("A1 ~", modelP[a]))
       
       print(system.time(m_pos <-
-                          DATRAS::tryCatch.W.E(
+                          tryCatch.W.E(
                             mgcv::gam(
                               formula = f.pos,
                               data = ddd,
@@ -311,7 +331,7 @@ get_surveyidx <- function(x,
       f.pos <- stats::as.formula(paste("A1 ~", modelP[a]))
       
       print(system.time(m_pos <-
-                          DATRAS::tryCatch.W.E(
+                          tryCatch.W.E(
                             mgcv::gam(
                               formula = f.pos,
                               data = ddd,

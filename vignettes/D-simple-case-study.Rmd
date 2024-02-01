@@ -41,7 +41,7 @@ for (p in PKG) {
 
 ## Case study
 
-In this example, we will use data from NOAA Fisheries' eastern and northern Bering sea (EBS) bottom trawl survey. The Resource Assessment and Conservation Engineering (RACE) Division Groundfish Assessment Program (GAP) of the Alaska Fisheries Science Center (AFSC) conducts fisheries-independent bottom trawl surveys to assess the populations of demersal fish and crab stocks of Alaska. The species covered in this case study include yellow fin sole, walleye pollock, and red king crab. 
+In this example, we will use data from NOAA Fisheries' eastern Bering sea (EBS) bottom trawl survey. The Resource Assessment and Conservation Engineering (RACE) Division Groundfish Assessment Program (GAP) of the Alaska Fisheries Science Center (AFSC) conducts fisheries-independent bottom trawl surveys to assess the populations of demersal fish and crab stocks of Alaska. The species covered in this case study include yellow fin sole, walleye pollock, and red king crab. 
 
 ```{r info-table, eval = TRUE, echo = FALSE}
 img_url <- paste0("https://raw.githubusercontent.com/afsc-gap-products/gap_bs_data_report/main/img/", 
@@ -453,11 +453,9 @@ for(i in 1:nrow(comb)){
 }
 ```
 
-```{r model_fit_save_butdont, eval = FALSE}
-save(models, fittimes, file = here::here("inst","vigD_model_fits.Rdata"))
-```
-
 ```{r model_fit_save_butdo, eval = FALSE, echo = FALSE}
+# save(models, fittimes, file = here::here("inst","vigD_model_fits.Rdata"))
+
 # Would normally save the whole list (like above), but need smaller files 
 # to fit example on GitHub
 models0 <- models
