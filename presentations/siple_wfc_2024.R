@@ -41,6 +41,30 @@ reg_dat_ebs$survey.area <- reg_dat_ebs$survey.area |>
     SURVEY = "Eastern Bering Sea"
   )
 
+
+# Map of strata for EBS ---------------------------------------------------
+png("output/EBS_with_strata.png", width = 5, height = 5, units = "in", res = 300)
+ggplot() +
+  geom_sf(data = reg_dat_ebs$akland) +
+  geom_sf(data = reg_dat_ebs$bathymetry) +
+  geom_sf(data = reg_dat_ebs$survey.area, fill = NA) +
+  geom_sf(data = reg_dat_ebs$graticule, color = "grey70", alpha = 0.5) +
+  geom_sf(data = reg_dat_ebs$survey.strata, aes(fill = Stratum)) +
+  coord_sf(
+    xlim = reg_dat_ebs$plot.boundary$x,
+    ylim = reg_dat_ebs$plot.boundary$y
+  ) +
+  scale_fill_manual(values = MetBrewer::met.brewer(palette_name = "Renoir", n = length(unique(reg_dat_ebs$survey.strata$Stratum)))) +
+  scale_x_continuous(
+    name = "Longitude",
+    breaks = reg_dat_ebs$lon.breaks
+  ) +
+  scale_y_continuous(
+    name = "Latitude",
+    breaks = reg_dat_ebs$lat.breaks
+  )
+dev.off()
+
 # Load CPUE data ----------------------------------------------------------
 load(file = "data/cpue_allspps.rds") # object: cpue_tab
 
@@ -240,10 +264,24 @@ all_spps %>%
   facet_wrap(~species, scales = "free") +
   theme_light(base_size = 14) +
   xlab("Design-based index (millions mt)") +
-  ylab("Model-based index (millions mt)")
+  ylab("Model-based index (millions mt)") #+
+  ggh4x::facetted_pos_scales(
+    x = list(
+      scale_x_continuous(limits = c(0.5, 3.5)),
+      scale_x_continuous(limits = c(0, 0.4)),
+      scale_x_continuous(limits = c(1, 8.5)),
+      scale_x_continuous(limits = c(1, 4))
+    ),
+    y = list(
+      scale_y_continuous(limits = c(0.5, 0.13)),
+      scale_y_continuous(limits = c(0, 0.4)),
+      scale_y_continuous(limits = c(1, 8.5)),
+      scale_y_continuous(limits = c(1, 4))
+    )
+  ) +
 dev.off()
 
-png("VAST_vs_design_CV.png", width = 8, height = 6, units = "in", res = 200)
+png("output/VAST_vs_design_CV.png", width = 8, height = 6, units = "in", res = 200)
 all_spps %>%
   mutate_at(
     .vars = c("design_mt", "VAST_mt", "design_se", "VAST_se"),
@@ -255,7 +293,22 @@ all_spps %>%
   facet_wrap(~species, scales = "free") +
   theme_light(base_size = 14) +
   xlab("CV of design-based index") +
-  ylab("CV of model-based index")
+  ylab("CV of model-based index") +
+  ggh4x::facetted_pos_scales(
+    x = list(
+      scale_x_continuous(limits = c(0.06, 0.13)),
+      scale_x_continuous(limits = c(0, 0.7)),
+      scale_x_continuous(limits = c(0, 0.3)),
+      scale_x_continuous(limits = c(0.04, 0.14))
+    ),
+    y = list(
+      scale_y_continuous(limits = c(0.06, 0.13)),
+      scale_y_continuous(limits = c(0, 0.7)),
+      scale_y_continuous(limits = c(0, 0.3)),
+      scale_y_continuous(limits = c(0.04, 0.14))
+    )
+  ) +
+  geom_abline(slope = 1, color = "red", linetype = "dashed")
 dev.off()
 
 
@@ -292,89 +345,57 @@ dev.off()
 
 
 # Load results and stuff from vignette D ----------------------------------
+# Em results - load into nested list
 
-# Em results
-load("inst/vigD_model_fits_fm_1_s_t_st.Rdata") # object:models
+model_path_list <- list()
+paths <- c(
+  "inst/vigD_model_fits_fm_1_s_t_st.Rdata", # object:models
+  "inst/vigD_model_fits_fm_2_cov.Rdata",
+  "inst/vigD_model_fits_fm_3_s_t_st_cov.Rdata"
+)
+for (m in 1:length(paths)) {
+  load(paths[[m]])
+  model_path_list[[m]] <- models
+}
 
-# this one has scaling issues or something:
-# load("inst/VigD_model_fits_cov_vs_st.Rdata")
+# this one has scaling issues or something:  load("inst/VigD_model_fits_cov_vs_st.Rdata")
 
 # Em code for tidying
-# all.spps (generated above) has design- and VAST- indices of abundance
 YEARS <- 2015:2023
 head(all_spps)
 
 # GAM stuff
-dat <- data.frame()
-for (i in 1:length(models)) {
-  temp <- models[[i]]
-  dat0 <- data.frame(
-    idx = temp$idx[, 1] / 1e2, # /1e2 clearly having an issue with units
-    lo = temp$lo[, 1] / 1e2,
-    up = temp$up[, 1] / 1e2,
-    Year = rownames(temp$idx),
-    group = names(models)[i],
-    formula = paste0(
-      "cpue_kgkm2 ~ ",
-      as.character(temp$pModels[[1]]$formula)[[3]]
+dat_combined <- data.frame()
+
+for (m in 1:length(paths)) {
+  dat <- data.frame()
+  for (i in 1:length(models)) {
+    temp <- model_path_list[[m]][[i]]
+    dat0 <- data.frame(
+      idx = temp$idx[, 1] / 1e2, # /1e2 clearly having an issue with units
+      lo = temp$lo[, 1] / 1e2,
+      up = temp$up[, 1] / 1e2,
+      Year = rownames(temp$idx),
+      group = names(models)[i],
+      formula = paste0(
+        "cpue_kgkm2 ~ ",
+        as.character(temp$pModels[[1]]$formula)[[3]]
+      )
     )
-  )
-  dat <- dplyr::bind_rows(dat, dat0)
+    dat <- dplyr::bind_rows(dat, dat0)
+  }
+  any(is.na(dat$index_type))
+
+  dat_combined <- bind_rows(dat_combined, dat)
 }
-any(is.na(dat$index_type))
-dat1 <- dat
 
-load("inst/vigD_model_fits_fm_2_cov.Rdata") # object:models
-dat <- data.frame()
-for (i in 1:length(models)) {
-  temp <- models[[i]]
-  dat0 <- data.frame(
-    idx = temp$idx[, 1] / 1e2, # /1e2 clearly having an issue with units
-    lo = temp$lo[, 1] / 1e2,
-    up = temp$up[, 1] / 1e2,
-    Year = rownames(temp$idx),
-    group = names(models)[i],
-    formula = paste0(
-      "cpue_kgkm2 ~ ",
-      as.character(temp$pModels[[1]]$formula)[[3]]
-    )
-  )
-
-  dat <- dplyr::bind_rows(dat, dat0)
-}
-any(is.na(dat$index_type))
-dat2 <- dat
-
-
-load("inst/vigD_model_fits_fm_3_s_t_st_cov.Rdata") # object:models
-dat <- data.frame()
-for (i in 1:length(models)) {
-  temp <- models[[i]]
-  dat0 <- data.frame(
-    idx = temp$idx[, 1] / 1e2, # /1e2 clearly having an issue with units
-    lo = temp$lo[, 1] / 1e2,
-    up = temp$up[, 1] / 1e2,
-    Year = rownames(temp$idx),
-    group = names(models)[i],
-    formula = paste0(
-      "cpue_kgkm2 ~ ",
-      as.character(temp$pModels[[1]]$formula)[[3]]
-    )
-  )
-
-  dat <- dplyr::bind_rows(dat, dat0)
-}
-any(is.na(dat$index_type))
-
-dat3 <- dat
-dat <- bind_rows(dat1, dat2, dat3)
-any(is.na(dat$index_type))
+dat <- dat_combined
 
 dat$common_name <- paste0(sapply(X = strsplit(x = dat$group, split = " fm"), `[`, 1))
 
 dat2 <- dat |>
   dplyr::rename(species = "common_name") |>
-  select(-group) |>
+  dplyr::select(-group) |>
   mutate(
     index_type = case_when(
       formula == 'cpue_kgkm2 ~ Year + s(sx, sy, bs = c("ts"), k = 376) + s(sx, sy, bs = c("ts"), k = 10, by = Year)' ~ "GAM_s_t_st",
@@ -383,7 +404,7 @@ dat2 <- dat |>
     ),
     year = as.numeric(Year)
   ) |>
-  select(-formula) |>
+  dplyr::select(-formula) |>
   rename(mt = "idx") |>
   filter(year != 2020) |>
   tibble::remove_rownames() |>
@@ -391,12 +412,24 @@ dat2 <- dat |>
 
 png("VAST_vs_design_vs_GAM_ts.png", width = 8, height = 6, units = "in", res = 200)
 p1 +
-  geom_point(data = dat2, aes(x = year, y = mt / 1e6)) +
-  geom_line(data = dat2, aes(x = year, y = mt / 1e6)) +
-  geom_ribbon(data = dat2, aes(ymin = lo / 1e6, ymax = up / 1e6), alpha = 0.3, color = NA)
+  geom_point(data = dat2, aes(x = year, y = mt / 1e6), size = 2.5) +
+  geom_line(data = dat2, aes(x = year, y = mt / 1e6), lwd = 1.2) +
+  geom_ribbon(data = dat2, aes(ymin = lo / 1e6, ymax = up / 1e6), alpha = 0.3, color = NA) +
+  guides(
+    color = guide_legend(title = "Index type"),
+    fill = guide_legend(title = "Index type")
+  )
 dev.off()
 
 
-# Look at model fits! -----------------------------------------------------
 
-str(models$`red king crab fm_1_s_t_st`$residuals)
+# AIC for all models ------------------------------------------------------
+all_aic <- data.frame()
+for(m in 1:length(model_path_list)){
+  AICs <- lapply(model_path_list[[m]], FUN = get_surveyidx_aic) |> 
+    unlist()
+  modelname <- names(AICs)
+  all_aic <- bind_rows(all_aic, data.frame(modelname = modelname, AIC = AICs))
+}
+
+rownames(all_aic) <- NULL
