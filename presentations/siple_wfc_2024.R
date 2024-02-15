@@ -241,18 +241,16 @@ results.df2 <- results.df |>
   )
 
 # Load the VAST indices and the design-based
-rkc <- read.csv("data/indices/bbrkc_2022_comparison.csv", header = TRUE) # this one was updated by Jon R after Thorson saw the comparison at WKUSER
+rkc <- read.csv("data/indices/EBS/bbrkc_2022_comparison.csv", header = TRUE) # this one was updated by Jon R after Thorson saw the comparison at WKUSER
 rkc$species <- "red king crab"
-atf <- read.csv("data/indices/ATF_10110_estimate_summary.csv")
-atf$species <- "arrowtooth flounder"
-yfs <- read.csv("data/indices/YFS_10210_estimate_summary.csv")
+yfs <- read.csv("data/indices/EBS/YFS_10210_estimate_summary.csv")
 yfs$species <- "yellowfin sole"
-wep <- read.csv("data/indices/WEP_21740_estimate_summary.csv")
+wep <- read.csv("data/indices/EBS/WEP_21740_estimate_summary.csv")
 wep$species <- "walleye pollock"
 
-all_spps <- bind_rows(atf, yfs, wep, rkc)
+all_spps <- bind_rows(yfs, wep, rkc)
 
-png("VAST_vs_design.png", width = 8, height = 6, units = "in", res = 200)
+png("output/VAST_vs_design.png", width = 8, height = 3, units = "in", res = 200)
 all_spps %>%
   mutate_at(
     .vars = c("design_mt", "VAST_mt", "design_se", "VAST_se"),
@@ -264,24 +262,23 @@ all_spps %>%
   facet_wrap(~species, scales = "free") +
   theme_light(base_size = 14) +
   xlab("Design-based index (millions mt)") +
-  ylab("Model-based index (millions mt)") #+
+  ylab("Model-based index (millions mt)") +
   ggh4x::facetted_pos_scales(
     x = list(
-      scale_x_continuous(limits = c(0.5, 3.5)),
       scale_x_continuous(limits = c(0, 0.4)),
       scale_x_continuous(limits = c(1, 8.5)),
-      scale_x_continuous(limits = c(1, 4))
+      scale_x_continuous(limits = c(1, 3.75))
     ),
     y = list(
-      scale_y_continuous(limits = c(0.5, 0.13)),
       scale_y_continuous(limits = c(0, 0.4)),
       scale_y_continuous(limits = c(1, 8.5)),
-      scale_y_continuous(limits = c(1, 4))
+      scale_y_continuous(limits = c(1, 3.75))
     )
   ) +
+  geom_abline(slope = 1, color = "red", linetype = "dashed")
 dev.off()
 
-png("output/VAST_vs_design_CV.png", width = 8, height = 6, units = "in", res = 200)
+png("output/VAST_vs_design_CV.png", width = 8, height = 3, units = "in", res = 200)
 all_spps %>%
   mutate_at(
     .vars = c("design_mt", "VAST_mt", "design_se", "VAST_se"),
@@ -296,16 +293,14 @@ all_spps %>%
   ylab("CV of model-based index") +
   ggh4x::facetted_pos_scales(
     x = list(
-      scale_x_continuous(limits = c(0.06, 0.13)),
       scale_x_continuous(limits = c(0, 0.7)),
-      scale_x_continuous(limits = c(0, 0.3)),
-      scale_x_continuous(limits = c(0.04, 0.14))
+      scale_x_continuous(limits = c(0, 0.26)),
+      scale_x_continuous(limits = c(0.04, 0.13))
     ),
     y = list(
-      scale_y_continuous(limits = c(0.06, 0.13)),
       scale_y_continuous(limits = c(0, 0.7)),
-      scale_y_continuous(limits = c(0, 0.3)),
-      scale_y_continuous(limits = c(0.04, 0.14))
+      scale_y_continuous(limits = c(0, 0.26)),
+      scale_y_continuous(limits = c(0.04, 0.13))
     )
   ) +
   geom_abline(slope = 1, color = "red", linetype = "dashed")
@@ -327,9 +322,9 @@ all.results <- results.df2 |>
   mutate(value2 = tolower(value2)) |>
   tidyr::pivot_wider(id_cols = year:index_type, names_from = value2, values_from = value)
 
-png("VAST_vs_design_ts.png", width = 8, height = 6, units = "in", res = 200)
+png("output/VAST_vs_design_ts.png", width = 8, height = 6, units = "in", res = 200)
 p1 <- all.results |>
-  filter(species != "arrowtooth flounder" & index_type != "gam") |>
+  filter(index_type != "gam") |> # species != "arrowtooth flounder" &
   mutate_at(.vars = c("mt", "se"), .funs = function(x) x / 1e6) |>
   ggplot(aes(x = year, y = mt, color = index_type, fill = index_type, group = index_type)) +
   geom_point(size = 2.5) +
@@ -425,8 +420,8 @@ dev.off()
 
 # AIC for all models ------------------------------------------------------
 all_aic <- data.frame()
-for(m in 1:length(model_path_list)){
-  AICs <- lapply(model_path_list[[m]], FUN = get_surveyidx_aic) |> 
+for (m in 1:length(model_path_list)) {
+  AICs <- lapply(model_path_list[[m]], FUN = get_surveyidx_aic) |>
     unlist()
   modelname <- names(AICs)
   all_aic <- bind_rows(all_aic, data.frame(modelname = modelname, AIC = AICs))
