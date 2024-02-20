@@ -54,7 +54,7 @@ ggplot() +
     xlim = reg_dat_ebs$plot.boundary$x,
     ylim = reg_dat_ebs$plot.boundary$y
   ) +
-  scale_fill_manual(values = MetBrewer::met.brewer(palette_name = "Renoir", n = length(unique(reg_dat_ebs$survey.strata$Stratum)))) +
+  scale_fill_manual(values = MetBrewer::met.brewer(name = "Renoir", n = length(unique(reg_dat_ebs$survey.strata$Stratum)))) +
   scale_x_continuous(
     name = "Longitude",
     breaks = reg_dat_ebs$lon.breaks
@@ -117,7 +117,7 @@ fit_gam_10120 <- gam(
   formula = CPUE_KGKM2 ~ as.factor(YEAR) +
     s(X, Y, k = 50),
   family = tw(link = "log"),
-  data = filter(cpue_tab, SPECIES_CODE == 10120)
+  data = dplyr::filter(cpue_tab, SPECIES_CODE == 10120)
 )
 
 cat(
@@ -130,14 +130,14 @@ fit_gam_21740 <- gam(
   formula = CPUE_KGKM2 ~ as.factor(YEAR) +
     s(X, Y, k = 50),
   family = tw(link = "log"),
-  data = filter(cpue_tab, SPECIES_CODE == 21740)
+  data = dplyr::filter(cpue_tab, SPECIES_CODE == 21740)
 )
 
 fit_gam_69322 <- gam(
   formula = CPUE_KGKM2 ~ as.factor(YEAR) + # temporal
     s(X, Y, k = 50), # spatial
   family = tw(link = "log"),
-  data = filter(cpue_tab, SPECIES_CODE == 69322)
+  data = dplyr::filter(cpue_tab, SPECIES_CODE == 69322)
 )
 
 
@@ -154,12 +154,12 @@ dev.off()
 
 start.time <- Sys.time()
 
-fit_gam_s_t_st_10210 <- gam(
+fit_gam_s_t_st_10120 <- gam(
   formula = CPUE_KGKM2 ~ as.factor(YEAR) + # temporal
     s(X, Y, bs = c("ts", k = 375)) + # spatial
     s(X, Y, bs = c("ts"), k = 50, by = as.factor(YEAR), id = 1), # spatiotemporal
   family = tw(link = "log"),
-  data = filter(cpue_tab, SPECIES_CODE == 10210)
+  data = dplyr::filter(cpue_tab, SPECIES_CODE == 10120)
 )
 
 cat(
@@ -175,7 +175,7 @@ fit_gam_s_t_st_21740 <- gam(
     s(X, Y, bs = c("ts", k = 375)) + # spatial
     s(X, Y, bs = c("ts"), k = 50, by = as.factor(YEAR), id = 1), # spatiotemporal
   family = tw(link = "log"),
-  data = filter(cpue_tab, SPECIES_CODE == 21740)
+  data = dplyr::filter(cpue_tab, SPECIES_CODE == 21740)
 )
 
 cat(
@@ -191,7 +191,7 @@ fit_gam_s_t_st_69322 <- gam(
     s(X, Y, bs = c("ts", k = 375)) + # spatial
     s(X, Y, bs = c("ts"), k = 50, by = as.factor(YEAR), id = 1), # spatiotemporal
   family = tw(link = "log"),
-  data = filter(cpue_tab, SPECIES_CODE == 69322)
+  data = dplyr::filter(cpue_tab, SPECIES_CODE == 69322)
 )
 
 cat(
