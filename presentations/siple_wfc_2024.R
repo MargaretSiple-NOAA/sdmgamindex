@@ -258,7 +258,7 @@ wep$species <- "walleye pollock"
 
 all_spps <- dplyr::bind_rows(yfs, wep, rkc)
 
-png("output/VAST_vs_design.png", width = 8, height = 3, units = "in", res = 200)
+png("output/VAST_vs_design.png", width = 4, height = 8, units = "in", res = 200)
 all_spps %>%
   mutate_at(
     .vars = c("design_mt", "VAST_mt", "design_se", "VAST_se"),
@@ -267,7 +267,7 @@ all_spps %>%
   ggplot(aes(x = design_mt, y = VAST_mt, color = Year)) +
   geom_point(size = 3) +
   scale_color_viridis_c(option = "A") +
-  facet_wrap(~species, scales = "free") +
+  facet_wrap(~species, scales = "free", ncol = 1) +
   theme_light(base_size = 14) +
   xlab("Design-based index (millions mt)") +
   ylab("Model-based index (millions mt)") +
@@ -451,6 +451,11 @@ all_aic |>
   select(stock, modelname,  AIC)
 
 
+
+
+
+
+
 # Update pcod-crab overlap ------------------------------------------------
 # For Erin Fedewa (I asked her if she had looked at an updated overlap graph)
 sql_channel <- gapindex::get_connected()
@@ -462,4 +467,73 @@ dat <- gapindex::get_data(year_set = 2005:2023,
 
 cpue <- gapindex::calc_cpue(racebase_tables = dat)
 
-write.csv(cpue,row.names = FALSE,file = "presentations/snowcrab_pcod_cpue_table.csv")
+stationidtable <- dat$haul |> distinct(HAULJOIN,STATIONID)
+any(duplicated(stationidtable$HAULJOIN)) # confirm that each hauljoin is unique
+
+cpue_w_station <- cpue |>
+  left_join(stationidtable)
+
+write.csv(cpue_w_station,row.names = FALSE,file = "presentations/snowcrab_pcod_cpue_table.csv")
+
+
+# Update BBRKC numbers for design-based -----------------------------------
+sql_channel <- gapindex::get_connected()
+dat <- gapindex::get_data(year_set = 1975:2023,
+                          survey_set = c("EBS","NBS"),
+                          spp_codes = c(69322),
+                          abundance_haul = "Y",sql_channel = sql_channel)
+
+cpue <- gapindex::calc_cpue(racebase_tables = dat)
+# add stationid
+
+stationidtable <- dat$haul |> distinct(HAULJOIN,STATIONID)
+any(duplicated(stationidtable$HAULJOIN)) # confirm that each hauljoin is unique
+
+cpue_w_station <- cpue |>
+  left_join(stationidtable)
+
+
+
+## Calculate stratum-level biomass, population abundance, mean CPUE and 
+## associated variances
+biomass_stratum <- gapindex::calc_biomass_stratum(
+  racebase_tables = dat,
+  cpue = cpue)
+
+## Calculate aggregated biomass and population abundance across subareas,
+## management areas, and regions
+biomass_subareas <- gapindex::calc_biomass_subarea(
+  racebase_tables = dat,
+  biomass_strata = biomass_stratum)
+
+rkc_ebs <- biomass_subareas |>
+  filter(AREA_ID ==99901)
+
+# Update other species indices -----------------------------------
+sql_channel <- gapindex::get_connected()
+dat <- gapindex::get_data(year_set = 1995:2023,
+                          survey_set = c("EBS"),
+                          spp_codes = c(21740, 10210),
+                          abundance_haul = "Y",sql_channel = sql_channel)
+
+cpue <- gapindex::calc_cpue(racebase_tables = dat)
+## Calculate stratum-level biomass, population abundance, mean CPUE and 
+## associated variances
+biomass_stratum <- gapindex::calc_biomass_stratum(
+  racebase_tables = dat,
+  cpue = cpue)
+
+## Calculate aggregated biomass and population abundance across subareas,
+## management areas, and regions
+biomass_subareas <- gapindex::calc_biomass_subarea(
+  racebase_tables = dat,
+  biomass_strata = biomass_stratum)
+
+newdat <- biomass_subareas |>
+  filter(AREA_ID ==99901) |> #EBS 
+  mutate(BIOMASS_CV_mcs = sqrt(BIOMASS_VAR)/BIOMASS_MT)
+write.csv(newdat, "output/gapindex_db_pollock_yfs_ebs.csv",row.names = FALSE)
+
+
+# devtools::install_github("sean-rohan-NOAA/coldpool")
+# remotes::install_github("DTUAqua/DATRAS/DATRAS")
