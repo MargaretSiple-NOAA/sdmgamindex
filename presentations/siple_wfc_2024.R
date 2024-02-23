@@ -69,7 +69,7 @@ dev.off()
 load(file = "data/cpue_allspps.rds") # object: cpue_tab
 
 # Plot to check it out
-png("presentations/figs/threespps_rawcpue.png", width = 10, height = 3, units = "in", res = 200)
+png("presentations/figs/threespps_rawcpue.png", width = 12, height = 5, units = "in", res = 200)
 cpue_tab |>
   filter(YEAR == 2023 & CPUE_KGKM2==0) |>
   ggplot() +
