@@ -75,6 +75,7 @@ table_print <- table_raw %>%
 table_print
 ```
 
+
 And we are going to estimate the indicies of these species Over the eastern and northern Bering Sea shelf. 
 
 ```{r survey-figure, echo=FALSE, fig.cap=readLines("https://raw.githubusercontent.com/afsc-gap-products/survey-live-temperature-map/main/examples/current_grid_bs.txt"), out.width = '100%'}
@@ -89,7 +90,7 @@ For the sake of a simple example, we will only assess data from 2015 to 2021.
 
 ```{r vars} 
 SPECIES <- c("yellowfin sole", "walleye pollock", "red king crab")
-YEARS <- 2015:2023
+YEARS <- 1982:2023
 SRVY <- "EBS"
 ```
 
@@ -114,6 +115,75 @@ dat <- sdmgamindex::noaa_afsc_public_foss %>%
 ```{r view-data-show}
 table(dat$common_name)
 head(dat)
+```
+
+
+```{r species-cpue-distribution, eval = TRUE, echo = FALSE, fig.cap="2023 species distribution relative densities (size) and bottom temperature (color). ", fig.width=6.5}
+
+library(akgfmaps)
+reg_dat <- akgfmaps::get_base_layers(
+  select.region = "bs.south", 
+  set.crs = "+proj=longlat")
+
+library(ggplot2)
+options(scipen=10000)
+
+pp <- ggplot2::ggplot(data = dat  %>% 
+                        dplyr::mutate(common_name = factor(
+                          x = common_name,
+                          levels = c("yellowfin sole", "walleye pollock", "red king crab"),
+                          labels = c("yellowfin sole", "walleye pollock", "red king crab"),
+                          ordered = TRUE), 
+                          common_name = stringr::str_to_title(common_name)) %>%
+                        dplyr::filter(cpue_kgkm2>0 &
+                                        year == max(year))) + 
+  ggplot2::geom_point(mapping = aes(
+    x = longitude_dd_start, 
+    y = latitude_dd_start, 
+    color = bottom_temperature_c, 
+    size = cpue_kgkm2)) + 
+  ggplot2::facet_grid(. ~ common_name) +
+  scale_colour_viridis_c(alpha = .9,
+                         option = "mako") +
+  ggplot2::geom_sf(data = reg_dat$bathymetry,
+                   color = "grey30")+ 
+  ggplot2::geom_sf(data = reg_dat$akland,
+                   color = NA,
+                   fill = "grey50")+  
+  ggplot2::geom_sf(data = reg_dat$graticule,
+                   color = "grey80",
+                   alpha = 0.2)  +
+  ggplot2::geom_sf(data = reg_dat$survey.area,
+                   color = "grey50",
+                   fill = NA,
+                   size = rel(0.2)) + 
+  ggplot2::scale_y_continuous(name = "Latitude °N", 
+                              limits = reg_dat$plot.boundary$y, 
+                              breaks = reg_dat$lat.breaks) +
+  ggplot2::scale_x_continuous(name = "Longitude °W", 
+                              limits = reg_dat$plot.boundary$x,
+                              breaks = reg_dat$lon.breaks) + 
+  # set legend position and vertical arrangement
+  ggplot2::guides(
+    color = guide_colourbar(title = "Bottom Temperature °C",
+                            title.position="top",
+                            label.position = "bottom"),
+    size = guide_legend(title = "CPUE (kg/km²)", 
+                        title.position="top",
+                        label.position = "bottom",
+                        nrow = 1)) +
+  ggplot2::theme(
+    panel.background = element_rect(fill = "white",
+                                    colour = NA),
+    panel.border = element_rect(fill = NA,
+                                colour = "grey20"),
+    strip.background = element_blank(),
+    strip.text = element_text(face="bold", size=10), 
+    legend.position = "bottom",
+    legend.key = element_rect(fill = NA), 
+    plot.margin=grid::unit(c(0,0,0,0), "mm") )
+
+pp
 ```
 
 ## 2. Prepare the data from sdmgamindex::get_surveyidx():
@@ -506,8 +576,6 @@ a <- lapply(models,function(x) gam.check(x$pModels[[1]]))
 png(filename = here::here("inst","vigD_gamcheck.png"),
     width=640,height=480)
 
-
-
 gam.check2 <- function(b, 
                        title0 = "GAM Model Results", 
                        type = "deviance"  ## "pearson" & "response" are other valid choices
@@ -545,25 +613,6 @@ lapply(models,function(x) summary(x$pModels[[1]]))
 ## 8. Indicies of Abundance
 
 ```{r indicie_abund, fig.height=8}
-# dat_design <- dplyr::bind_rows(
-#   read.csv(file = system.file("YFS_10210_estimate_summary.csv",
-#                               package = "sdmgamindex" )) %>%
-#     dplyr::mutate(common_name = "yellowfin sole"),
-#   read.csv(file = system.file("WEP_21740_estimate_summary.csv",
-#                               package = "sdmgamindex" ))  %>%
-#     dplyr::mutate(common_name = "walleye pollock"),
-#   read.csv(file = system.file("RKC_Table_for_SS3.csv",
-#                               package = "sdmgamindex" )) %>%
-#     dplyr::rename(design_mt = Estimate_metric_tons,
-#                   design_se = SD_mt) %>%
-#     dplyr::mutate(design_se = (design_se)^2,
-#                   design_CV = NA,
-#                   VAST_mt = NA,
-#                   VAST_se = NA,
-#                   VAST_CV = NA,
-#                   common_name = "red king crab") %>%
-#     dplyr::select(-Unit, -Fleet, -SD_log))
-
 dat_design <- dplyr::bind_rows(
   sdmgamindex::noaa_afsc_biomass_estimates %>%
     dplyr::filter(survey_definition_id == 98 &
@@ -676,12 +725,12 @@ dat <- dat %>%
 
 for (i in 1:length(unique(dat$facet_group))){
   figure <- ggplot2::ggplot(data = dat %>% 
-                    dplyr::filter(facet_group == unique(dat$facet_group)[i]), 
-                  mapping = aes(x = Lon, 
-                                y = Lat, 
-                                group = group, 
-                                color = idx), 
-                  size = .5) +
+                              dplyr::filter(facet_group == unique(dat$facet_group)[i]), 
+                            mapping = aes(x = Lon, 
+                                          y = Lat, 
+                                          group = group, 
+                                          color = idx), 
+                            size = .5) +
     scale_color_viridis_c(option = "D") +
     geom_point()  + 
     ggtitle(paste0("Annual Index Model Results for ", unique(dat$facet_group)[i])) +

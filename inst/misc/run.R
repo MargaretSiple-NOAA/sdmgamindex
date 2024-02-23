@@ -92,7 +92,7 @@ ON sv.SPECIES_CODE = cc.SPECIES_CODE
 AND hh.HAULJOIN = cc.HAULJOIN
 WHERE sv.SURVEY_DEFINITION_ID = 98 
 AND sv.SPECIES_CODE IN (21740, 10210, 69322) 
-AND hh.YEAR >= 2015
+AND hh.YEAR >= 1982 --2015
 --GROUP BY ss.COMMON_NAME, hh.HAULJOIN
 ") %>% 
   janitor::clean_names()
@@ -105,7 +105,7 @@ column <- metadata_colname %>%
   dplyr::mutate(metadata_colname = tolower(metadata_colname)) %>%
   dplyr::distinct()
 
-str0 <- paste0("#' @title Public data from FOSS for EBS walleye pollock, yellowfin sole, and red king crab from 2015 to present
+str0 <- paste0("#' @title Public data from FOSS for EBS walleye pollock, yellowfin sole, and red king crab from 1982 to present
 #' @description ",metadata_table_comment$COMMENT[metadata_table_comment$TABLE_NAME == "FOSS_CATCH"]," 
 #' @usage data('noaa_afsc_public_foss')
 #' @author Emily Markowitz (Emily.Markowitz AT noaa.gov)
@@ -144,7 +144,7 @@ FROM GAP_PRODUCTS.AKFIN_BIOMASS bb
 WHERE bb.SURVEY_DEFINITION_ID = 98 
 AND bb.SPECIES_CODE IN (21740, 10210, 69322) 
 AND AREA_ID = 99901
-AND bb.YEAR >= 2015
+AND bb.YEAR >= 1982
 ") %>% 
   janitor::clean_names()
 
@@ -156,7 +156,7 @@ column <- metadata_colname %>%
   dplyr::mutate(metadata_colname = tolower(metadata_colname)) %>%
   dplyr::distinct()
 
-str0 <- paste0("#' @title Biomass Estimates from AKFIN for EBS walleye pollock, yellowfin sole, and red king crab from 2015 to present
+str0 <- paste0("#' @title Biomass Estimates from AKFIN for EBS walleye pollock, yellowfin sole, and red king crab from 1982 to present
 #' @description ",metadata_table_comment$COMMENT[metadata_table_comment$TABLE_NAME == "AKFIN_BIOMASS"]," 
 #' @usage data('noaa_afsc_biomass_estimates')
 #' @author Emily Markowitz (Emily.Markowitz AT noaa.gov)
