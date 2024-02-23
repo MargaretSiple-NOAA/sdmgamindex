@@ -79,7 +79,7 @@ cpue_tab |>
   ),
     color = "red",
     shape = 4,
-    size = 1) +
+    size = 3) +
   geom_point(
     data = filter(cpue_tab, YEAR == 2023 & CPUE_KGKM2 > 0),
     aes(x = LONGITUDE_DD_START, y = LATITUDE_DD_START,
@@ -450,3 +450,16 @@ all_aic |>
   arrange(AIC) |>
   select(stock, modelname,  AIC)
 
+
+# Update pcod-crab overlap ------------------------------------------------
+# For Erin Fedewa (I asked her if she had looked at an updated overlap graph)
+sql_channel <- gapindex::get_connected()
+
+dat <- gapindex::get_data(year_set = 2005:2023,
+                          survey_set = c("EBS","NBS"),
+                          spp_codes = c(68580, 21720),
+                          abundance_haul = "Y",sql_channel = sql_channel)
+
+cpue <- gapindex::calc_cpue(racebase_tables = dat)
+
+write.csv(cpue,row.names = FALSE,file = "presentations/snowcrab_pcod_cpue_table.csv")
