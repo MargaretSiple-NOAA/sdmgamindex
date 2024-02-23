@@ -69,18 +69,26 @@ dev.off()
 load(file = "data/cpue_allspps.rds") # object: cpue_tab
 
 # Plot to check it out
-png("presentations/figs/threespps_rawcpue.png", width = 10, height = 6, units = "in", res = 200)
+png("presentations/figs/threespps_rawcpue.png", width = 10, height = 3, units = "in", res = 200)
 cpue_tab |>
-  filter(YEAR == 2023) |>
-  ggplot(
-    mapping = aes(
-      x = LONGITUDE_DD_START, y = LATITUDE_DD_START,
-      size = CPUE_KGKM2, color = BOTTOM_TEMPERATURE_C
-    )
+  filter(YEAR == 2023 & CPUE_KGKM2==0) |>
+  ggplot() +
+  geom_point(mapping = aes(
+    x = LONGITUDE_DD_START, y = LATITUDE_DD_START,
+    size = CPUE_KGKM2, color = BOTTOM_TEMPERATURE_C
+  ),
+    color = "red",
+    shape = 4,
+    size = 1) +
+  geom_point(
+    data = filter(cpue_tab, YEAR == 2023 & CPUE_KGKM2 > 0),
+    aes(x = LONGITUDE_DD_START, y = LATITUDE_DD_START,
+        size = CPUE_KGKM2,
+        color = BOTTOM_TEMPERATURE_C),
+    alpha = 0.6
   ) +
-  geom_point(alpha = 0.8) +
-  scale_color_viridis_c("Temperature (deg C)") +
-  scale_size_area("CPUE (kg/km2)") +
+  scale_color_viridis_c(expression(Temperature~(degree*C))) +
+  scale_size_area(max_size = 15,expression(CPUE~(kg/km^2))) +
   # geom_sf(
   #   data = reg_dat_ebs$akland,
   #   color = NA,
@@ -233,7 +241,7 @@ load("output/gamresults_2023.RDS") # results.df
 # These are the results from Emily's GAMs using Casper's pkg
 
 results.df$index_type <- "GAM"
-results.df <- rename(results.df, idx_cv = "value")
+results.df <- dplyr::rename(results.df, idx_cv = "value")
 results.df2 <- results.df |>
   tidyr::pivot_longer(
     cols = `arrowtooth flounder`:`red king crab`,
@@ -248,7 +256,7 @@ yfs$species <- "yellowfin sole"
 wep <- read.csv("data/indices/EBS/WEP_21740_estimate_summary.csv")
 wep$species <- "walleye pollock"
 
-all_spps <- bind_rows(yfs, wep, rkc)
+all_spps <- dplyr::bind_rows(yfs, wep, rkc)
 
 png("output/VAST_vs_design.png", width = 8, height = 3, units = "in", res = 200)
 all_spps %>%
@@ -331,8 +339,8 @@ p1 <- all.results |>
   geom_line(lwd = 1.2) +
   geom_ribbon(aes(ymin = mt - se, ymax = mt + se), alpha = 0.3, color = NA) +
   facet_wrap(~species, scales = "free", ncol = 1) +
-  MetBrewer::scale_color_met_d(palette_name = "Klimt") +
-  MetBrewer::scale_fill_met_d(palette_name = "Klimt") +
+  MetBrewer::scale_color_met_d(name = "Klimt") +
+  MetBrewer::scale_fill_met_d(name = "Klimt") +
   ylab("Estimated biomass (millions mt)") +
   theme_light(base_size = 14)
 print(p1)
@@ -405,7 +413,7 @@ dat2 <- dat |>
   tibble::remove_rownames() |>
   filter(up < 50e6)
 
-png("VAST_vs_design_vs_GAM_ts.png", width = 8, height = 6, units = "in", res = 200)
+png("output/VAST_vs_design_vs_GAM_ts.png", width = 8, height = 6, units = "in", res = 200)
 p1 +
   geom_point(data = dat2, aes(x = year, y = mt / 1e6), size = 2.5) +
   geom_line(data = dat2, aes(x = year, y = mt / 1e6), lwd = 1.2) +
@@ -413,6 +421,13 @@ p1 +
   guides(
     color = guide_legend(title = "Index type"),
     fill = guide_legend(title = "Index type")
+  ) +
+  ggh4x::facetted_pos_scales(
+    y = list(
+      scale_y_continuous(limits = c(0, 0.2)),
+      scale_y_continuous(limits = c(2, 10.5)),
+      scale_y_continuous(limits = c(0.5,3.5))
+    )
   )
 dev.off()
 
@@ -428,3 +443,10 @@ for (m in 1:length(model_path_list)) {
 }
 
 rownames(all_aic) <- NULL
+all_aic$stock <- sapply(stringr::str_split(all_aic$model, " fm_"), `[`, 1)
+
+all_aic |>
+  group_by(stock) |>
+  arrange(AIC) |>
+  select(stock, modelname,  AIC)
+
