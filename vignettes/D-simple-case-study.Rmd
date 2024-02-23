@@ -34,8 +34,8 @@ PKG <- c(
 
 for (p in PKG) {
   # if(!require(p,character.only = TRUE)) {  
-    # install.packages(p)
-    require(p,character.only = TRUE)}
+  # install.packages(p)
+  require(p,character.only = TRUE)}
 # }
 ```
 
@@ -75,6 +75,7 @@ table_print <- table_raw %>%
 table_print
 ```
 
+
 And we are going to estimate the indicies of these species Over the eastern and northern Bering Sea shelf. 
 
 ```{r survey-figure, echo=FALSE, fig.cap=readLines("https://raw.githubusercontent.com/afsc-gap-products/survey-live-temperature-map/main/examples/current_grid_bs.txt"), out.width = '100%'}
@@ -89,7 +90,7 @@ For the sake of a simple example, we will only assess data from 2015 to 2021.
 
 ```{r vars} 
 SPECIES <- c("yellowfin sole", "walleye pollock", "red king crab")
-YEARS <- 2015:2023
+YEARS <- 1982:2023
 SRVY <- "EBS"
 ```
 
@@ -114,6 +115,75 @@ dat <- sdmgamindex::noaa_afsc_public_foss %>%
 ```{r view-data-show}
 table(dat$common_name)
 head(dat)
+```
+
+
+```{r species-cpue-distribution, eval = TRUE, echo = FALSE, fig.cap="2023 species distribution relative densities (size) and bottom temperature (color). ", fig.width=6.5}
+
+library(akgfmaps)
+reg_dat <- akgfmaps::get_base_layers(
+  select.region = "bs.south", 
+  set.crs = "+proj=longlat")
+
+library(ggplot2)
+options(scipen=10000)
+
+pp <- ggplot2::ggplot(data = dat  %>% 
+                        dplyr::mutate(common_name = factor(
+                          x = common_name,
+                          levels = c("yellowfin sole", "walleye pollock", "red king crab"),
+                          labels = c("yellowfin sole", "walleye pollock", "red king crab"),
+                          ordered = TRUE), 
+                          common_name = stringr::str_to_title(common_name)) %>%
+                        dplyr::filter(cpue_kgkm2>0 &
+                                        year == max(year))) + 
+  ggplot2::geom_point(mapping = aes(
+    x = longitude_dd_start, 
+    y = latitude_dd_start, 
+    color = bottom_temperature_c, 
+    size = cpue_kgkm2)) + 
+  ggplot2::facet_grid(. ~ common_name) +
+  scale_colour_viridis_c(alpha = .9,
+                         option = "mako") +
+  ggplot2::geom_sf(data = reg_dat$bathymetry,
+                   color = "grey30")+ 
+  ggplot2::geom_sf(data = reg_dat$akland,
+                   color = NA,
+                   fill = "grey50")+  
+  ggplot2::geom_sf(data = reg_dat$graticule,
+                   color = "grey80",
+                   alpha = 0.2)  +
+  ggplot2::geom_sf(data = reg_dat$survey.area,
+                   color = "grey50",
+                   fill = NA,
+                   size = rel(0.2)) + 
+  ggplot2::scale_y_continuous(name = "Latitude °N", 
+                              limits = reg_dat$plot.boundary$y, 
+                              breaks = reg_dat$lat.breaks) +
+  ggplot2::scale_x_continuous(name = "Longitude °W", 
+                              limits = reg_dat$plot.boundary$x,
+                              breaks = reg_dat$lon.breaks) + 
+  # set legend position and vertical arrangement
+  ggplot2::guides(
+    color = guide_colourbar(title = "Bottom Temperature °C",
+                            title.position="top",
+                            label.position = "bottom"),
+    size = guide_legend(title = "CPUE (kg/km²)", 
+                        title.position="top",
+                        label.position = "bottom",
+                        nrow = 1)) +
+  ggplot2::theme(
+    panel.background = element_rect(fill = "white",
+                                    colour = NA),
+    panel.border = element_rect(fill = NA,
+                                colour = "grey20"),
+    strip.background = element_blank(),
+    strip.text = element_text(face="bold", size=10), 
+    legend.position = "bottom",
+    legend.key = element_rect(fill = NA), 
+    plot.margin=grid::unit(c(0,0,0,0), "mm") )
+
+pp
 ```
 
 ## 2. Prepare the data from sdmgamindex::get_surveyidx():
@@ -386,10 +456,10 @@ fm <-  list(
   "fm_2_cov" =
     "s(BOTTOM_DEPTH,bs='ts',k=10) +
 s(log(GEAR_TEMPERATURE+3),bs='ts',k=10)",
-  
-  # Mdoel with simple covariates and spatial and temporal with an additional year effect
-  "fm_3_s_t_st_cov" =
-    "Year +
+
+# Mdoel with simple covariates and spatial and temporal with an additional year effect
+"fm_3_s_t_st_cov" =
+  "Year +
     s(sx,sy,bs=c('ts'),k=376) +
     s(sx,sy,bs=c('ts'),k=10,by=Year) + 
     s(BOTTOM_DEPTH,bs='ts',k=10) +
@@ -466,21 +536,28 @@ for (i in unique(comb$fm_name)){
 models <- models0
 ```
 
-``` {r model_aic}
-# temp <- sapply(models, `[`, "pModels")
-# mods <- sapply(temp, `[`, 1)
-# lapply(X = mods, FUN = AIC)
+```{r model_aic}
+aic <- AIC(
+  models$`red king crab fm_1_s_t_st`$pModels[[1]], 
+  models$`red king crab fm_2_cov`$pModels[[1]], 
+  models$`red king crab fm_3_s_t_st_cov`$pModels[[1]], 
+  models$`walleye pollock fm_1_s_t_st`$pModels[[1]], 
+  models$`walleye pollock fm_2_cov`$pModels[[1]], 
+  models$`walleye pollock fm_3_s_t_st_cov`$pModels[[1]], 
+  models$`yellowfin sole fm_1_s_t_st`$pModels[[1]], 
+  models$`yellowfin sole fm_2_cov`$pModels[[1]], 
+  models$`yellowfin sole fm_3_s_t_st_cov`$pModels[[1]]) 
+```
 
+```{r model-aic1, echo = FALSE}
+# AIC(sapply(sapply(models,"[[",'pModels'),"[[",1))
 # sdmgamindex::get_surveyidx_aic(x = models)
-AIC(models$`red king crab fm_1_s_t_st`$pModels[[1]], 
-    models$`red king crab fm_2_cov`$pModels[[1]], 
-    models$`red king crab fm_3_s_t_st_cov`$pModels[[1]], 
-    models$`walleye pollock fm_1_s_t_st`$pModels[[1]], 
-    models$`walleye pollock fm_2_cov`$pModels[[1]], 
-    models$`walleye pollock fm_3_s_t_st_cov`$pModels[[1]], 
-    models$`yellowfin sole fm_1_s_t_st`$pModels[[1]], 
-    models$`yellowfin sole fm_2_cov`$pModels[[1]], 
-    models$`yellowfin sole fm_3_s_t_st_cov`$pModels[[1]])
+aic %>% 
+  tibble::rownames_to_column("model") %>% 
+  dplyr::mutate(model = gsub(pattern = "models$`", replacement = "", x = model, fixed = TRUE), 
+                model = gsub(pattern = "`$pModels[[1]]", replacement = "", x = model, fixed = TRUE)) %>%
+  flextable::flextable() %>% 
+  flextable::width(j = "model", width = 3, unit = "in")
 
 ```
 
@@ -499,29 +576,27 @@ a <- lapply(models,function(x) gam.check(x$pModels[[1]]))
 png(filename = here::here("inst","vigD_gamcheck.png"),
     width=640,height=480)
 
-
-
 gam.check2 <- function(b, 
                        title0 = "GAM Model Results", 
                        type = "deviance"  ## "pearson" & "response" are other valid choices
-                       ) {
-# https://stackoverflow.com/questions/22275610/how-to-get-only-the-plots-from-gam-check
-resid <- residuals(b, type = type)
-linpred <- napredict(b$na.action, b$linear.predictors)
-observed.y <- napredict(b$na.action, b$y)
-# QQ plot - This is produced via qq.gam():
-f1 <- qq.gam(b, rep = 0, level = 0.9, type = type, rl.col = 2, 
-       rep.col = "gray80")
-# Histogram of residuals 
-f2 <- hist(resid, xlab = "Residuals", main = "Histogram of residuals")
-# Residuals vs linear predictor 
-f3 <- plot(linpred, resid, main = "Resids vs. linear pred.", 
-     xlab = "linear predictor", ylab = "residuals")
-# Observed vs fitted values
-f4 <- plot(fitted(b), observed.y, xlab = "Fitted Values", 
-     ylab = "Response", main = "Response vs. Fitted Values")
-figure <- cowplot::plot_grid(title0, f1, f2, f3, f4, 
-                             nrow = 3, rel_heights = c(0.1, 1, 1))
+) {
+  # https://stackoverflow.com/questions/22275610/how-to-get-only-the-plots-from-gam-check
+  resid <- residuals(b, type = type)
+  linpred <- napredict(b$na.action, b$linear.predictors)
+  observed.y <- napredict(b$na.action, b$y)
+  # QQ plot - This is produced via qq.gam():
+  f1 <- qq.gam(b, rep = 0, level = 0.9, type = type, rl.col = 2, 
+               rep.col = "gray80")
+  # Histogram of residuals 
+  f2 <- hist(resid, xlab = "Residuals", main = "Histogram of residuals")
+  # Residuals vs linear predictor 
+  f3 <- plot(linpred, resid, main = "Resids vs. linear pred.", 
+             xlab = "linear predictor", ylab = "residuals")
+  # Observed vs fitted values
+  f4 <- plot(fitted(b), observed.y, xlab = "Fitted Values", 
+             ylab = "Response", main = "Response vs. Fitted Values")
+  figure <- cowplot::plot_grid(title0, f1, f2, f3, f4, 
+                               nrow = 3, rel_heights = c(0.1, 1, 1))
 }
 
 gam.check2(b = models[[1]]$pModels, names(models[1]))
@@ -538,25 +613,6 @@ lapply(models,function(x) summary(x$pModels[[1]]))
 ## 8. Indicies of Abundance
 
 ```{r indicie_abund, fig.height=8}
-# dat_design <- dplyr::bind_rows(
-#   read.csv(file = system.file("YFS_10210_estimate_summary.csv",
-#                               package = "sdmgamindex" )) %>%
-#     dplyr::mutate(common_name = "yellowfin sole"),
-#   read.csv(file = system.file("WEP_21740_estimate_summary.csv",
-#                               package = "sdmgamindex" ))  %>%
-#     dplyr::mutate(common_name = "walleye pollock"),
-#   read.csv(file = system.file("RKC_Table_for_SS3.csv",
-#                               package = "sdmgamindex" )) %>%
-#     dplyr::rename(design_mt = Estimate_metric_tons,
-#                   design_se = SD_mt) %>%
-#     dplyr::mutate(design_se = (design_se)^2,
-#                   design_CV = NA,
-#                   VAST_mt = NA,
-#                   VAST_se = NA,
-#                   VAST_CV = NA,
-#                   common_name = "red king crab") %>%
-#     dplyr::select(-Unit, -Fleet, -SD_log))
-
 dat_design <- dplyr::bind_rows(
   sdmgamindex::noaa_afsc_biomass_estimates %>%
     dplyr::filter(survey_definition_id == 98 &
@@ -628,7 +684,7 @@ ggplot2::ggplot(data = dat,
 
 ## 9. Predict and plot
 
-```{r predict}
+```{r predict, eval = FALSE, echo = FALSE}
 dat_pred <- dat_catch_haul %>%
   dplyr::select(Year, sx, sy, Lon, Lat, GEAR_TEMPERATURE, BOTTOM_DEPTH)
 
@@ -650,20 +706,131 @@ for (i in 1:length(models)) {
 
 dat$facet_group <- paste0(sapply(X = strsplit(x = dat$group, split = " fm"), `[`, 1))
 
+dat <- dat %>% 
+  # dplyr::mutate(idx = idx) %>%
+  dplyr::bind_rows(data.frame(
+    idx = dat_catch_haul$wCPUE, 
+    group = "design", 
+    formula = "", 
+    Year = dat_catch_haul$Year, 
+    sx = dat_catch_haul$sx, 
+    sy = dat_catch_haul$sy, 
+    Lon = dat_catch_haul$Lon, 
+    Lat = dat_catch_haul$Lat, 
+    GEAR_TEMPERATURE = dat_catch_haul$GEAR_TEMPERATURE, 
+    BOTTOM_DEPTH = dat_catch_haul$BOTTOM_DEPTH, 
+    facet_group = dat_catch_haul$COMMON_NAME)) %>% 
+  dplyr::mutate(aa = paste0(facet_group, "_", group, "_", Year), 
+                COMMON_NAME = facet_group, LATITUDE = Lat, LONGITUDE = Lon, CPUE_KGHA = idx)
+
 for (i in 1:length(unique(dat$facet_group))){
-  ggplot2::ggplot(data = dat %>% 
-                    dplyr::filter(facet_group == unique(dat$facet_group)[i]), 
-                  mapping = aes(x = Lon, 
-                                y = Lat, 
-                                group = group, 
-                                color = idx)) +
+  figure <- ggplot2::ggplot(data = dat %>% 
+                              dplyr::filter(facet_group == unique(dat$facet_group)[i]), 
+                            mapping = aes(x = Lon, 
+                                          y = Lat, 
+                                          group = group, 
+                                          color = idx), 
+                            size = .5) +
     scale_color_viridis_c(option = "D") +
     geom_point()  + 
     ggtitle(paste0("Annual Index Model Results for ", unique(dat$facet_group)[i])) +
     facet_grid(cols = vars(group), 
                rows = vars(Year)) +
-    theme_bw()
+    theme_bw() + 
+    theme(legend.position = "bottom")
+  ggsave(filename = paste0("vigD_model_fit_maps_", unique(dat$facet_group)[i], ".png"), 
+         path = here::here("inst"), 
+         plot = figure, 
+         # device = "png",
+         width = 6.5, height = 10)
 }
+
+
+# for (i in 1:length(unique(dat$facet_group))){
+# library(akgfmaps)
+# idw <- akgfmaps::make_idw_stack(
+#   x = dat %>% 
+#     dplyr::filter(facet_group == unique(dat$facet_group)[i]), 
+#   region = "bs.south", 
+#   grouping.vars = "aa", 
+#   extrapolation.grid.type = "sf")
+# 
+# reg_dat = akgfmaps::get_base_layers(
+#       select.region = "bs.south", 
+#       set.crs = out.crs)
+# 
+# figure <- ggplot() +
+#     ggplot2::geom_sf(data = reg_dat0$akland,
+#                      color = NA,
+#                      fill = "grey50")  +
+#     ggplot2::geom_sf(data = reg_dat0$graticule,
+#                      color = "grey80",
+#                      alpha = 0.2) +
+#     ggplot2::scale_y_continuous(name = "", #"Latitude",
+#                                 limits = reg_dat0$plot.boundary$y,
+#                                 breaks = reg_dat0$lat.breaks) +
+#     ggplot2::scale_x_continuous(name = "", #"Longitude",
+#                                 limits = reg_dat0$plot.boundary$x,
+#                                 breaks = reg_dat0$lon.breaks) + 
+#     geom_sf(data = idw$extrapolation.stack,
+#             mapping = aes(fill = var1.pred),
+#             na.rm = FALSE,
+#             show.legend = TRUE, 
+#             color = NA) +
+#     ggplot2::facet_wrap( ~ YEAR, nrow = row0) + 
+#     coord_sf() + 
+#     ggplot2::scale_fill_manual(
+#       name = key.title,
+#       values =  c("gray90",
+#                   viridis::viridis(
+#                     option = viridis_palette_option,
+#                     direction = -1,
+#                     n = length(set.breaks)-1,
+#                     begin = 0.20,
+#                     end = 0.80)),
+#       na.translate = FALSE, # Don't use NA
+#       drop = FALSE) + 
+#     ggplot2::geom_sf(
+#       data = reg_dat0$survey.area, 
+#       mapping = aes(color = SURVEY, 
+#                     geometry = geometry), 
+#       fill = "transparent", 
+#       linewidth = ifelse(row0 > 2, 1.5, 1), 
+#       show.legend = FALSE) +
+#     ggplot2::scale_color_manual(
+#       name = " ", 
+#       values = reg_dat0$survey.area$color,
+#       breaks = reg_dat0$survey.area$SURVEY,
+#       labels = reg_dat0$survey.area$SRVY) + 
+#     ggplot2::guides(
+#       fill = guide_legend(
+#         order = 1,
+#         title.position = "top",
+#         label.position = "bottom",
+#         title.hjust = 0.5,
+#         override.aes = list(color = NA),
+#         nrow = 1),
+#       color = "none")
+# 
+#   ggsave(filename = paste0("vigD_model_fit_idw_", unique(dat$facet_group)[i], ".png"), 
+#          path = here::here("inst"), 
+#          plot = figure, 
+#          # device = "png",
+#          width = 6.5, height = 10)
+# }
+```
+
+
+```{r survey-figure1, echo=FALSE, out.width = '100%'}
+knitr::include_graphics(here::here("inst", paste0("vigD_model_fit_maps_walleye pollock.png")))
+```
+
+```{r survey-figure1, echo=FALSE, out.width = '100%'}
+knitr::include_graphics(here::here("inst", paste0("vigD_model_fit_maps_yellowfin sole.png")))
+```
+
+```{r survey-figure1, echo=FALSE, out.width = '100%'}
+knitr::include_graphics(here::here("inst", paste0("vigD_model_fit_maps_red king crab.png")))
 ```
 
 ```{r}
