@@ -511,7 +511,7 @@ biomass_subareas <- gapindex::calc_biomass_subarea(
   biomass_strata = biomass_stratum)
 
 rkc_ebs <- biomass_subareas |>
-  filter(AREA_ID ==99901)
+  filter(AREA_ID ==99900)
 
 # Update other species indices -----------------------------------
 sql_channel <- gapindex::get_connected()
@@ -520,7 +520,8 @@ dat <- gapindex::get_data(year_set = 1995:2023,
                           spp_codes = c(21740, # pollock
                                         10210,# yfs
                                         69322), # RKC
-                          abundance_haul = "Y",sql_channel = sql_channel)
+                          abundance_haul = "Y",
+                          sql_channel = sql_channel)
 
 cpue <- gapindex::calc_cpue(racebase_tables = dat)
 ## Calculate stratum-level biomass, population abundance, mean CPUE and 
@@ -535,9 +536,11 @@ biomass_subareas <- gapindex::calc_biomass_subarea(
   racebase_tables = dat,
   biomass_strata = biomass_stratum)
 
-btotal <- biomass_subareas |>
-  filter(AREA_ID ==99901) |> #EBS 
+all_db <- biomass_subareas |>
+  dplyr::filter(AREA_ID ==99900) |> #EBS 
+  mutate(BIOMASS_SE_mcs = sqrt(BIOMASS_VAR)) |>
   mutate(BIOMASS_CV_mcs = sqrt(BIOMASS_VAR)/BIOMASS_MT)
 
-write.csv(newdat, "output/gapindex_db_pollock_yfs_rkc_ebs.csv",row.names = FALSE)
+write.csv(all_db, "output/gapindex_db_pollock_yfs_rkc_ebs.csv",row.names = FALSE)
+
 

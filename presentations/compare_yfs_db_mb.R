@@ -29,8 +29,14 @@ biomass_subareas <- gapindex::calc_biomass_subarea(
 )
 
 db_yfs <- biomass_subareas |>
-  filter(AREA_ID == 99901) |> # EBS
+  filter(AREA_ID == 99900) |> # EBS + NW
   mutate(BIOMASS_CV_mcs = sqrt(BIOMASS_VAR) / BIOMASS_MT, index_type = "db")
+
+# From Zack:
+# 99900: EBS Standard + NW: all EBS strata. Compare this to the "EBS" Stratum in the VAST Index.csv
+# 99901: EBS Standard: all EBS strata except strata 82 and 90. Don't use this AREA_ID when doing VAST comparisons because of the missing strata
+# 
+# If you wanted to compare the "Both" Stratum (EBS + NBS) in the vast output, I would add AREA_IDs 99900 and 99902 (which codes for the NBS region).  
 
 # Compare YFS design- and model-based
 # Get mb index from google drive
