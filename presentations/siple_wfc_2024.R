@@ -28,6 +28,10 @@ options(ggplot2.continuous.fill = "viridis")
 theme_set(theme_light())
 
 
+# devtools::install_github("sean-rohan-NOAA/coldpool")
+# remotes::install_github("DTUAqua/DATRAS/DATRAS")
+
+
 # Load map backgrounds ----------------------------------------------------
 
 reg_dat_ebs <- akgfmaps::get_base_layers(
@@ -513,7 +517,9 @@ rkc_ebs <- biomass_subareas |>
 sql_channel <- gapindex::get_connected()
 dat <- gapindex::get_data(year_set = 1995:2023,
                           survey_set = c("EBS"),
-                          spp_codes = c(21740, 10210),
+                          spp_codes = c(21740, # pollock
+                                        10210,# yfs
+                                        69322), # RKC
                           abundance_haul = "Y",sql_channel = sql_channel)
 
 cpue <- gapindex::calc_cpue(racebase_tables = dat)
@@ -529,11 +535,9 @@ biomass_subareas <- gapindex::calc_biomass_subarea(
   racebase_tables = dat,
   biomass_strata = biomass_stratum)
 
-newdat <- biomass_subareas |>
+btotal <- biomass_subareas |>
   filter(AREA_ID ==99901) |> #EBS 
   mutate(BIOMASS_CV_mcs = sqrt(BIOMASS_VAR)/BIOMASS_MT)
-write.csv(newdat, "output/gapindex_db_pollock_yfs_ebs.csv",row.names = FALSE)
 
+write.csv(newdat, "output/gapindex_db_pollock_yfs_rkc_ebs.csv",row.names = FALSE)
 
-# devtools::install_github("sean-rohan-NOAA/coldpool")
-# remotes::install_github("DTUAqua/DATRAS/DATRAS")
