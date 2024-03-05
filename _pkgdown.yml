@@ -1,4 +1,4 @@
-url: https://emilymarkowitz-noaa.github.io/sdmgamindex/
+url: https://github.com/noaa-afsc/sdmgamindex/
 template:
   bootstrap: 5
 csl: "https://raw.githubusercontent.com/citation-style-language/styles/master/apa-no-ampersand.csl"

@@ -7,35 +7,35 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-  
+
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
-collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE, 
-comment = "#>"
+  collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE, 
+  comment = "#>"
 )
 
 # library(remotes)
 PKG <- c(
-"sdmgamindex", 
-"DATRAS", # remotes::install_github("DTUAqua/DATRAS/DATRAS")
-"dplyr",
-"sf", 
-"gstat",
-"magrittr", 
-"flextable", 
-"raster", 
-"dplyr", 
-"magrittr",
-
-# RACE-GAP Specific R packages
-"akgfmaps", # devtools::install_github("afsc-gap-products/akgfmaps", build_vignettes = TRUE)
-"coldpool" # devtools::install_github("afsc-gap-products/coldpool")
+  "sdmgamindex", 
+  "DATRAS", # remotes::install_github("DTUAqua/DATRAS/DATRAS")
+  "dplyr",
+  "sf", 
+  "gstat",
+  "magrittr", 
+  "flextable", 
+  "raster", 
+  "dplyr", 
+  "magrittr",
+  
+  # RACE-GAP Specific R packages
+  "akgfmaps", # devtools::install_github("afsc-gap-products/akgfmaps", build_vignettes = TRUE)
+  "coldpool" # devtools::install_github("afsc-gap-products/coldpool")
 )
 
 for (p in PKG) {
-# if(!require(p,character.only = TRUE)) {  
-# install.packages(p)
-require(p,character.only = TRUE)}
+  # if(!require(p,character.only = TRUE)) {  
+  # install.packages(p)
+  require(p,character.only = TRUE)}
 # }
 
 options(ggplot2.continuous.colour = "viridis")
@@ -536,6 +536,9 @@ cat(str0)
 ```
 
 ```{r model_aic}
+# AIC(sapply(sapply(models,"[[",'pModels'),"[[",1))
+# sdmgamindex::get_surveyidx_aic(x = models)
+
 aic <- AIC(
   models$`red king crab fm_1_s_t_st`$pModels[[1]], 
   models$`red king crab fm_2_cov`$pModels[[1]], 
@@ -545,18 +548,19 @@ aic <- AIC(
   models$`walleye pollock fm_3_s_t_st_cov`$pModels[[1]], 
   models$`yellowfin sole fm_1_s_t_st`$pModels[[1]], 
   models$`yellowfin sole fm_2_cov`$pModels[[1]], 
-  models$`yellowfin sole fm_3_s_t_st_cov`$pModels[[1]]) %>% 
-  dplyr::mutate(dAIC = round(AIC-min(AIC), digits = 2))
+  models$`yellowfin sole fm_3_s_t_st_cov`$pModels[[1]]) 
 
-# AIC(sapply(sapply(models,"[[",'pModels'),"[[",1))
-# sdmgamindex::get_surveyidx_aic(x = models)
 aic %>% 
   tibble::rownames_to_column("model") %>% 
   dplyr::mutate(model = gsub(pattern = "models$`", replacement = "", x = model, fixed = TRUE), 
                 model = gsub(pattern = "`$pModels[[1]]", replacement = "", x = model, fixed = TRUE)) %>%
+  tidyr::separate(col = model, into = c("SPECIES", "fm"), sep = " fm_") %>% 
+  dplyr::group_by(SPECIES) %>% 
+  dplyr::mutate(dAIC = round(AIC-min(AIC), digits = 2)) %>% 
+  dplyr::ungroup() %>%
   flextable::flextable() %>% 
-  flextable::width(j = "model", width = 3, unit = "in")
-
+  # flextable::merge_at(i = SPECIES, part = "body") %>% 
+  flextable::width(j = "SPECIES", width = 1, unit = "in") 
 ```
 
 ```{r model_check1_script, eval = FALSE, echo = TRUE}
@@ -600,9 +604,6 @@ gam.check2 <- function(b,
 gam.check2(b = models[[1]]$pModels, names(models[1]))
 ```
 
-```{r model_check1_show, eval = TRUE, echo = FALSE}
-```
-
 ```{r model_check2}
 ## Model summaries
 lapply(models,function(x) summary(x$pModels[[1]]))
@@ -610,7 +611,7 @@ lapply(models,function(x) summary(x$pModels[[1]]))
 
 ## 8. Indicies of Abundance
 
-```{r indicie_abund, fig.height=8}
+```{r indicie_abund}
 dat_design <- dplyr::bind_rows(
   sdmgamindex::noaa_afsc_biomass_estimates %>%
     dplyr::filter(survey_definition_id == 98 &
@@ -639,44 +640,54 @@ for (i in 1:length(models)){
                      lo = temp$lo[,1]/1e2, 
                      up = temp$up[,1]/1e2,
                      Year = rownames(temp$idx), 
-                     group = names(models)[i],
+                     common_name = lapply(strsplit(x = names(models)[i], split = " fm"), `[[`, 1)[[1]],
+                     group = paste0("fm", lapply(strsplit(x = names(models)[i], split = " fm"), `[[`, 2)),
                      formula = paste0("cpue_kgkm2 ~ ", 
                                       as.character(temp$pModels[[1]]$formula)[[3]]))
   
   dat <- dplyr::bind_rows(dat, dat0) 
 }
 
-dat$common_name <- paste0(sapply(X = strsplit(x = dat$group, split = " fm"), `[`, 1))
-
 dat <- dplyr::bind_rows(dat %>% 
-                          dplyr::mutate(Year = as.numeric(Year)) %>% 
-                          dplyr::select(-group), 
+                          dplyr::mutate(Year = as.numeric(Year)), # %>% 
+                        # dplyr::select(-group), 
                         dat_design %>% 
                           dplyr::select(design_mt, common_name, Year) %>%
                           dplyr::rename(idx = design_mt) %>%
                           dplyr::mutate(lo = NA, 
                                         up = NA, 
+                                        group = "design",
                                         formula = "design")) %>% 
-  dplyr::filter(Year %in% YEARS[-1])
+  dplyr::filter(Year %in% (YEARS)[-1])
+# dplyr::filter(Year >= min(YEARS))
 
 dat[dat$Year == 2020, c("idx", "up", "lo")] <- NA
 
-ggplot2::ggplot(data = dat,
-                mapping = aes(x = Year, 
-                              y = idx, 
-                              group = formula, 
-                              color = formula)) +
+figure <- ggplot2::ggplot(data = dat,
+                          mapping = aes(x = Year, 
+                                        y = idx, 
+                                        group = group, 
+                                        color = group)) +
   ggplot2::geom_line(size = 1.5) + 
-  ggplot2::geom_point(size = 2)  + 
-  ggplot2::geom_ribbon(aes(ymin = lo, ymax = up, fill = formula), 
-                       alpha=0.1, 
-                       linetype="dashed",
-                       color="grey") + 
+  ggplot2::geom_point(size = 2) + 
+  ggplot2::geom_ribbon(aes(ymin = lo, ymax = up, fill = group, color = group), 
+                       alpha = 0.1, 
+                       linetype = "dashed") + 
   ggplot2::ggtitle("Annual Index Model Results") +
   ggplot2::scale_y_continuous(name = "Index", labels = scales::comma) +
-  ggplot2::facet_wrap(vars(common_name), scales = "free", ncol = 1) +
+  ggplot2::facet_wrap(vars(common_name), scales = "free_y", ncol = 1) +
   ggplot2::theme(legend.position = "bottom", 
-                 legend.direction = "vertical")
+                 legend.direction = "horizontal", 
+                 legend.title = element_blank())
+
+ggsave(filename = paste0("vigD_model_fit_timeseries.png"),
+       path = here::here("inst"),
+       plot = figure,
+       width = 6.5, height = 6)
+```
+
+```{r survey-figure-timeseries, echo=FALSE, out.width = '100%'}
+knitr::include_graphics(here::here("inst", paste0("vigD_model_fit_timeseries.png")))
 ```
 
 ## 9. Predict and plot
@@ -696,9 +707,9 @@ for (i in 1:length(models)) {
                      formula = paste0("cpue_kgkm2 ~ ", 
                                       as.character(temp$pModels[[1]]$formula)[[3]])
   ) %>%
-  dplyr::group_by(group, formula) %>%
-  dplyr::mutate(idx = scale(idx)[,1]) %>%
-  dplyr::ungroup()
+    dplyr::group_by(group, formula) %>%
+    dplyr::mutate(idx = scale(idx)[,1]) %>%
+    dplyr::ungroup()
   
   dat00 <- dplyr::bind_cols(dat0, dat_pred) 
   dat <- dplyr::bind_rows(dat, dat00) 
@@ -719,14 +730,16 @@ dat <- dat %>%
     GEAR_TEMPERATURE = dat_catch_haul$GEAR_TEMPERATURE, 
     BOTTOM_DEPTH = dat_catch_haul$BOTTOM_DEPTH, 
     facet_group = dat_catch_haul$COMMON_NAME) %>%
-  dplyr::group_by(facet_group, group, formula) %>%
-  dplyr::mutate(idx = scale(idx)[,1]) %>%
-  dplyr::ungroup() )
+      dplyr::group_by(facet_group, group, formula) %>%
+      dplyr::mutate(idx = scale(idx)[,1]) %>%
+      dplyr::ungroup() )
+```
 
+```{r predict_point, eval = FALSE, echo = FALSE}
 for (i in 1:length(unique(dat$facet_group))){
   
   figure <- ggplot2::ggplot(data = dat %>%
-                            dplyr::filter(group != "design") %>%
+                              dplyr::filter(group != "design") %>%
                               dplyr::filter(facet_group == unique(dat$facet_group)[i]), 
                             mapping = aes(x = Lon, 
                                           y = Lat, 
@@ -747,7 +760,7 @@ for (i in 1:length(unique(dat$facet_group))){
 for (i in 1:length(unique(dat$facet_group))){
   
   figure <- ggplot2::ggplot(data = dat %>%
-                            dplyr::filter(group == "design") %>%
+                              dplyr::filter(group == "design") %>%
                               dplyr::filter(facet_group == unique(dat$facet_group)[i]), 
                             mapping = aes(x = Lon, 
                                           y = Lat, 
@@ -766,7 +779,7 @@ for (i in 1:length(unique(dat$facet_group))){
 }
 ```
 
-```{r predict, eval = FALSE, echo = FALSE}
+```{r predict_idw, eval = FALSE, echo = FALSE}
 idw <- akgfmaps::make_idw_stack(
   x = dat %>% 
     dplyr::ungroup() %>%
@@ -778,18 +791,19 @@ idw <- akgfmaps::make_idw_stack(
   region = "bs.south",
   grouping.vars = "aa",
   extrapolation.grid.type = "sf")
+idw$extrapolation.stack$aa <- gsub(x = idw$extrapolation.stack$aa, pattern = " fm", replacement = "-fm")
+idw$extrapolation.stack <- idw$extrapolation.stack %>% 
+  tidyr::separate(col = aa, sep = "-", into = c("common_name", "model", "Year"), remove = FALSE)
 
 save(idw, file = here::here("inst", "vigD_model_fit_idw.Rdata"))
 
 reg_dat = akgfmaps::get_base_layers(
-      select.region = "bs.south")
+  select.region = "bs.south")
 
-# strsplit(x = idw$extrapolation.stack$aa, split = "_")
-
-for (i in 1:length(unique(dat$facet_group))){
+for (i in 1:length(unique(idw$extrapolation.stack$common_name))){
   set.breaks <- unique(idw$extrapolation.stack$var1.pred)
   
-figure <- ggplot() +
+  figure <- ggplot() +
     ggplot2::geom_sf(data = reg_dat$akland,
                      color = NA,
                      fill = "grey50")  +
@@ -803,37 +817,24 @@ figure <- ggplot() +
                                 limits = reg_dat$plot.boundary$x,
                                 breaks = reg_dat$lon.breaks) +
     geom_sf(data = idw$extrapolation.stack %>% 
-              dplyr::filter(grepl(x = aa, pattern = unique(dat$facet_group)[i])),
+              dplyr::filter(grepl(x = aa, pattern = unique(idw$extrapolation.stack$common_name)[i])),
             mapping = aes(fill = var1.pred),
             na.rm = FALSE,
             show.legend = TRUE,
             color = NA) +
-    ggplot2::facet_wrap(. ~ aa) +
-    # ggplot2::facet_grid(cols = vars(group), rows = vars(Year)) +
+    ggplot2::facet_grid(cols = vars(model), rows = vars(Year)) +
     coord_sf() +
     ggplot2::scale_fill_manual(
       name = "Index",
       values =  c("gray90",
                   viridis::viridis(
-                    option = viridis_palette_option,
+                    option = "D",
                     direction = -1,
                     n = length(set.breaks)-1,
                     begin = 0.20,
                     end = 0.80)),
       na.translate = FALSE, # Don't use NA
       drop = FALSE) +
-    ggplot2::geom_sf(
-      data = reg_dat$survey.area,
-      mapping = aes(color = SURVEY,
-                    geometry = geometry),
-      fill = "transparent",
-      linewidth = 1,
-      show.legend = FALSE) +
-    ggplot2::scale_color_manual(
-      name = " ",
-      values = reg_dat$survey.area$color,
-      breaks = reg_dat$survey.area$SURVEY,
-      labels = reg_dat$survey.area$SRVY) +
     ggplot2::guides(
       fill = guide_legend(
         order = 1,
@@ -842,54 +843,44 @@ figure <- ggplot() +
         title.hjust = 0.5,
         override.aes = list(color = NA),
         nrow = 1),
-      color = "none")
-
-  ggsave(filename = paste0("vigD_model_fit_idw_", unique(dat$facet_group)[i], ".png"),
+      color = "none") +
+    ggplot2::theme(legend.position = "bottom")
+  
+  ggsave(filename = paste0("vigD_model_fit_idw_", 
+                           unique(idw$extrapolation.stack$common_name)[i], ".png"),
          path = here::here("inst"),
          plot = figure,
          width = 6.5, height = 10)
 }
 ```
 
-
 ```{r survey-figure1, echo=FALSE, out.width = '100%'}
-knitr::include_graphics(here::here("inst", paste0("vigD_model_fit_maps_walleye pollock.png")))
-```
-
-```{r survey-figure1-design, echo=FALSE, out.width = '100%'}
-knitr::include_graphics(here::here("inst", paste0("vigD_model_fit_maps_walleye pollock-design.png")))
+knitr::include_graphics(here::here("inst", paste0("vigD_model_fit_idw_walleye pollock.png")))
 ```
 
 ```{r survey-figure2, echo=FALSE, out.width = '100%'}
-knitr::include_graphics(here::here("inst", paste0("vigD_model_fit_maps_yellowfin sole.png")))
-```
-
-```{r survey-figure2-design, echo=FALSE, out.width = '100%'}
-knitr::include_graphics(here::here("inst", paste0("vigD_model_fit_maps_yellowfin sole-design.png")))
+knitr::include_graphics(here::here("inst", paste0("vigD_model_fit_idw_yellowfin sole.png")))
 ```
 
 ```{r survey-figure3, echo=FALSE, out.width = '100%'}
-knitr::include_graphics(here::here("inst", paste0("vigD_model_fit_maps_red king crab.png")))
+knitr::include_graphics(here::here("inst", paste0("vigD_model_fit_idw_red king crab.png")))
 ```
 
-```{r survey-figure3-design, echo=FALSE, out.width = '100%'}
-knitr::include_graphics(here::here("inst", paste0("vigD_model_fit_maps_red king crab-design.png")))
-```
 
-```{r}
-# sdmgamindex::plot_surveyidx(
-#   x = models,
-#   dat = ds,
-#   myids = NULL,
-#   predD = allpd)
+```{r, eval = FALSE, echo = FALSE}
+sdmgamindex::plot_surveyidx(
+  x = models,
+  dat = ds,
+  myids = NULL,
+  predD = allpd)
 ```
 
 ## 10. Simulations
 
-```{r sim_gam, echo=TRUE, eval=FALSE}
-sims <- fittimes_sims <- list()
+```{r model_sims, eval = FALSE}
+sims <- fittimes <- list()
+
 for(i in 1:nrow(comb)){
-  
   cat("Simulating ",comb$SPECIES[i],"\n", comb$fm_name[i], ": ", comb$fm[i], "\n")
   
   temp <- paste0(comb$SPECIES[i], " ", comb$fm_name[i])
@@ -899,19 +890,80 @@ for(i in 1:nrow(comb)){
                     sdmgamindex::get_surveyidx_sim(
                       model = models[[i]],
                       d = ds[[ comb$SPECIES[i] ]]) )
+  
+  sim <- sims[[ temp ]]
+  fittime <- fittimes[[ temp ]]
+  
+  save(sim, fittime, file = here::here("inst",paste0("vigD_model_sims_",comb$SPECIES[i], "_", comb$fm_name[i],".Rdata")))
 }
 ```
 
+```{r model_sim_load, echo = FALSE}
+sims <- list()
+str0 <- ""
+for (i in 1:nrow(comb)) {
+  load(system.file(paste0("vigD_model_sims_",comb$SPECIES[i], "_", comb$fm_name[i],".Rdata"), 
+                   package = "sdmgamindex"), verbose = FALSE)
+  sims <- c(sims, list("temp" = sim))
+  names(sims)[names(sims) == "temp"] <- paste0(comb$SPECIES[i], " ", comb$fm_name[i])
+  str0 <- paste0(str0, "\n", comb$SPECIES[i], " ", comb$fm_name[i], ": ", formatC(x = unlist(fittime[1]), big.mark = ",", digits = 2), " minutes")
+}
+cat(str0)
+```
 
-```{r sim_gam_plot, eval=FALSE}
-par(mfrow = c(2, 2)) # Create a 2 x 2 plotting matrix
+```{r sim-plot, eval=FALSE}
+# par(mfrow = c(2, 2)) # Create a 2 x 2 plotting matrix
+# for(i in 1:nrow(comb)){
+# # png('output/my_plot.png')
+#   plot(sims[[i]]$sim, main = paste0(names(sims)[i], " sims"))
+#   plot(sims[[i]]$mu[[1]], main = paste0(names(sims)[i], " mu"))
+# # dev.off()
+# }
+
+dat <- c()
 for(i in 1:nrow(comb)){
-  plot(sims[[i]]$sim, main = paste0(names(sims)[i], " sims"))
-  plot(sims[[i]]$mu[[1]], main = paste0(names(sims)[i], " mu"))
+    dat <- dat %>% 
+      dplyr::bind_rows(
+        data.frame(
+        SPECIES = comb$SPECIES[i], 
+        model = comb$fm_name[i], 
+        Simulations = as.vector(sims[[i]]$sim), 
+        Mean = as.vector(sims[[i]]$mu[[1]]),
+        Index = 1:nrow(sims[[i]]$sim)) )
+}
+
+dat <- dat %>% 
+  tidyr::pivot_longer(cols = c("Simulations", "Mean"), names_to = "type", values_to = "val")
+
+for (i in 1:length(unique(comb$SPECIES))) {
+  figure <- ggplot2::ggplot(data = dat %>% 
+                              dplyr::filter(SPECIES == unique(comb$SPECIES)[i]), 
+                            mapping = aes(x = Index, y = val)) +
+    ggplot2::geom_point(size = .5, alpha = .5) +
+    ggplot2::facet_grid(rows = vars(type), cols = vars(model), scales = "free_y") + 
+    ggplot2::ggtitle(unique(comb$SPECIES)[i]) +
+    ggplot2::xlab("")
+
+ggsave(filename = paste0("vigD_model_sim_", unique(comb$SPECIES)[i], ".png"),
+         path = here::here("inst"),
+         plot = figure,
+         width = 6.5, height = 6)
 }
 ```
 
-```{r model-sims, eval=FALSE}
+```{r sim-1, echo=FALSE, out.width = '100%'}
+knitr::include_graphics(here::here("inst", paste0("vigD_model_sim_walleye pollock.png")))
+```
+
+```{r sim-2, echo=FALSE, out.width = '100%'}
+knitr::include_graphics(here::here("inst", paste0("vigD_model_sim_yellowfin sole.png")))
+```
+
+```{r sim-3, echo=FALSE, out.width = '100%'}
+knitr::include_graphics(here::here("inst", paste0("vigD_model_sim_red king crab.png")))
+```
+
+```{r model-sims}
 REPS <- 4
 ests <- list()
 
@@ -954,24 +1006,23 @@ for(i in 1:nrow(comb)){
 sims
 ests
 
-png(filename = here::here("inst","simest.png"),
+png(filename = here::here("inst","vigD_model_simsest_plot.png"),
     width=640*pngscal,height=480)
 # par(mfrow=c(2,2))
-save(sims, ests, file = here::here("inst","vigD_model_sims.Rdata"))
+save(sims, ests, file = here::here("inst","vigD_model_simsest.Rdata"))
 ```
 
 ```{r model-sims-load, echo = FALSE, eval = FALSE}
-load(system.file("vigD_model_sims.Rdata", package = "sdmgamindex") )
+load(system.file("vigD_model_simsest.Rdata", package = "sdmgamindex") )
 sims
 ests
 ```
 
-```{r model-sims-img, echo=FALSE, out.width = '100%', eval = FALSE}
-download.file(url = here::here("inst","simest.png"), destfile = img_loc, mode="wb")
-knitr::include_graphics(img_loc)
+```{r simest-3, echo=FALSE, out.width = '100%'}
+knitr::include_graphics(here::here("inst", paste0("vigD_model_simsest_plot.png")))
 ```
 
-```{r sim_gam2, eval=FALSE}
+```{r sim_gam2}
 for(i in 1:nrow(comb)){
   sdmgamindex::plot_simulation_list(
     x = ests[[temp]],
