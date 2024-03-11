@@ -1,5 +1,67 @@
 url: https://github.com/noaa-afsc/sdmgamindex/
+csl: 'https://raw.githubusercontent.com/citation-style-language/styles/master/apa-no-ampersand.csl'
+bibliography: 'https://raw.githubusercontent.com/afsc-gap-products/citations/main/cite/bibliography.bib'
+
+
 template:
   bootstrap: 5
-csl: "https://raw.githubusercontent.com/citation-style-language/styles/master/apa-no-ampersand.csl"
-bibliography: "https://raw.githubusercontent.com/afsc-gap-products/citations/main/cite/bibliography.bib"
+  bslib:
+    pkgdown-nav-height: 100px
+    
+navbar:
+  structure:
+    left: [reference, vignettes, articles, citation, news]
+  components:
+    reference:
+      text: Functions
+      href: reference/index.html
+    vignettes:
+      text: Vignettes
+      menu:
+      - text: Intro to GAMs
+        href: articles/A-gam-basics.html
+      - text: Fitting a spatiotemporal model and deriving an abundance index
+        href: articles/B_gam_sdmTMB_example.html
+      - text: Compare {sdmgamindex} to regular GAMs
+        href: articles/C-model-comparisons.html
+      - text: sdmgamindex case study with and without covariates
+        href: articles/D-simple-case-study.html
+    news:
+     text: Release Notes
+     menu:
+      - text: "v 2022.09.26"
+        href: "https://github.com/noaa-afsc/sdmgamindex/releases/tag/2022.09.26"
+    
+footer:
+  structure: 
+    right: FALSE
+    left: built_with
+    
+home:
+  sidebar: FALSE
+    
+reference:
+  - title: Get Data Format
+    contents:
+      - starts_with("get_")
+  - title: Functions
+    contents:
+      - "anova_likelihood_ratio_test"
+      - "calc_distance"
+      - "concentration_transform"
+      - "consistency_external"
+      - "consistency_internal"
+      - "convert_crs"
+      - "convert_deg_rad"
+      - "export_surveyidx"
+      - "fix_age_group"
+      - "qres_tweedie"
+      - "redo_surveyidx"
+  - title: Plot Functions
+    contents:
+      - starts_with("plot_")
+  - title: Data
+    contents:
+      - "noaa_afsc_public_foss"
+      - "noaa_afsc_biomass_estimates"
+      - "pred_grid_ebs"

@@ -6,8 +6,8 @@ articles:
   B-gam-sdmTMB-example: B-gam-sdmTMB-example.html
   C-model-comparisons: C-model-comparisons.html
   D-simple-case-study: D-simple-case-study.html
-last_built: 2024-03-02T19:12Z
+last_built: 2024-03-11T09:32Z
 urls:
-  reference: https://emilymarkowitz-noaa.github.io/sdmgamindex/reference
-  article: https://emilymarkowitz-noaa.github.io/sdmgamindex/articles
+  reference: https://github.com/noaa-afsc/sdmgamindex/reference
+  article: https://github.com/noaa-afsc/sdmgamindex/articles
 
