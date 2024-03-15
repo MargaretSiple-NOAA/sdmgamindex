@@ -302,9 +302,20 @@ plot(tmp)
 Here we want to match covariate data to the prediction grid. 
 
 ```{r dat-cov}
-dat_cov <- sdmgamindex::pred_grid_ebs %>% 
-  dplyr::select(-Shape_Area) %>% 
-  dplyr::mutate( 
+# # : Point ‘grids’ with center coordinates (for plotting with VAST and sdmTMB)
+# dat_cov <- akgfmaps::make_2d_grid(obj = tmp, output_type = "point", include_tile_center = TRUE)  %>% 
+#   dplyr::select(-AREA) %>% 
+#   # dplyr::rename(lon = lon_plot, lat = lat_plot)  %>% 
+#   st_transform(crs = crs_latlon) 
+# 
+# dat_cov <- dat_cov %>% 
+#   dplyr::mutate( 
+#     sx = ((lon - mean(lon, na.rm = TRUE))/1000),
+#     sy = ((lat - mean(lat, na.rm = TRUE))/1000))
+
+dat_cov <- sdmgamindex::pred_grid_ebs %>%
+  dplyr::select(-Shape_Area) %>%
+  dplyr::mutate(
     sx = ((lon - mean(lon, na.rm = TRUE))/1000),
     sy = ((lat - mean(lat, na.rm = TRUE))/1000))
 
