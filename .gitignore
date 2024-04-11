@@ -7,3 +7,6 @@ output
 
 notforgit/
 R/megsie-sandbox.R
+
+inst/vigB_model_fits_fm_4_pred.Rdata
+inst/vigB_model_sim_fm_1.Rdata

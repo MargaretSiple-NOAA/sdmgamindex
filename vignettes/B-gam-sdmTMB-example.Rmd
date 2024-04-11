@@ -1,5 +1,5 @@
 ---
-title: "Fitting a spatiotemporal model with a GAM and deriving an abundance index"
+title: "Fitting a spatiotemporal model and deriving an abundance index"
 date: "`r format(Sys.Date(), format='%B %d %Y') `"
 output: rmarkdown::html_vignette
 vignette: >
@@ -8,10 +8,11 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+  
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE, 
-  comment = "#>"
+collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE, 
+comment = "#>"
 )
 ```
 
@@ -30,13 +31,11 @@ knitr::opts_chunk$set(
 -   Fit a GAM and obtain an area-weighted biomass index
 -   Fit a basic spatiotemporal model (a GLMM!) using sdmTMB and compare GAM to GLMM
 
-```{r install_inla, eval = FALSE, include = FALSE}
+```{r load_lib}
 # install.packages("INLA", repos = c(getOption("repos"), INLA = "https://inla.r-inla-download.org/R/stable"), dependencies = TRUE)
 #library(remotes)
 #remotes::install_github("pbs-assess/sdmTMB", dependencies = TRUE)
-```
 
-```{r}
 PKG <- c(
   "sdmTMB", # install.packages("sdmTMB", dependencies = TRUE)
   "mgcv", 
@@ -51,10 +50,10 @@ PKG <- c(
   "purrr")
 
 for (p in PKG) {
-  if(!require(p,character.only = TRUE)) {  
-    install.packages(p)
-    require(p,character.only = TRUE)}
-}
+  # if(!require(p,character.only = TRUE)) {  
+  # install.packages(p)
+  require(p,character.only = TRUE)}
+# }
 
 options(ggplot2.continuous.colour = "viridis")
 options(ggplot2.continuous.fill = "viridis")
@@ -63,7 +62,7 @@ theme_set(theme_light())
 
 Check your system:
 
-```{r}
+```{r sessioninfo}
 sessionInfo()
 ```
 
@@ -71,21 +70,19 @@ sessionInfo()
 
 We will work with CPUE data from yellowfin sole in the Eastern Bering Sea summer bottom trawl survey. This data is publicly available through FOSS.
 
-```{r, include = FALSE}
+```{r load_data, include = FALSE}
 # Load EBS yellowfin sole CPUE table for example:
 # load(here::here("data/ebs_yfs_example.rda"))
 # dat <- ebs_yfs_example
 # If the ebs_yfs_example.rds file isn't available:
 # load(here::here("data/noaa_afsc_public_foss.rda"))
-dat <- yfs <- sdmgamindex::noaa_afsc_public_foss |> 
+dat <- sdmgamindex::noaa_afsc_public_foss |> 
   dplyr::filter(srvy=="EBS" & species_code == 10210)
-# saveRDS(object = yfs,file = here::here("data/ebs_yfs_example.RDS"))
-
 ```
 
 ## Add UTM columns, log depth, and year as factor
 
-```{r}
+```{r plot_data_1}
 dat <- add_utm_columns(dat, 
                        ll_crs = 4326,
                        ll_names = c("longitude_dd_start", "latitude_dd_start"))
@@ -104,21 +101,21 @@ ggplot(dat, aes(X, Y, size = cpue_kgkm2)) +
 
 The dataset contains sampling locations (`longitude` and `latitude`) and `year`. It also contains sampling `depth` in meters and sample CPUE `density` in units of tonnes/km^2^.
 
--   <div>
-
-    ```{r}
-    ggplot(data = dat, 
-           mapping = aes(x = longitude_dd_start, y = latitude_dd_start, 
-                         size = cpue_kgkm2, color = bottom_temperature_c)) + 
-      geom_point(alpha = 0.3)
-    ```
+```{r plot_data_2}
+ggplot(data = dat, 
+       mapping = aes(x = longitude_dd_start, 
+                     y = latitude_dd_start, 
+                     size = cpue_kgkm2, 
+                     color = bottom_temperature_c)) + 
+  geom_point(alpha = 0.3)
+```
 
 # The prediction grid
 ## Load the grid
 
 Extrapolation grid for the EBS. Ignore the warnings about the UTM zones-- it's a Bering Sea thing.
 
-```{r}
+```{r load_pred_grid}
 # This is another form of the same grid:
 load(here::here("data/pred_grid_ebs.rda")) # object: pred_grid_ebs
 #pred_grid_ebs <- read.csv(here::here("data/ebs_2022_epsg3338.csv"),header = TRUE)
@@ -126,20 +123,20 @@ load(here::here("data/pred_grid_ebs.rda")) # object: pred_grid_ebs
 get_crs(dat = pred_grid_ebs,ll_names =c("lon","lat"))
 
 grid <- add_utm_columns(pred_grid_ebs, 
-                       #ll_crs = 32603, 
-                       ll_names = c("lon", "lat"))
+                        #ll_crs = 32603, 
+                        ll_names = c("lon", "lat"))
 grid$area_swept_km2 <- 1 # if you have area swept in your model as an offset (common when you're using CPUE data) you can do this (I think)
 
 range(grid$X)
 
 grid$Shape_Area_ha <- grid$Shape_Area*0.0001 # original Shape_area is in m^2
-
 ```
+
 ## Replicate the grid for each year
 
 When you have spatiotemporal data, you need a grid for each year. There is a nice tidy little chunk of `{purrr}` code that will do that for you!
 
-```{r}
+```{r rep_gird_each_yr}
 grid <- purrr::map_dfr(unique(dat$year), ~ tibble(grid, year = .x))
 ```
 
@@ -149,8 +146,7 @@ grid <- purrr::map_dfr(unique(dat$year), ~ tibble(grid, year = .x))
 
 First, fit a GAM without any covariates: just year as a factor and a spatial smoother $s(X,Y)$. The `as.factor(year)` part is a common component of SDMs that are being used to generate indices.
 
-```{r}
-start.time <- Sys.time()
+```{r m1_fit, eval = FALSE}
 fit_gam <- gam(
   formula = cpue_kgkm2 ~ as.factor(year) +
     s(X, Y, k = 50),
@@ -158,22 +154,28 @@ fit_gam <- gam(
   data = dat
 )
 
-cat(
-  "The GAM took ",
-  difftime(Sys.time(), start.time, units = "mins"),
-  " mins to run"
-)
+fittime <- difftime(Sys.time(),start.time, units = "mins")
+
+save(fit_gam, fittime, 
+     file = here::here("inst",paste0("vigB_model_fits_fm_1_s_t_st.Rdata")))
+
 ```
 
-Get diagnostics and perform model checking:
+```{r m1_load, echo = FALSE}
+load(system.file(paste0("vigB_model_fits_fm_1_s_t_st.Rdata"), 
+                package = "sdmgamindex"), verbose = TRUE)
+```
 
-```{r}
+```{r m1_use, eval = TRUE}
+cat("The GAM took ", fittime, "mins to run")
+
+# Get diagnostics and perform model checking:
 gam.check(fit_gam)
 ```
 
 Include a 2-D smooth over space, and depth as a covariate.
 
-```{r}
+```{r m2_fit, eval = FALSE}
 start.time <- Sys.time()
 fit_gam_s <- gam(
   formula = cpue_kgkm2 ~ s(depth_m) + as.factor(year) + 
@@ -182,21 +184,30 @@ fit_gam_s <- gam(
   data = dat
 )
 
-cat("The GAM took ", 
-    difftime(Sys.time(),start.time, units = "mins"), 
-    "mins to run")
+fittime <- difftime(Sys.time(),start.time, units = "mins")
+
+save(fit_gam_s, fittime, 
+     file = here::here("inst",paste0("vigB_model_fits_fm_2.Rdata")))
+
+```
+
+```{r m2_load, echo = FALSE}
+load(system.file(paste0("vigB_model_fits_fm_2.Rdata"), 
+                package = "sdmgamindex"), verbose = TRUE)
+```
+
+```{r m2_use, eval = TRUE}
+cat("The GAM took ", fittime, "mins to run")
 
 gam.check(fit_gam_s)
 ```
 
 ## Spatiotemporal effect
 
-**NOTE**: This takes a long time to fit. Include a 2-D smooth over space for each year. In this case, there a different 2-D smooth for each year. This will take much longer to fit than the other two (this model takes about 10-15 mins - I have set `cache=TRUE` in the chunk so that the outputs are saved and can be used again the next time this doc is run). This model also includes area swept as an offset.
+**NOTE**: This takes a long time to fit. Include a 2-D smooth over space for each year. In this case, there a different 2-D smooth for each year. This will take much longer to fit than the other two. This model also includes area swept as an offset.
 
-```{r cache=TRUE}
-#| cache = TRUE
+```{r m3_fit, eval = FALSE}
 start.time <- Sys.time()
-
 fit_gam_st <- gam(
   formula = count ~ as.factor(year) +  s(X, Y) +
     s(X, Y, by = as.factor(year)) + offset(area_swept_km2),
@@ -204,17 +215,22 @@ fit_gam_st <- gam(
   data = dat
 )
 
-cat(
-  "The GAM took ",
-  difftime(Sys.time(), start.time, units = "mins"),
-  "mins to run"
-)
+fittime <- difftime(Sys.time(), start.time, units = "mins")
+
+save(fit_gam_st, fittime, 
+     file = here::here("inst",paste0("vigB_model_fits_fm_3.Rdata")))
 
 ```
 
-Get diagnostics and perform model checking:
+```{r m3_load, echo = FALSE}
+load(system.file(paste0("vigB_model_fits_fm_3.Rdata"), 
+                package = "sdmgamindex"), verbose = TRUE)
+```
 
-```{r}
+```{r m3_use, eval = TRUE}
+cat("The GAM took ", fittime, "mins to run")
+
+# Get diagnostics and perform model checking:
 gam.check(fit_gam_st)
 
 # To save the k' values, edf, k-index, and p-value:
@@ -232,16 +248,28 @@ Examine the four diagnostic plots. Each of these gives a different way of lookin
 
 To get predicted CPUE across the survey grid. Here you can use any of the models from above, as long as they have `YEAR` as a factor and as long as all your covariates are also in the grid. Here we use the basic model (`fit_gam`) because `grid` does not contain depth.
 
-```{r}
+```{r m1_pred, eval = FALSE}
+start.time <- Sys.time()
 pred_gam <- predict(fit_gam, type = "response", newdata = grid) #This takes a long time
+fittime <- difftime(Sys.time(), start.time, units = "mins")
+
 pred_gam_df <- cbind(grid, pred_gam)
 pred_gam_df$predicted_tot_grid <- pred_gam_df$Shape_Area_ha*pred_gam_df$pred_gam
 
+save(pred_gam, pred_gam_df, fittime, 
+     file = here::here("inst",paste0("vigB_model_pred_fm_1.Rdata")))
+```
+
+```{r m1_pred_load, echo = FALSE}
+load(system.file(paste0("vigB_model_pred_fm_1.Rdata"), 
+                package = "sdmgamindex"), verbose = TRUE)
 ```
 
 Plot predictions over survey area. Note: Because the EBS grid is irregularly spaced, you have to use `geom_point()` here instead of `geom_tile()` or `geom_raster()`.
 
-```{r}
+```{r m1_pred_use, eval = TRUE}
+cat("The GAM prediction took ", fittime, "mins to run")
+
 pred_gam_df |>
   dplyr::filter(year == 2019) |> # single year
   ggplot(aes(X, Y, color = pred_gam)) +
@@ -258,7 +286,7 @@ pred_gam_df |>
 
 Generally, model-based indices of abundance use the area of each grid cell and the prediction for that area to calculate a total index across the survey area. The simplest way to do this is to sum the predicted biomasses across the full grid like so:
 
-```{r}
+```{r m1_idx}
 gam_idx_mt <- pred_gam_df |> 
   dplyr::group_by(year) |> 
   summarize(total_wt_mt = sum(predicted_tot_grid)/1000)
@@ -268,11 +296,15 @@ head(gam_idx_mt)
 
 ## Get uncertainties for GAM-based index by sampling from posteriors
 
-[`{gratia}`](https://gavinsimpson.github.io/gratia/) is an R package for evaluating and displaying GAM fits. This script uses the `fitted_samples()` function, which draws fitted values from the posterior of a model using a Gaussian approximation. This will also take a while.
+[`{gratia}`](https://gavinsimpson.github.io/gratia/) is an R package for evaluating and displaying GAM fits. This script uses the `fitted_samples()` function, which draws fitted values from the posterior of a model using a Gaussian approximation. This will also take a while. 
 
-```{r}
+```{r m1_sim, eval = FALSE}
+start.time <- Sys.time()
 sims <- gratia::fitted_samples(fit_gam, n=10, data=grid, 
                                scale="response", seed=9)
+fittime <- difftime(Sys.time(), start.time, units = "mins")
+cat("The GAM simulation took ", fittime, "mins to run")
+
 sims$year <- grid$year[sims$row]
 sims$area <- rep(pred_gam_df$Shape_Area_ha, times = 10) # matching the # of draws
 sims$biomass <- sims$fitted * sims$area # expand from density to biomass, given area
@@ -288,15 +320,27 @@ sims_sum <- sims %>%
   summarise_at("biomass", list(biomass = sum)) %>%
   group_by(year) %>%
   summarise_at("biomass", list(est = median, # could use mean
-                           lwr = lwr_fn,
-                           upr = upr_fn))
+                               lwr = lwr_fn,
+                               upr = upr_fn))
+
+save(sims, sims_sum, fittime, 
+     file = here::here("inst",paste0("vigB_model_sim_fm_1.Rdata")))
+```
+
+```{r m1_sim_load, echo = FALSE}
+load(system.file(paste0("vigB_model_sim_fm_1.Rdata"), 
+                package = "sdmgamindex"), verbose = TRUE)
+```
+
+```{r m1_sim_use, eval = TRUE}
+sims_sum
 ```
 
 ## Plot the index
 
 Now you can plot your GAM model-based index over time just like we do for all the other indices!
 
-```{r}
+```{r m1_sim_plot}
 p1 <- sims_sum |>
   ggplot() +
   geom_line(aes(x = year, y = est)) +
@@ -315,27 +359,68 @@ To calculate an index from a model in `sdmTMB`, we need to run the `predict.sdmT
 
 We can set the area argument to our `cell_area` column in km^2^. In this case the value is 4 km^2^ for all of the cells, since our grid cells are 2 km x 2 km. If some grid cells were not fully in the survey domain (or were on land), we could feed a vector of grid areas to the area argument that matched the number of grid cells. Because the density units are tonnes per km^2^ for this data, the index is in tonnes.
 
-```{r cache = TRUE}
 
-# make a mesh for the predictions - this takes a while with cutoff = 10!!
+```{r m4_mesh, eval = TRUE}
 mesh <- make_mesh(dat, c("X", "Y"), cutoff=10)
 plot(mesh)
+```
+
+```{r m4_fit, eval = FALSE}
+start.time <- Sys.time()
+# make a mesh for the predictions - this takes a while with cutoff = 10!!
 
 fit <- sdmTMB(data = dat, 
               formula = cpue_kgkm2 ~ 1 + as.factor(year), # If you set the intercept to zero, R spontaneously aborts!
               mesh = mesh,
               family = tweedie(link = "log"),
-              time= "year"
-              )
+              time= "year")
 
-sanity(fit)
+fittime <- difftime(Sys.time(),start.time, units = "mins")
+
+save(fit, fittime, 
+     file = here::here("inst",paste0("vigB_model_fits_fm_4.Rdata")))
+```
+
+```{r m4_load, echo = FALSE}
+load(system.file(paste0("vigB_model_fits_fm_4.Rdata"), 
+                package = "sdmgamindex"), verbose = TRUE)
+```
+
+```{r m4_use, eval = TRUE}
+cat("The GAM took ", fittime, "mins to run")
+sdmTMB::sanity(fit)
 tidy(fit)
-
-p <- predict(fit, newdata = grid, return_tmb_object = TRUE)
-
 grid$cell_area <- 4 #Shape_Area_ha
-index <- get_index(p, area = grid$Shape_Area_ha, bias_correct = FALSE)
+```
 
+```{r m4_pred, eval = FALSE}
+p <- predict(fit, newdata = grid, return_tmb_object = TRUE)
+save(p,
+     file = here::here("inst",paste0("vigB_model_fits_fm_4_pred.Rdata")))
+```
+
+```{r m4_pred_load, eval = TRUE, echo = FALSE}
+load(system.file(paste0("vigB_model_fits_fm_4_pred.Rdata"), 
+                package = "sdmgamindex"), verbose = TRUE)
+```
+
+We used `bias_correction = FALSE` to speed things up, but for any final result you will want to use the bias correction. Let's see how much the scale of the index changes with bias correction.
+
+```{r m4_idx, eval = FALSE}
+index <- sdmTMB::get_index(p, area = grid$Shape_Area_ha, bias_correct = FALSE)
+
+index_c <- sdmTMB::get_index(p, area = grid$cell_area, bias_correct = TRUE)
+index_c$Method <- "Bias correction"
+
+save(index, index_c, 
+     file = here::here("inst",paste0("vigB_model_index.Rdata")))
+```
+
+```{r m4_idx_load, echo = FALSE}
+load(here::here("inst",paste0("vigB_model_index.Rdata")))
+```
+
+```{r m4_idx_use}
 ggplot(index, aes(year, est)) +
   geom_line() +
   geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.4) +
@@ -343,12 +428,7 @@ ggplot(index, aes(year, est)) +
   ylab("Biomass estimate (tonnes)")
 ```
 
-We used `bias_correction = FALSE` to speed things up, but for any final result you will want to use the bias correction. Let's see how much the scale of the index changes with bias correction.
-
-```{r}
-index_c <- get_index(p, area = grid$cell_area, bias_correct = TRUE)
-index_c$Method <- "Bias correction"
-
+```{r m4_idx_c_use}
 bind_rows(index, index_c) %>%
   ggplot(aes(year, est, fill = Method)) +
   geom_line(aes(colour = Method)) +
@@ -357,4 +437,3 @@ bind_rows(index, index_c) %>%
   ylab("Biomass estimate (tonnes)")
 ```
 
-# 
