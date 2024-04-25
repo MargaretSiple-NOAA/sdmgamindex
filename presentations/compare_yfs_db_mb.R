@@ -2,7 +2,7 @@ library(gapindex)
 library(googlesheets4)
 library(dplyr)
 
-# Get db index for YFS
+# Get db index
 sql_channel <- gapindex::get_connected()
 dat <- gapindex::get_data(
   year_set = 1995:2023,

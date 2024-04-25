@@ -27,6 +27,7 @@ options(ggplot2.continuous.colour = "viridis")
 options(ggplot2.continuous.fill = "viridis")
 theme_set(theme_light())
 
+scale_indices <- TRUE
 
 # devtools::install_github("sean-rohan-NOAA/coldpool")
 # remotes::install_github("DTUAqua/DATRAS/DATRAS")
@@ -58,7 +59,7 @@ ggplot() +
     xlim = reg_dat_ebs$plot.boundary$x,
     ylim = reg_dat_ebs$plot.boundary$y
   ) +
-  scale_fill_manual(values = MetBrewer::met.brewer(name = "Renoir", n = length(unique(reg_dat_ebs$survey.strata$Stratum)))) +
+  scale_fill_manual(values = MetBrewer::met.brewer(palette_name = "Renoir", n = length(unique(reg_dat_ebs$survey.strata$Stratum)))) +
   scale_x_continuous(
     name = "Longitude",
     breaks = reg_dat_ebs$lon.breaks
@@ -251,7 +252,6 @@ results.df2 <- results.df |>
     cols = `arrowtooth flounder`:`red king crab`,
     names_to = "species", values_to = "value"
   )
-
 # Load the VAST indices and the design-based
 rkc <- read.csv("data/indices/EBS/bbrkc_2022_comparison.csv", header = TRUE) # this one was updated by Jon R after Thorson saw the comparison at WKUSER
 rkc$species <- "red king crab"
@@ -262,34 +262,59 @@ wep$species <- "walleye pollock"
 
 all_spps <- dplyr::bind_rows(yfs, wep, rkc)
 
-png("output/VAST_vs_design.png", width = 4, height = 8, units = "in", res = 200)
-all_spps %>%
-  mutate_at(
-    .vars = c("design_mt", "VAST_mt", "design_se", "VAST_se"),
-    .funs = function(x) x / 1e6
-  ) |>
+
+# design vs model xy---------------------------------------------------------
+# Make the plot
+if (scale_indices) {
+  plotdat <- all_spps |>
+    group_by(species) |>
+    mutate_at(.vars = c("design_mt", "VAST_mt"), 
+              .funs = function(x) as.vector(scale(x))) |>
+    ungroup()
+} else {
+  plotdat <- all_spps |>
+    mutate_at(
+      .vars = c("design_mt", "VAST_mt", "design_se", "VAST_se"),
+      .funs = function(x) x / 1e6
+    )
+}
+
+p1 <- plotdat |>
   ggplot(aes(x = design_mt, y = VAST_mt, color = Year)) +
   geom_point(size = 3) +
   scale_color_viridis_c(option = "A") +
   facet_wrap(~species, scales = "free", ncol = 1) +
   theme_light(base_size = 14) +
-  xlab("Design-based index (millions mt)") +
-  ylab("Model-based index (millions mt)") +
-  ggh4x::facetted_pos_scales(
-    x = list(
-      scale_x_continuous(limits = c(0, 0.4)),
-      scale_x_continuous(limits = c(1, 8.5)),
-      scale_x_continuous(limits = c(1, 3.75))
-    ),
-    y = list(
-      scale_y_continuous(limits = c(0, 0.4)),
-      scale_y_continuous(limits = c(1, 8.5)),
-      scale_y_continuous(limits = c(1, 3.75))
-    )
-  ) +
   geom_abline(slope = 1, color = "red", linetype = "dashed")
+
+if (scale_indices) {
+  p2 <- p1 +
+    xlab("Design-based index (scaled)") +
+    ylab("Model-based index (scaled)")
+} else {
+  p2 <- p1 +
+    xlab("Design-based index (millions mt)") +
+    ylab("Model-based index (millions mt)") +
+    ggh4x::facetted_pos_scales(
+      x = list(
+        scale_x_continuous(limits = c(0, 0.4)),
+        scale_x_continuous(limits = c(1, 8.5)),
+        scale_x_continuous(limits = c(1, 3.75))
+      ),
+      y = list(
+        scale_y_continuous(limits = c(0, 0.4)),
+        scale_y_continuous(limits = c(1, 8.5)),
+        scale_y_continuous(limits = c(1, 3.75))
+      )
+    )
+}
+
+png("output/VAST_vs_design_scaled.png", width = 4, height = 8, units = "in", res = 200)
+print(p2)
 dev.off()
 
+
+# design vs model CV ------------------------------------------------------
 png("output/VAST_vs_design_CV.png", width = 8, height = 3, units = "in", res = 200)
 all_spps %>%
   mutate_at(
@@ -318,9 +343,8 @@ all_spps %>%
   geom_abline(slope = 1, color = "red", linetype = "dashed")
 dev.off()
 
+# Time series -------------------------------------------
 
-# Plot time series of each: VAST, GAM, design-based -----------------------
-# all_spps2 <- all_spps |> mutate (GAM=NA,GAM_cv=NA)
 all.results <- results.df2 |>
   tidyr::pivot_wider(names_from = idx_cv) |>
   rename(Year = "year", GAM = "index", GAM_cv = "cv") |>
@@ -334,21 +358,49 @@ all.results <- results.df2 |>
   mutate(value2 = tolower(value2)) |>
   tidyr::pivot_wider(id_cols = year:index_type, names_from = value2, values_from = value)
 
+if(scale_indices){
+  all.results <- all.results |>
+    dplyr::group_by(species, index_type) |>
+    mutate_at(.vars = c('mt','se'), function(x)as.vector(scale(x))) |>
+    ungroup()
+  
+  tsplot <- all.results |>
+    filter(index_type != "gam") |> # species != "arrowtooth flounder" &
+    ggplot(aes(x = year, y = mt, color = index_type, fill = index_type, group = index_type)) +
+    geom_point(size = 2.5) +
+    geom_line(lwd = 1.2) +
+    geom_ribbon(aes(ymin = mt - se, ymax = mt + se), alpha = 0.3, color = NA) +
+    facet_wrap(~species, scales = "free", ncol = 1) +
+    MetBrewer::scale_color_met_d(name = "Klimt") +
+    MetBrewer::scale_fill_met_d(name = "Klimt") +
+    ylab("Estimated biomass (scaled)") +
+    theme_light(base_size = 14)
+}else{
+  tsplot <- all.results |>
+    filter(index_type != "gam") |> # species != "arrowtooth flounder" &
+    mutate_at(.vars = c("mt", "se"), .funs = function(x) x / 1e6) |>
+    ggplot(aes(x = year, y = mt, color = index_type, fill = index_type, group = index_type)) +
+    geom_point(size = 2.5) +
+    geom_line(lwd = 1.2) +
+    geom_ribbon(aes(ymin = mt - se, ymax = mt + se), alpha = 0.3, color = NA) +
+    facet_wrap(~species, scales = "free", ncol = 1) +
+    MetBrewer::scale_color_met_d(name = "Klimt") +
+    MetBrewer::scale_fill_met_d(name = "Klimt") +
+    ylab("Estimated biomass (millions mt)") +
+    theme_light(base_size = 14)
+}
+
 png("output/VAST_vs_design_ts.png", width = 8, height = 6, units = "in", res = 200)
-p1 <- all.results |>
-  filter(index_type != "gam") |> # species != "arrowtooth flounder" &
-  mutate_at(.vars = c("mt", "se"), .funs = function(x) x / 1e6) |>
-  ggplot(aes(x = year, y = mt, color = index_type, fill = index_type, group = index_type)) +
-  geom_point(size = 2.5) +
-  geom_line(lwd = 1.2) +
-  geom_ribbon(aes(ymin = mt - se, ymax = mt + se), alpha = 0.3, color = NA) +
-  facet_wrap(~species, scales = "free", ncol = 1) +
-  MetBrewer::scale_color_met_d(name = "Klimt") +
-  MetBrewer::scale_fill_met_d(name = "Klimt") +
-  ylab("Estimated biomass (millions mt)") +
-  theme_light(base_size = 14)
-print(p1)
+print(tsplot)
 dev.off()
+
+
+
+#  GOA time series ---------------------------------------------------
+vast <- read.csv("data/goa_biomass_total_vast_fromCole.csv")
+vast < vast |>
+  dplyr::mutate(index_type = 'VAST') |>
+  
 
 
 # Load results and stuff from vignette D ----------------------------------
@@ -417,8 +469,22 @@ dat2 <- dat |>
   tibble::remove_rownames() |>
   filter(up < 50e6)
 
-png("output/VAST_vs_design_vs_GAM_ts.png", width = 8, height = 6, units = "in", res = 200)
-p1 +
+png("output/VAST_vs_design_vs_GAM_ts_scaled.png", width = 8, height = 6, units = "in", res = 200)
+if(scale_indices){
+  dat2 <- dat2 |>
+    dplyr::group_by(species,index_type) |>
+    mutate_at(.vars = c('mt', 'lo', 'up'), function(x)as.vector(scale(x)))
+  
+  tsplot +
+    geom_point(data = dat2, aes(x = year, y = mt), size = 2.5) +
+    geom_line(data = dat2, aes(x = year, y = mt), lwd = 1.2) +
+    geom_ribbon(data = dat2, aes(ymin = lo, ymax = up), alpha = 0.3, color = NA) +
+    guides(
+      color = guide_legend(title = "Index type"),
+      fill = guide_legend(title = "Index type")
+  )
+}else{
+  tsplot +
   geom_point(data = dat2, aes(x = year, y = mt / 1e6), size = 2.5) +
   geom_line(data = dat2, aes(x = year, y = mt / 1e6), lwd = 1.2) +
   geom_ribbon(data = dat2, aes(ymin = lo / 1e6, ymax = up / 1e6), alpha = 0.3, color = NA) +
@@ -432,9 +498,42 @@ p1 +
       scale_y_continuous(limits = c(2, 10.5)),
       scale_y_continuous(limits = c(0.5,3.5))
     )
-  )
+  )}
 dev.off()
 
+
+# Prediction maps ---------------------------------------------------------
+# dat_pred <- dat_catch_haul |>
+#   dplyr::select(Year, sx, sy, Lon, Lat, GEAR_TEMPERATURE, BOTTOM_DEPTH)
+dat_catch_haul <- sdmgamindex::noaa_afsc_public_foss |>
+  dplyr::select(year, cpue_kgkm2, 
+                latitude_dd_start,
+                longitude_dd_start, 
+                bottom_temperature_c, 
+                depth_m) |>
+  dplyr::mutate(sx = ((longitude_dd_start - mean(longitude_dd_start, na.rm = TRUE))/1000),
+                sy = ((latitude_dd_start - mean(latitude_dd_start, na.rm = TRUE))/1000)) |>
+  dplyr::rename(Year = year,
+                wCPUE = cpue_kgkm2,
+                
+                )
+
+dat <- data.frame()
+for (i in 1:length(models)) {
+  temp <- models[[i]]
+  dat0 <- data.frame(idx = 
+                       predict.gam(
+                         object = temp$pModels[[1]],
+                         newdata = dat_pred
+                         ),  
+                     group = names(models)[i], 
+                     formula = paste0("cpue_kgkm2 ~ ", 
+                                      as.character(temp$pModels[[1]]$formula)[[3]])
+  )
+  dat00 <- dplyr::bind_cols(dat0, dat_pred) 
+  dat <- dplyr::bind_rows(dat, dat00) 
+  
+}
 
 
 # AIC for all models ------------------------------------------------------
@@ -456,6 +555,52 @@ all_aic |>
 
 
 
+# Plot results from the fitted model results ------------------------------
+
+length(model_path_list) # There should be three different GAMs. These objects are of the structure surveyIdx
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -467,7 +612,8 @@ sql_channel <- gapindex::get_connected()
 dat <- gapindex::get_data(year_set = 2005:2023,
                           survey_set = c("EBS","NBS"),
                           spp_codes = c(68580, 21720),
-                          abundance_haul = "Y",sql_channel = sql_channel)
+                          abundance_haul = "Y",
+                          sql_channel = sql_channel)
 
 cpue <- gapindex::calc_cpue(racebase_tables = dat)
 
@@ -485,7 +631,8 @@ sql_channel <- gapindex::get_connected()
 dat <- gapindex::get_data(year_set = 1975:2023,
                           survey_set = c("EBS","NBS"),
                           spp_codes = c(69322),
-                          abundance_haul = "Y",sql_channel = sql_channel)
+                          abundance_haul = "Y",
+                          sql_channel = sql_channel)
 
 cpue <- gapindex::calc_cpue(racebase_tables = dat)
 # add stationid
@@ -512,35 +659,4 @@ biomass_subareas <- gapindex::calc_biomass_subarea(
 
 rkc_ebs <- biomass_subareas |>
   filter(AREA_ID ==99900)
-
-# Update other species indices -----------------------------------
-sql_channel <- gapindex::get_connected()
-dat <- gapindex::get_data(year_set = 1995:2023,
-                          survey_set = c("EBS"),
-                          spp_codes = c(21740, # pollock
-                                        10210,# yfs
-                                        69322), # RKC
-                          abundance_haul = "Y",
-                          sql_channel = sql_channel)
-
-cpue <- gapindex::calc_cpue(racebase_tables = dat)
-## Calculate stratum-level biomass, population abundance, mean CPUE and 
-## associated variances
-biomass_stratum <- gapindex::calc_biomass_stratum(
-  racebase_tables = dat,
-  cpue = cpue)
-
-## Calculate aggregated biomass and population abundance across subareas,
-## management areas, and regions
-biomass_subareas <- gapindex::calc_biomass_subarea(
-  racebase_tables = dat,
-  biomass_strata = biomass_stratum)
-
-all_db <- biomass_subareas |>
-  dplyr::filter(AREA_ID ==99900) |> #EBS 
-  mutate(BIOMASS_SE_mcs = sqrt(BIOMASS_VAR)) |>
-  mutate(BIOMASS_CV_mcs = sqrt(BIOMASS_VAR)/BIOMASS_MT)
-
-write.csv(all_db, "output/gapindex_db_pollock_yfs_rkc_ebs.csv",row.names = FALSE)
-
 
