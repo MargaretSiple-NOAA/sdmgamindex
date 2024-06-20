@@ -90,9 +90,12 @@ ON sv.SURVEY_DEFINITION_ID = hh.SURVEY_DEFINITION_ID
 FULL OUTER JOIN GAP_PRODUCTS.FOSS_CATCH cc
 ON sv.SPECIES_CODE = cc.SPECIES_CODE
 AND hh.HAULJOIN = cc.HAULJOIN
-WHERE sv.SURVEY_DEFINITION_ID = 98 
+WHERE (sv.SURVEY_DEFINITION_ID = 98 
 AND sv.SPECIES_CODE IN (21740, 10210, 69322) 
-AND hh.YEAR >= 1982 --2015
+AND hh.YEAR >= 1982) --2015
+OR (sv.SURVEY_DEFINITION_ID = 47 
+AND sv.SPECIES_CODE IN (10110, 30060, 30420, 10130) 
+AND hh.YEAR >= 1991)
 --GROUP BY ss.COMMON_NAME, hh.HAULJOIN
 ") %>% 
   janitor::clean_names()
@@ -108,7 +111,7 @@ column <- metadata_colname %>%
 str0 <- paste0("#' @title Public data from FOSS for EBS walleye pollock, yellowfin sole, and red king crab from 1982 to present
 #' @description ",metadata_table_comment$COMMENT[metadata_table_comment$TABLE_NAME == "FOSS_CATCH"]," 
 #' @usage data('noaa_afsc_public_foss')
-#' @author Emily Markowitz (Emily.Markowitz AT noaa.gov)
+#' @author AFSC Groundfish Assessment Program (nmfs.afsc.gap.metadata AT noaa.gov)
 #' @format A data frame with ",nrow(noaa_afsc_public_foss)," observations on the following ",
 ncol(noaa_afsc_public_foss)," variables.
 #' \\describe{
@@ -134,6 +137,7 @@ noaa_afsc_biomass_estimates <- RODBC::sqlQuery(
   query = 
     "SELECT DISTINCT 
 bb.SURVEY_DEFINITION_ID,
+bb.AREA_ID,
 bb.SPECIES_CODE,
 bb.YEAR,
 bb.BIOMASS_MT,
@@ -141,11 +145,18 @@ bb.BIOMASS_VAR,
 bb.POPULATION_COUNT,
 bb.POPULATION_VAR
 FROM GAP_PRODUCTS.AKFIN_BIOMASS bb
-WHERE bb.SURVEY_DEFINITION_ID = 98 
+
+WHERE (bb.AREA_ID = 99901 -- ebs
 AND bb.SPECIES_CODE IN (21740, 10210, 69322) 
-AND AREA_ID = 99901
-AND bb.YEAR >= 1982
+AND bb.YEAR >= 1982) --2015
+OR (bb.AREA_ID = 99903 -- goa
+AND bb.SPECIES_CODE IN (10110, 30060, 30420, 10130) 
+AND bb.YEAR >= 1991)
 ") %>% 
+#   -- WHERE bb.SURVEY_DEFINITION_ID = 98 
+# -- AND bb.SPECIES_CODE IN (21740, 10210, 69322) 
+# -- AND AREA_ID = 99901
+# -- AND bb.YEAR >= 1982
   janitor::clean_names()
 
 # Save table to local directory
@@ -159,7 +170,7 @@ column <- metadata_colname %>%
 str0 <- paste0("#' @title Biomass Estimates from AKFIN for EBS walleye pollock, yellowfin sole, and red king crab from 1982 to present
 #' @description ",metadata_table_comment$COMMENT[metadata_table_comment$TABLE_NAME == "AKFIN_BIOMASS"]," 
 #' @usage data('noaa_afsc_biomass_estimates')
-#' @author Emily Markowitz (Emily.Markowitz AT noaa.gov)
+#' @author AFSC Groundfish Assessment Program (nmfs.afsc.gap.metadata AT noaa.gov)
 #' @format A data frame with ",nrow(noaa_afsc_biomass_estimates)," observations on the following ",
                ncol(noaa_afsc_biomass_estimates)," variables.
 #' \\describe{

@@ -24,8 +24,10 @@ navbar:
         href: articles/B_gam_sdmTMB_example.html
       - text: Compare {sdmgamindex} to regular GAMs
         href: articles/C-model-comparisons.html
-      - text: sdmgamindex case study with and without covariates
-        href: articles/D-simple-case-study.html
+      - text: sdmgamindex case study with and without covariates for the Eastern Bering Sea
+        href: articles/D-ebs-case-study.html
+      - text: sdmgamindex case study with and without covariates fot the Gulf of Alaska
+        href: articles/D-goa-case-study.html
     news:
      text: Release Notes
      menu:

@@ -1,9 +1,9 @@
 ---
-title: "{sdmgamindex} case study with and without covariates"
+title: "{sdmgamindex} case study with and without covariates for Gulf of Alaska"
 date: "`r format(Sys.Date(), format='%B %d %Y') `"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{{sdmgamindex} case study with and without covariates}
+  %\VignetteIndexEntry{{sdmgamindex} case study with and without covariates for Gulf of Alaska}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -54,17 +54,20 @@ sessionInfo()
 In this example, we will use data from NOAA Fisheries' eastern Bering sea (EBS) bottom trawl survey. The Resource Assessment and Conservation Engineering (RACE) Division Groundfish Assessment Program (GAP) of the Alaska Fisheries Science Center (AFSC) conducts fisheries-independent bottom trawl surveys to assess the populations of demersal fish and crab stocks of Alaska. The species covered in this case study include yellow fin sole, walleye pollock, and red king crab. 
 
 ```{r info-table, eval = TRUE, echo = FALSE}
-img_url <- paste0("https://raw.githubusercontent.com/afsc-gap-products/gap_bs_data_report/main/img/", 
-                  c("yellowfin-sole", "walleye-pollock", "red-king-crab"), ".png")
-img_loc <- here::here("vignettes", paste0(c("yellowfin-sole", "walleye-pollock", "red-king-crab"), ".png")) 
+
+# 10110, 30060, 30420, 10130
+spp0 <- c("arrowtooth-flounder", "flathead-sole", "pacific-ocean-perch", "northern-rockfish")
+img_url <- paste0("https://raw.githubusercontent.com/afsc-gap-products/gap_bs_data_report/main/img/", spp0, ".png")
+img_loc <- here::here("vignettes", paste0(spp0, ".png")) 
 for (i in 1:length(img_loc)) {download.file(url = img_url[i], destfile = img_loc[i], mode="wb")}
 
 table_raw <- data.frame(img = img_loc, 
-                        Species = c("Yellowfin Sole", "Walleye pollock", "Red King Crab"), 
+                        Species = c("Arrowtooth Flounder", "Flathead Sole", "Pacific Ocean Pearch", "Northern Rockfish"), 
                         Description = 
                           c("Commonly caught species has been realitively easy to model and assess because of it's high abundance, large distribution over the survey area, and consistent availability to the survey.", 
-                            "Common to the survey, but their distribution and availability to the survey are driven by density-dependence and temperature and the cold pool extent. Including covariates in model fits could help uncover structure that could help us better understand this specie's abundance.", 
-                            "Has patchier and less understood availability to the survey. "))
+                            "Commonly caught species has been realitively easy to model and assess because of it's high abundance, large distribution over the survey area, and consistent availability to the survey.", 
+                            "problem for covariates - rockiness raste. ", 
+                            "big deal and diverging trends - problem. Common to the survey, but their distribution and availability to the survey are driven by density-dependence and temperature and the cold pool extent. Including covariates in model fits could help uncover structure that could help us better understand this specie's abundance."))
 
 table_print <- table_raw %>% 
   flextable::flextable(
@@ -90,8 +93,8 @@ And we are going to estimate the indicies of these species Over the eastern and 
 
 ```{r survey-figure, echo=FALSE, fig.cap=readLines("https://raw.githubusercontent.com/afsc-gap-products/survey-live-temperature-map/main/examples/current_grid_bs.txt"), out.width = '100%'}
 
-img_url <- "https://raw.githubusercontent.com/afsc-gap-products/survey-live-temperature-map/main/examples/current_grid_bs.png"
-img_loc <- here::here("vignettes", "current_grid_bs.png")
+img_url <- "https://raw.githubusercontent.com/afsc-gap-products/survey-live-temperature-map/main/examples/current_grid_goa.png"
+img_loc <- here::here("vignettes", "current_grid_goa.png")
 download.file(url = img_url, destfile = img_loc, mode="wb")
 knitr::include_graphics(img_loc)
 ```
@@ -99,9 +102,9 @@ knitr::include_graphics(img_loc)
 For the sake of a simple example, we will only assess data from 2015 to 2021. 
 
 ```{r vars} 
-SPECIES <- c("yellowfin sole", "walleye pollock", "red king crab")
+SPECIES <- c("arrowtooth flounder", "flathead sole", "Pacific ocean Perch", "northern rockfish")
 YEARS <- 2015:2023
-SRVY <- "EBS"
+SRVY <- "GOA"
 ```
 
 ## 1. What data area we using?
