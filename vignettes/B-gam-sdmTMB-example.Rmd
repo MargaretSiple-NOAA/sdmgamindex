@@ -147,14 +147,16 @@ grid <- purrr::map_dfr(unique(dat$year), ~ tibble(grid, year = .x))
 First, fit a GAM without any covariates: just year as a factor and a spatial smoother $s(X,Y)$. The `as.factor(year)` part is a common component of SDMs that are being used to generate indices.
 
 ```{r m1_fit, eval = FALSE}
+start.time <- Sys.time()
+
 fit_gam <- gam(
   formula = cpue_kgkm2 ~ as.factor(year) +
     s(X, Y, k = 50),
   family = tw(link = "log"),
-  data = dat
+  data = dat, control = list(nthreads = 3)
 )
 
-fittime <- difftime(Sys.time(),start.time, units = "mins")
+(fittime <- difftime(Sys.time(), start.time, units = "mins"))
 
 save(fit_gam, fittime, 
      file = here::here("inst",paste0("vigB_model_fits_fm_1_s_t_st.Rdata")))
@@ -212,10 +214,11 @@ fit_gam_st <- gam(
   formula = count ~ as.factor(year) +  s(X, Y) +
     s(X, Y, by = as.factor(year)) + offset(area_swept_km2),
   family = tw(link = "log"),
-  data = dat
+  data = dat#, 
+  #control = list(nthreads = 3)
 )
 
-fittime <- difftime(Sys.time(), start.time, units = "mins")
+(fittime <- difftime(Sys.time(), start.time, units = "mins") )
 
 save(fit_gam_st, fittime, 
      file = here::here("inst",paste0("vigB_model_fits_fm_3.Rdata")))
