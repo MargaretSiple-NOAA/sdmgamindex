@@ -1,0 +1,104 @@
+---
+title: "Comparing tinyVAST to GAM-based indices"
+date: "`r format(Sys.Date(), format='%B %d %Y') `"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{tinyVAST vs GAMs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE, 
+  comment = "#>"
+)
+
+# library(remotes)
+PKG <- c(
+  "sdmgamindex", 
+  "dplyr",
+  "sf", 
+  "gstat",
+  "magrittr", 
+  "flextable", 
+  "raster", 
+  "dplyr", 
+  
+  # RACE-GAP Specific R packages
+  "akgfmaps", # devtools::install_github("afsc-gap-products/akgfmaps", build_vignettes = TRUE)
+  "coldpool", # devtools::install_github("afsc-gap-products/coldpool")
+  
+  # VAST tools
+  "tinyVAST",
+  "fmesher" # for making pred meshes for tinyVAST
+)
+
+for (p in PKG) {
+  # if(!require(p,character.only = TRUE)) {  
+  # install.packages(p)
+  require(p,character.only = TRUE)}
+# }
+
+options(ggplot2.continuous.colour = "viridis")
+options(ggplot2.continuous.fill = "viridis")
+theme_set(theme_bw())
+```
+
+## Example stock: pollock in the Gulf of Alaska
+
+For this vignette, we will fit a GAM-based index and a tinyVAST model to data for GOA Pacific ocean perch. 
+
+### Load data
+```{r}
+SPECIES <- c("Pacific ocean perch")
+YEARS <- 2015:2023
+SRVY <- "GOA"
+```
+
+
+### Load libraries and data
+```{r}
+library(tinyVAST)
+library(fmesher)
+
+dat0 <- sdmgamindex::noaa_afsc_public_foss %>% 
+  dplyr::filter(srvy == "GOA" &
+                  year %in% YEARS &
+                  common_name %in% SPECIES) %>%
+  dplyr::mutate(hauljoin = paste0(stratum, "_", station, "_", date_time)) %>%
+  dplyr::select(
+    year, date_time, latitude_dd_start, longitude_dd_start,
+    cpue_kgkm2, common_name, 
+    bottom_temperature_c, depth_m, # covariates (used later)
+    srvy, area_swept_km2, duration_hr, vessel_id, hauljoin
+  )
+
+head(dat0)
+```
+This is the raw data and for tinyVAST it needs to be in a specific format. Let's format it so that it works:
+
+```{r}
+dat <- dat0 |>
+  dplyr::rename('x' = longitude_dd_start,
+                'y' = latitude_dd_start,
+                'time' = year,
+                'n' = cpue_kgkm2) |>
+                dplyr::mutate(logn = log(n)) # results in Infs
+
+```
+
+### Make mesh
+
+```{r}
+mesh <- fm_mesh_2d(dat[,c('x','y')])
+plot(mesh)
+```
+
+### Fit model
+```{r}
+vastfit <- tinyVAST(formula = n ~ 0 + factor(time),
+                    data = dat, dsem = NULL,
+                    family = tweedie(), 
+                    spatial_graph = mesh)
+```
