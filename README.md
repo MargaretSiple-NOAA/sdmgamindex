@@ -3,16 +3,16 @@
 # [sdmgamindex](link_repo) <img src="https://avatars.githubusercontent.com/u/91760178?s=96&amp;v=4" alt="Logo." align="right" width="139" height="139"/>
 
 This repository was previously forked from `casperwberg/surveyIndex` and
-previously named `emilymarkowitz-noaa/surveyIndex`.
+previously named `emilymarkowitz-noaa/surveyIndex`. 
 
 R package for calculating survey indices by age from DATRAS exchange
 data.
 
-[![](https://img.shields.io/github/last-commit/EmilyMarkowitz-NOAA/sdmgamindex.svg)](https://github.com/EmilyMarkowitz-NOAA/sdmgamindex/commits/main)
+[![](https://img.shields.io/github/last-commit/noaa-afsc/sdmgamindex.svg)](https://github.com/noaa-afsc/sdmgamindex/commits/main)
 
 > This code is always in development. Find code used for various reports
 > in the code
-> [releases](https://github.com/EmilyMarkowitz-NOAA/sdmgamindex//releases).
+> [releases](https://github.com/noaa-afsc/sdmgamindex//releases).
 
 ### Code has been modified and adapted by:
 
@@ -53,7 +53,7 @@ To install you need the DATRAS package
 library(remotes)
 remotes::install_github("DTUAqua/DATRAS/DATRAS")
 # remotes::install_github("casperwberg/sdmgamindex/sdmgamindex")
-remotes::install_github("emilymarkowitz-noaa/sdmgamindex")
+remotes::install_github("noaa-afsc/sdmgamindex")
 ```
 
 ## Usage
