@@ -82,9 +82,9 @@ This is the raw data and for tinyVAST it needs to be in a specific format. Let's
 dat <- dat0 |>
   dplyr::rename('x' = longitude_dd_start,
                 'y' = latitude_dd_start,
-                'time' = year,
-                'n' = cpue_kgkm2) |>
-                dplyr::mutate(logn = log(n)) # results in Infs
+                'time' = year) |>
+                dplyr::mutate(catch_kg = cpue_kgkm2 * area_swept_km2, 
+                  logn = log(catch_kg)) # results in Infs
 
 ```
 
@@ -97,8 +97,15 @@ plot(mesh)
 
 ### Fit model
 ```{r}
-vastfit <- tinyVAST(formula = n ~ 0 + factor(time),
+vastfit <- tinyVAST(formula = catch_kg ~ 0 + factor(time),
                     data = dat, dsem = NULL,
-                    family = tweedie(), 
+                    family = tweedie(),
                     spatial_graph = mesh)
+vastfit
+```
+
+### Add predictions to `dat`
+
+```{r}
+dat$catch_kg_pred <- predict()
 ```
