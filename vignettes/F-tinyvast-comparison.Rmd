@@ -14,32 +14,20 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 
-# library(remotes)
-PKG <- c(
-  "sdmgamindex", 
-  "dplyr",
-  "sf", 
-  "gstat",
-  "magrittr", 
-  "flextable", 
-  "raster", 
-  "dplyr", 
+# Index and mapping 
+library(sdmgamindex) 
+library(dplyr)
+library(sf)
+library(gstat)
+library(raster)
+library(akgfmaps)  # devtools::install_github("afsc-gap-products/akgfmaps", build_vignettes = TRUE)
+library(coldpool) # devtools::install_github("afsc-gap-products/coldpool")
   
-  # RACE-GAP Specific R packages
-  "akgfmaps", # devtools::install_github("afsc-gap-products/akgfmaps", build_vignettes = TRUE)
-  "coldpool", # devtools::install_github("afsc-gap-products/coldpool")
-  
-  # VAST tools
-  "tinyVAST",
-  "fmesher" # for making pred meshes for tinyVAST
-)
+# VAST tools
+library(tinyVAST) #devtools::install_github("vast-lib/tinyVAST", dependencies = TRUE)
+library(fmesher) # for making pred meshes for tinyVAST
 
-for (p in PKG) {
-  # if(!require(p,character.only = TRUE)) {  
-  # install.packages(p)
-  require(p,character.only = TRUE)}
-# }
-
+# Aesthetics
 options(ggplot2.continuous.colour = "viridis")
 options(ggplot2.continuous.fill = "viridis")
 theme_set(theme_bw())
@@ -49,18 +37,12 @@ theme_set(theme_bw())
 
 For this vignette, we will fit a GAM-based index and a tinyVAST model to data for GOA Pacific ocean perch. 
 
-### Load data
+### Load public catch data
 ```{r}
 SPECIES <- c("Pacific ocean perch")
 YEARS <- 2015:2023
+nyrs <- length(YEARS)
 SRVY <- "GOA"
-```
-
-
-### Load libraries and data
-```{r}
-library(tinyVAST)
-library(fmesher)
 
 # Public catch data
 dat0 <- sdmgamindex::noaa_afsc_public_foss %>% 
@@ -76,23 +58,21 @@ dat0 <- sdmgamindex::noaa_afsc_public_foss %>%
   )
 
 head(dat0)
-
-# Extrapolation grid
-
 ```
-This is the raw data and for tinyVAST it needs to be in a specific format. Let's format it so that it works:
+For tinyVAST, the data needs to be in a specific format. Let's format it properly:
 
 ```{r}
 dat <- dat0 |>
   dplyr::rename('x' = longitude_dd_start,
                 'y' = latitude_dd_start,
                 'time' = year) |>
-                dplyr::mutate(catch_kg = cpue_kgkm2 * area_swept_km2, 
-                  logn = log(catch_kg)) # results in Infs
-
+                dplyr::mutate(catch_kg = cpue_kgkm2 * area_swept_km2 #, 
+                  #logn = log(catch_kg) # results in Infs
+                  ) 
+head(dat)
 ```
 
-### Make mesh
+### Build prediction grid/mesh
 
 ```{r}
 mesh <- fm_mesh_2d(dat[,c('x','y')])
@@ -103,13 +83,21 @@ plot(mesh)
 ```{r}
 vastfit <- tinyVAST(formula = catch_kg ~ 0 + factor(time),
                     data = dat, dsem = NULL,
-                    family = tweedie(),
-                    spatial_graph = mesh)
+                    spatial_graph = mesh,
+                    family = tweedie()
+                    )
 vastfit
+```
+
+### Get area-weighted total abundance
+```{r}
+integrate_output(object = vastfit,newdata = subset(dat,time==2015))
+Est <- sapply(YEARS, 
+              FUN = \(t) integrate_output, vastfit, newdata = subset(dat,time==t))
 ```
 
 ### Add predictions to `dat`
 
 ```{r}
-dat$catch_kg_pred <- predict(object = vastfit,newdata = )
+#dat$catch_kg_pred <- predict(object = vastfit,newdata = )
 ```
