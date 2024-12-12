@@ -1,5 +1,5 @@
 ---
-title: "Comparing tinyVAST to GAM-based indices"
+title: "Comparing tinyVAST to GAM-based indices: An example with GOA POP"
 date: "`r format(Sys.Date(), format='%B %d %Y') `"
 output: rmarkdown::html_vignette
 vignette: >
@@ -10,21 +10,22 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE, message=FALSE, error=FALSE, warning = FALSE, 
+  collapse = TRUE, message = FALSE, error = FALSE, warning = FALSE,
   comment = "#>"
 )
 
-# Index and mapping 
-library(sdmgamindex) 
+# Index and mapping
+#library(sdmgamindex)
 library(dplyr)
 library(sf)
 library(gstat)
 library(raster)
-library(akgfmaps)  # devtools::install_github("afsc-gap-products/akgfmaps", build_vignettes = TRUE)
+library(akgfmaps) # devtools::install_github("afsc-gap-products/akgfmaps", build_vignettes = TRUE)
 library(coldpool) # devtools::install_github("afsc-gap-products/coldpool")
-  
+library(ggplot2)
+
 # VAST tools
-library(tinyVAST) #devtools::install_github("vast-lib/tinyVAST", dependencies = TRUE)
+library(tinyVAST) # devtools::install_github("vast-lib/tinyVAST", dependencies = TRUE)
 library(fmesher) # for making pred meshes for tinyVAST
 
 # Aesthetics
@@ -33,14 +34,14 @@ options(ggplot2.continuous.fill = "viridis")
 theme_set(theme_bw())
 ```
 
-## Example stock: pollock in the Gulf of Alaska
+# Pollock in the Gulf of Alaska
 
-For this vignette, we will fit a GAM-based index and a tinyVAST model to data for GOA Pacific ocean perch. 
+For this vignette, we will fit a tinyVAST model and a GAM to data for GOA Pacific ocean perch and compare the total biomass indices. 
 
 ### Load public catch data
 ```{r}
 SPECIES <- c("Pacific ocean perch")
-YEARS <- 2015:2023
+YEARS <- seq(2015,2023, by =2) # odd years for GOA survey
 nyrs <- length(YEARS)
 SRVY <- "GOA"
 
@@ -59,17 +60,23 @@ dat0 <- sdmgamindex::noaa_afsc_public_foss %>%
 
 head(dat0)
 ```
-For tinyVAST, the data needs to be in a specific format. Let's format it properly:
+
+
+
+## GAM
+
+For tinyVAST, the data need to be in a specific format. Let's format it properly:
 
 ```{r}
 dat <- dat0 |>
   dplyr::rename('x' = longitude_dd_start,
                 'y' = latitude_dd_start,
                 'time' = year) |>
-                dplyr::mutate(catch_kg = cpue_kgkm2 * area_swept_km2 #, 
-                  #logn = log(catch_kg) # results in Infs
-                  ) 
+                dplyr::mutate(catch_kg = cpue_kgkm2 * area_swept_km2
+                  )
 head(dat)
+#save(dat, file = "FOSS_POP.Rdata")
+
 ```
 
 ### Build prediction grid/mesh
@@ -91,13 +98,70 @@ vastfit
 
 ### Get area-weighted total abundance
 ```{r}
-integrate_output(object = vastfit,newdata = subset(dat,time==2015))
-Est <- sapply(YEARS, 
-              FUN = \(t) integrate_output, vastfit, newdata = subset(dat,time==t))
+# Test out the integrate_output() function
+integrate_output(object = vastfit, newdata = subset(dat, time == 2019), bias.correct = FALSE) # bias.correct=FALSE means no random effects
+
+Est <- sapply(YEARS, FUN = \(t) integrate_output(
+  object = vastfit,
+  newdata = subset(dat, time == t),
+  bias.correct = FALSE
+))
+colnames(Est) <- YEARS
+
+plot(YEARS, Est[1, ], type = "both", ylab = "Estimated biomass")
+arrows(x0 = YEARS, x1 = YEARS, y0 = Est[1,]-Est[2,], y1 = Est[1,]+Est[2,],angle=90,code = 3, length=0.05)
 ```
 
-### Add predictions to `dat`
+## Fit GAM using `sdmgamindex`
 
+### Set up the data for sdmgamindex:
 ```{r}
-#dat$catch_kg_pred <- predict(object = vastfit,newdata = )
+# project spatial data
+crs_proj <- "EPSG:3338" # NAD83 / Alaska Albers
+crs_latlon <- "+proj=longlat +datum=WGS84" # decimal degrees
+
+ll <- sdmgamindex::convert_crs( 
+  x = dat$longitude_dd_start,
+  y = dat$latitude_dd_start, 
+  crs_in = crs_latlon, 
+  crs_out = crs_proj) 
+
+YEARS <- sort(unique(dat$year))
+
+# The sdmgamindex::get_surveyidx() expects some columns to be named in a specific way
+dat_wrangled <- dat %>% 
+  dplyr::rename(
+    Year = year,
+    wCPUE = cpue_kgkm2, 
+    COMMON_NAME = common_name,
+    GEAR_TEMPERATURE = bottom_temperature_c, 
+    BOTTOM_DEPTH = depth_m,
+    HaulDur = duration_hr,
+    EFFORT = area_swept_km2,
+    Ship = vessel_id) %>%
+  dplyr::mutate( 
+    # create some other vars
+    Lon = longitude_dd_start, 
+    Lat = latitude_dd_start, 
+    lon = ll$X,
+    lat = ll$Y,
+    sx = ((longitude_dd_start - mean(longitude_dd_start, na.rm = TRUE))/1000),
+    sy = ((latitude_dd_start - mean(latitude_dd_start, na.rm = TRUE))/1000), 
+    ctime = as.numeric(as.character(Year)),
+    date_time = as.Date(x = date_time, format = "%m/%d/%Y %H:%M:%S"), 
+    hour = as.numeric(format(date_time,"%H")),
+    minute = as.numeric(format(date_time,"%M")),
+    day = as.numeric(format(date_time,"%d")),
+    month = as.numeric(format(date_time,"%m")),
+    TimeShotHour = hour + minute/60,
+    timeOfYear = (month - 1) * 1/12 + (day - 1)/365,   
+    
+    # add some dummy vars and create some other vars
+    Country = "USA",
+    Gear = "dummy",
+    Quarter = "2")  %>%
+  dplyr::mutate(across((c("Year", "Ship", "COMMON_NAME")), as.factor)) %>% 
+  dplyr::select(wCPUE, GEAR_TEMPERATURE, BOTTOM_DEPTH, COMMON_NAME, EFFORT, 
+                Year, Ship, Lon, Lat, lat, lon, sx, sy, 
+                ctime, TimeShotHour, timeOfYear, Gear, Quarter, HaulDur, hauljoin)
 ```
