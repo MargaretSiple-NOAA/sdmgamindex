@@ -108,8 +108,19 @@ Est <- sapply(YEARS, FUN = \(t) integrate_output(
 ))
 colnames(Est) <- YEARS
 
-plot(YEARS, Est[1, ], type = "both", ylab = "Estimated biomass")
+
+
+# Design-based
+otherindices <- read.csv("../data/indices/GOA/POP_30060_estimate_summary.csv")
+db <- subset(otherindices, Year %in% colnames(Est))
+
+
+# tinyVAST
+plot(YEARS, Est[1, ], type = "both", ylab = "Estimated biomass", pch=19)
 arrows(x0 = YEARS, x1 = YEARS, y0 = Est[1,]-Est[2,], y1 = Est[1,]+Est[2,],angle=90,code = 3, length=0.05)
+
+# Add design-based
+points(db$Year, db$design_mt, ylab = "Estimated biomass", pch=19,col = "blue")
 ```
 
 ## Fit GAM using `sdmgamindex`
