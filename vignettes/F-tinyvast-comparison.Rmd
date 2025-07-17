@@ -17,9 +17,9 @@ knitr::opts_chunk$set(
 # Index and mapping
 #library(sdmgamindex)
 library(dplyr)
-library(sf)
+#library(sf)
 library(gstat)
-library(raster)
+#library(raster)
 library(akgfmaps) # devtools::install_github("afsc-gap-products/akgfmaps", build_vignettes = TRUE)
 library(coldpool) # devtools::install_github("afsc-gap-products/coldpool")
 library(ggplot2)
@@ -88,7 +88,7 @@ plot(mesh)
 
 ### Fit model
 ```{r}
-vastfit <- tinyVAST(formula = catch_kg ~ 0 + factor(time),
+vastfit <- tinyVAST(formula = cpue_kgkm2 ~ 0 + factor(time), #+ offset(area_swept_km2),
                     data = dat, dsem = NULL,
                     spatial_graph = mesh,
                     family = tweedie()
@@ -97,30 +97,68 @@ vastfit
 ```
 
 ### Get area-weighted total abundance
-```{r}
-# Test out the integrate_output() function
-integrate_output(object = vastfit, newdata = subset(dat, time == 2019), bias.correct = FALSE) # bias.correct=FALSE means no random effects
+Use `tinyVAST()` to get an area-weighted total abundance. First we need to get an extrapolation grid; we'll use the one that the ModSquad group uses for model-based indices for GOA.
 
+#### Prediction grid
+```{r}
+extrap_grid <- read.csv("../data/pred_grid_goa.csv")
+plot(extrap_grid$Longitude,extrap_grid$Latitude)
+extrap_grid_years <- sdmTMB::replicate_df(dat = extrap_grid,time_name = "time",time_values = unique(dat$time))
+```
+
+
+
+```{r}
+# Test  the integrate_output() function
+integrate_output(object = vastfit, 
+                 newdata = subset(extrap_grid_years, time == 2019), 
+                 bias.correct = FALSE) # bias.correct=FALSE means no random effects
+
+# Apply it across all the years to get an index value
 Est <- sapply(YEARS, FUN = \(t) integrate_output(
   object = vastfit,
-  newdata = subset(dat, time == t),
+  newdata = subset(extrap_grid_years, time == t),
   bias.correct = FALSE
 ))
 colnames(Est) <- YEARS
 
-
-
 # Design-based
-otherindices <- read.csv("../data/indices/GOA/POP_30060_estimate_summary.csv")
-db <- subset(otherindices, Year %in% colnames(Est))
+# Pull db estimates from GAP_PRODUCTS
+library(RODBC)
+channel <- gapindex::get_connected()
+dbdat <- RODBC::sqlQuery(channel = channel,
+                       query = "
+-- Select columns for output data
+SELECT
+SURVEY_DEFINITION_ID,
+BIOMASS_MT / 1000000 AS BIOMASS_MMT,
+(BIOMASS_MT - 2 * SQRT(BIOMASS_VAR)) / 1000000 AS BIOMASS_CI_DW,
+(BIOMASS_MT + 2 * SQRT(BIOMASS_VAR)) / 1000000 AS BIOMASS_CI_UP,
+BIOMASS_VAR,
+YEAR
 
+-- Identify what tables to pull data from
+FROM GAP_PRODUCTS.AKFIN_BIOMASS
+
+-- Filter data results
+WHERE SPECIES_CODE = 30060
+AND SURVEY_DEFINITION_ID = 47
+AND AREA_ID = 99903
+AND YEAR BETWEEN 1990 AND 2023" ) 
+dbdat <- subset(dbdat, YEAR %in% colnames(Est))
 
 # tinyVAST
-plot(YEARS, Est[1, ], type = "both", ylab = "Estimated biomass", pch=19)
-arrows(x0 = YEARS, x1 = YEARS, y0 = Est[1,]-Est[2,], y1 = Est[1,]+Est[2,],angle=90,code = 3, length=0.05)
+#dev.off()
+plot(YEARS, Est[1, ], type = "b", ylab = "Estimated biomass", pch=19, ylim = c(1e8,2e8))
+arrows(x0 = YEARS, x1 = YEARS, y0 = Est[1,]-Est[2,],
+       y1 = Est[1,]+Est[2,],angle=90,code = 3, length=0.05)
 
 # Add design-based
-points(db$Year, db$design_mt, ylab = "Estimated biomass", pch=19,col = "blue")
+points(dbdat$YEAR+0.1, dbdat$BIOMASS_MMT*1e8, pch=19,col = "blue")
+arrows(x0 = YEARS+0.1, x1 = YEARS+0.1, y0 = dbdat$BIOMASS_CI_DW*1e8,
+       y1 = dbdat$BIOMASS_CI_UP*1e8,
+       angle=90,code = 3, length=0.05, col = 'blue')
+
 ```
 
 ## Fit GAM using `sdmgamindex`
