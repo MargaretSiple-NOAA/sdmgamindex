@@ -177,17 +177,17 @@ crs_proj <- "EPSG:3338" # NAD83 / Alaska Albers
 crs_latlon <- "+proj=longlat +datum=WGS84" # decimal degrees
 
 ll <- sdmgamindex::convert_crs( 
-  x = dat$x,
-  y = dat$y, 
+  x = dat0$longitude_dd_start,
+  y = dat0$latitude_dd_start, 
   crs_in = crs_latlon, 
   crs_out = crs_proj) 
 
-YEARS <- sort(unique(dat$time))
+YEARS <- sort(unique(dat0$year))
 
 # The sdmgamindex::get_surveyidx() expects some columns to be named in a specific way
-dat_wrangled <- dat |> 
+dat_wrangled <- dat0 |> 
   dplyr::rename(
-    Year = time,
+    Year = year,
     wCPUE = cpue_kgkm2, 
     COMMON_NAME = common_name,
     GEAR_TEMPERATURE = bottom_temperature_c, 
@@ -197,12 +197,12 @@ dat_wrangled <- dat |>
     Ship = vessel_id) |>
   dplyr::mutate( 
     # create some other vars
-    Lon = x, 
-    Lat = y, 
-    lon = ll$x,
-    lat = ll$y,
-    sx = ((x - mean(x, na.rm = TRUE))/1000),
-    sy = ((y - mean(y, na.rm = TRUE))/1000), 
+    Lon = longitude_dd_start, 
+    Lat = latitude_dd_start, 
+    lon = ll$X,
+    lat = ll$Y,
+    sx = ((longitude_dd_start - mean(longitude_dd_start, na.rm = TRUE))/1000),
+    sy = ((latitude_dd_start - mean(latitude_dd_start, na.rm = TRUE))/1000), 
     ctime = as.numeric(as.character(Year)),
     date_time = as.Date(x = date_time, format = "%m/%d/%Y %H:%M:%S"), 
     hour = as.numeric(format(date_time,"%H")),
