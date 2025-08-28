@@ -168,7 +168,7 @@ arrows(
 ## Fit GAM using `sdmgamindex`
 
 ### Set up the data for sdmgamindex:
-`dat` is our sample dataset created above in the "GAM" section. 
+`dat` is our sample dataset created above in the "GAM" section. This data is formatted and processed analogously to the data in the "Intro to GAMs" vignette.
 
 ```{r}
 
@@ -220,12 +220,32 @@ dat_wrangled <- dat0 |>
   dplyr::select(wCPUE, GEAR_TEMPERATURE, BOTTOM_DEPTH, COMMON_NAME, EFFORT, 
                 Year, Ship, Lon, Lat, sx, sy, 
                 ctime, TimeShotHour, timeOfYear, Gear, Quarter, HaulDur, hauljoin)
+head(dat_wrangled)
+```
+
+### Retrieve the GOA prediction grid
+
+```{r}
+pg <- read.csv(here::here("data/pred_grid_goa.csv"),header = TRUE)
+pred_grid_goa <- pg |> 
+  rename(lon = ShapeLongitude, lat = ShapeLatitude) |>
+  dplyr::select(lon, lat, Shape_Area)
+# For the future, will add this to the package files, and I don't think we would need pred_grid_goa.csv after that.
+# save(pred_grid_goa, file = here::here("data/pred_grid_goa.rda"))
+
+load(here::here("data/pred_grid_ebs.rda"))
+pred_grid_ebs
+
+
+pred_grid <- sdmgamindex::pred_grid
+
+
 ```
 
 ### Fit the SDM using `sdmgamindex`
 
 ```{r}
-head(dat_wrangled)
+
 dat_datras <- sdmgamindex::get_datrasraw(x = dat_wrangled)
 
 ```
