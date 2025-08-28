@@ -15,11 +15,8 @@ knitr::opts_chunk$set(
 )
 
 # Index and mapping
-#library(sdmgamindex)
 library(dplyr)
-#library(sf)
 library(gstat)
-#library(raster)
 library(akgfmaps) # devtools::install_github("afsc-gap-products/akgfmaps", build_vignettes = TRUE)
 library(coldpool) # devtools::install_github("afsc-gap-products/coldpool")
 library(ggplot2)
@@ -41,11 +38,11 @@ For this vignette, we will fit a tinyVAST model and a GAM to data for GOA Pacifi
 ### Load public catch data
 ```{r}
 SPECIES <- c("Pacific ocean perch")
-YEARS <- seq(2015,2023, by =2) # odd years for GOA survey
+YEARS <- seq(2015, 2023, by =2) # odd years for GOA survey
 nyrs <- length(YEARS)
 SRVY <- "GOA"
 
-# Public catch data
+# Public survey catch data
 dat0 <- sdmgamindex::noaa_afsc_public_foss %>% 
   dplyr::filter(srvy == "GOA" &
                   year %in% YEARS &
@@ -89,8 +86,8 @@ plot(mesh)
 ### Fit model
 ```{r}
 vastfit <- tinyVAST(formula = cpue_kgkm2 ~ 0 + factor(time), #+ offset(area_swept_km2),
-                    data = dat, dsem = NULL,
-                    spatial_graph = mesh,
+                    data = dat, #dsem = NULL,
+                    #spatial_graph = mesh,
                     family = tweedie()
                     )
 vastfit
@@ -110,9 +107,11 @@ extrap_grid_years <- sdmTMB::replicate_df(dat = extrap_grid,time_name = "time",t
 
 ```{r}
 # Test  the integrate_output() function
-integrate_output(object = vastfit, 
-                 newdata = subset(extrap_grid_years, time == 2019), 
-                 bias.correct = FALSE) # bias.correct=FALSE means no random effects
+integrate_output(
+  object = vastfit,
+  newdata = subset(extrap_grid_years, time == 2019),
+  bias.correct = FALSE
+) # bias.correct=FALSE means no random effects
 
 # Apply it across all the years to get an index value
 Est <- sapply(YEARS, FUN = \(t) integrate_output(
@@ -122,12 +121,13 @@ Est <- sapply(YEARS, FUN = \(t) integrate_output(
 ))
 colnames(Est) <- YEARS
 
-# Design-based
-# Pull db estimates from GAP_PRODUCTS
+# Design-based indices of abundance
+# Pull db estimates straight from GAP_PRODUCTS
 library(RODBC)
 channel <- gapindex::get_connected()
-dbdat <- RODBC::sqlQuery(channel = channel,
-                       query = "
+dbdat <- RODBC::sqlQuery(
+  channel = channel,
+  query = "
 -- Select columns for output data
 SELECT
 SURVEY_DEFINITION_ID,
@@ -144,58 +144,65 @@ FROM GAP_PRODUCTS.AKFIN_BIOMASS
 WHERE SPECIES_CODE = 30060
 AND SURVEY_DEFINITION_ID = 47
 AND AREA_ID = 99903
-AND YEAR BETWEEN 1990 AND 2023" ) 
+AND YEAR BETWEEN 1990 AND 2023"
+)
 dbdat <- subset(dbdat, YEAR %in% colnames(Est))
 
 # tinyVAST
-#dev.off()
-plot(YEARS, Est[1, ], type = "b", ylab = "Estimated biomass", pch=19, ylim = c(1e8,2e8))
-arrows(x0 = YEARS, x1 = YEARS, y0 = Est[1,]-Est[2,],
-       y1 = Est[1,]+Est[2,],angle=90,code = 3, length=0.05)
+# dev.off()
+plot(YEARS, Est[1, ], type = "b", ylab = "Estimated biomass (mt)", pch = 19, ylim = c(1e7, 3e8))
+arrows(
+  x0 = YEARS, x1 = YEARS, y0 = Est[1, ] - Est[2, ],
+  y1 = Est[1, ] + Est[2, ], angle = 90, code = 3, length = 0.05
+)
 
 # Add design-based
-points(dbdat$YEAR+0.1, dbdat$BIOMASS_MMT*1e8, pch=19,col = "blue")
-arrows(x0 = YEARS+0.1, x1 = YEARS+0.1, y0 = dbdat$BIOMASS_CI_DW*1e8,
-       y1 = dbdat$BIOMASS_CI_UP*1e8,
-       angle=90,code = 3, length=0.05, col = 'blue')
-
+points(dbdat$YEAR + 0.1, dbdat$BIOMASS_MMT * 1e8, pch = 19, col = "blue")
+arrows(
+  x0 = YEARS + 0.1, x1 = YEARS + 0.1, y0 = dbdat$BIOMASS_CI_DW * 1e8,
+  y1 = dbdat$BIOMASS_CI_UP * 1e8,
+  angle = 90, code = 3, length = 0.05, col = "blue"
+)
 ```
 
 ## Fit GAM using `sdmgamindex`
 
 ### Set up the data for sdmgamindex:
+`dat` is our sample dataset created above in the "GAM" section. 
+
 ```{r}
+
 # project spatial data
 crs_proj <- "EPSG:3338" # NAD83 / Alaska Albers
 crs_latlon <- "+proj=longlat +datum=WGS84" # decimal degrees
 
 ll <- sdmgamindex::convert_crs( 
-  x = dat$longitude_dd_start,
-  y = dat$latitude_dd_start, 
+  x = dat$x,
+  y = dat$y, 
   crs_in = crs_latlon, 
   crs_out = crs_proj) 
 
-YEARS <- sort(unique(dat$year))
+YEARS <- sort(unique(dat$time))
 
 # The sdmgamindex::get_surveyidx() expects some columns to be named in a specific way
-dat_wrangled <- dat %>% 
+dat_wrangled <- dat |> 
   dplyr::rename(
-    Year = year,
+    Year = time,
     wCPUE = cpue_kgkm2, 
     COMMON_NAME = common_name,
     GEAR_TEMPERATURE = bottom_temperature_c, 
     BOTTOM_DEPTH = depth_m,
     HaulDur = duration_hr,
     EFFORT = area_swept_km2,
-    Ship = vessel_id) %>%
+    Ship = vessel_id) |>
   dplyr::mutate( 
     # create some other vars
-    Lon = longitude_dd_start, 
-    Lat = latitude_dd_start, 
-    lon = ll$X,
-    lat = ll$Y,
-    sx = ((longitude_dd_start - mean(longitude_dd_start, na.rm = TRUE))/1000),
-    sy = ((latitude_dd_start - mean(latitude_dd_start, na.rm = TRUE))/1000), 
+    Lon = x, 
+    Lat = y, 
+    lon = ll$x,
+    lat = ll$y,
+    sx = ((x - mean(x, na.rm = TRUE))/1000),
+    sy = ((y - mean(y, na.rm = TRUE))/1000), 
     ctime = as.numeric(as.character(Year)),
     date_time = as.Date(x = date_time, format = "%m/%d/%Y %H:%M:%S"), 
     hour = as.numeric(format(date_time,"%H")),
@@ -208,9 +215,18 @@ dat_wrangled <- dat %>%
     # add some dummy vars and create some other vars
     Country = "USA",
     Gear = "dummy",
-    Quarter = "2")  %>%
-  dplyr::mutate(across((c("Year", "Ship", "COMMON_NAME")), as.factor)) %>% 
+    Quarter = "2")  |>
+  dplyr::mutate(across((c("Year", "Ship", "COMMON_NAME")), as.factor)) |> 
   dplyr::select(wCPUE, GEAR_TEMPERATURE, BOTTOM_DEPTH, COMMON_NAME, EFFORT, 
-                Year, Ship, Lon, Lat, lat, lon, sx, sy, 
+                Year, Ship, Lon, Lat, sx, sy, 
                 ctime, TimeShotHour, timeOfYear, Gear, Quarter, HaulDur, hauljoin)
 ```
+
+### Fit the SDM using `sdmgamindex`
+
+```{r}
+head(dat_wrangled)
+dat_datras <- sdmgamindex::get_datrasraw(x = dat_wrangled)
+
+```
+
